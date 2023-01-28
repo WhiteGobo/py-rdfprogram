@@ -96,5 +96,5 @@ See programloader/test.py for a working implementation.
         """)
         all_objects: dict = rl.load_from_graph(programloader.input_dict, g)
 
-        app_iri = URIRef("http://example.com/meinBefehl")
+        app_iri = rdflib.URIRef("http://example.com/meinBefehl")
         returnstring, new_axioms = all_objects[ app_iri ][0]()
