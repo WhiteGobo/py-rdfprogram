@@ -1,0 +1,5 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix example: <http://example.com/> . 
+
+_:a a <example:asdf> .
+_:b <example:q> _:a .

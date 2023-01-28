@@ -2,14 +2,14 @@ programloader
 =============
 
 .. automodule:: programloader
-   :imported-members: newuseprogram
+   :imported-members:
    :members:
    :undoc-members:
 
 internal modules
 ================
 
-.. automodule:: programloader.newuseprogram
+.. automodule:: programloader.useprogram
    :members:
    :undoc-members:
    :show-inheritance:

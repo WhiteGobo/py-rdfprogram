@@ -1,7 +1,7 @@
 import unittest
 import os.path
 #from . import useprogram
-from . import newuseprogram as useprogram
+from . import useprogram
 import rdfloader as rl
 import logging
 logger = logging.getLogger( __name__ )
