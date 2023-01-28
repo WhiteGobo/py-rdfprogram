@@ -1,0 +1,53 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix auto: <http://program/automaton#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<myprogram.py>
+	a auto:executable ;
+#	auto:uses <2>, <1> .
+	auto:uses <2>, <1>, <3> .
+
+<2>
+	a auto:argument ;
+	auto:index 0 ;
+	rdf:label "first integer" ;
+	auto:default 25 .
+
+
+<1>
+	a auto:argument ;
+	auto:keyword "--secint" ;
+	rdf:label "second integer" ;
+#	auto:default <brubru> .
+	auto:default 44 .
+
+<3>
+        a owl:NamedIndividual ;
+	a auto:argument ;
+	auto:keyword "--savefile" ;
+#	auto:default 11 ;
+	rdf:label "targetfile" .
+
+
+#<sum> 
+#	auto:generatedby <sumgenerator> .
+
+<sumgenerator>
+#        	a owl:NamedIndividual ;
+		a auto:command ;
+		auto:execute <myprogram.py> ;
+		auto:uses [
+			a auto:argument ;
+			auto:overwrite <3> ;
+			#auto:target <sum>
+			auto:value "sum"
+			] , [
+			a auto:argument ;
+			auto:overwrite <1> ;
+			auto:value 2 
+			] , [
+			a auto:argument ;
+			auto:overwrite <2> ;
+			auto:value 3 
+			] .

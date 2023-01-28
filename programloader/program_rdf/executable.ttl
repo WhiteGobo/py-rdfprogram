@@ -1,0 +1,25 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<executable>
+	a rdf:type ;
+	rdfs:comment "commandline executable." .
+
+<argument>
+	rdf:subclass rdf:Literal ;
+	rdfs:comment "class for arguments for executable" .
+
+<uses>
+	a rdf:property .
+
+<index>
+	a rdf:property ;
+	rdfs:comment "position of argument, when calling command" ;
+	rdfs:comment "cann only be directed at integers (to be translated)" .
+
+<keyword>
+	a rdf:property ;
+	rdfs:comment "string to identify given parameter" .
+
+<default>
+	a rdf:property .

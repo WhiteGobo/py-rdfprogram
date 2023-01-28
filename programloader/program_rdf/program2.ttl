@@ -1,0 +1,26 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+# @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<executable>
+	a rdf:type .
+#	rdfs:comment "executable file" .
+
+<argument>
+	rdf:subclass rdf:Literal .
+#	rdfs:comment "class for arguments for executable" .
+
+#<uses>
+#	a rdf:property .
+
+#<myprogram>
+#	a <executable> ;
+#	<uses> [ 
+#			a <inputparameter> ;
+#			<index> "0"^^int ;
+#			rdf:label "first integer" . 
+#		], [ 
+#			a <inputparameter> ;
+#			<param> "--secint" ;
+#			rdf:label "second integer" ;
+#			<default> "1"^^int . 
+#		] .
