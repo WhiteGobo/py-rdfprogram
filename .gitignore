@@ -1,3 +1,5 @@
 docs/build
 __pycache__
-*/__pycache__
+programloader/__pycache__
+rdfloader/__pycache__
+pathfinder/__pycache
