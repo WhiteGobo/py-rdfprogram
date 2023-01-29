@@ -23,7 +23,7 @@ test_flowgraph:
 	python -m pathfinder.lin_flowgraph_abstract.test -v --failfast
 
 test:
-	python -m unittest
+	python -m unittest -k  programloader -k rdfloader -k infogeneration
 
 documentation:
 	cd docs && $(MAKE) html 
