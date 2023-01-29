@@ -36,7 +36,8 @@ Things the annotation will specify for the callable:
           and even as dict ({property-object: object-object, ...})
 
 See the :py:class:`rdfloader.classloader.constructor_annotation` for 
-detailed information.
+detailed information. See :py:module:`rdfloader.extension_classes` for
+a complete list of all implemented extension classes.
 
 
 .. code:: python
