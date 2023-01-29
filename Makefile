@@ -12,7 +12,11 @@ test_rdfloader:
 .PHONY: test_programloader
 test_programloader:
 	#python -m programloader.test_programloader
-	python -m programloader.test
+	python -m programloader.test 
+
+.PHONY: test_infogeneration
+test_infogeneration:
+	python -m infogeneration.test
 
 .PHONY: test_flowgraph
 test_flowgraph:
