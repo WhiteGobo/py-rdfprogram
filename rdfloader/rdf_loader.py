@@ -174,7 +174,7 @@ def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
         try:
             constructor = uri_to_constructor[x]
         except KeyError:
-            logger.debug( f"skip {target_resource} cause no constructor to type {x}" )
+            logger.warning( f"skip {target_resource} cause no constructor to type {x}" )
             continue
         infoobject = _ObjectfromUri_generator.from_class_constructor( \
                                                             constructor )
