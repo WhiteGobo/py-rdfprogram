@@ -35,10 +35,15 @@ Things the annotation will specify for the callable:
           Eg it can be given as sngle obj (obj1) or as list ([obj1, obj2])
           and even as dict ({property-object: object-object, ...})
 
+See the :py:class:`rdfloader.classloader.constructor_annotation` for 
+detailed information.
+
+
 .. code:: python
 
+    from rdfloader import extension_classes as extc
     class loadable_class( base ):
-        def __init__( self, uri, val: ext.info_attr( prop1, needed=True )=None):
+        def __init__(self, uri, val: extc.info_attr(prop, needed=True)):
             self.uri = uri
             if val is not None:
                 self.val = val
