@@ -12,7 +12,9 @@ import pathlib
 import os.path
 from . import test_src
 adder_path = importlib.resources.files(test_src).joinpath( "adder.py" )
-adder_uri = pathlib.Path(program_path).as_uri()
+adder_uri = pathlib.Path(adder_path).as_uri()
+numbertoaxiom_path = importlib.resources.files(test_src).joinpath( "adder.py" )
+numbertoaxiom_uri = pathlib.Path(numbertoaxiom_path).as_uri()
 
 input_dictionary = {
         AUTGEN.tactic: tactic.tactic,
@@ -52,7 +54,7 @@ class TestInfogenerator( unittest.TestCase ):
             _:addres1 asdf:greater _:addres2 .
 
             #Program number 2
-            <file://path/to/numbertoaxiom> a proloa:program ;
+            <{numbertoaxiom_uri}> a proloa:program ;
                 proloa:hasArgument _:ntaArg .
             _:ntaArg proloa:id 0 ;
                 rdfs:comment "loadfile" ;
