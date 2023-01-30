@@ -6,6 +6,14 @@ from . import tactic
 from . import AUTGEN
 import rdfloader as rl
 import programloader
+
+import importlib.resources
+import pathlib
+import os.path
+from . import test_src
+adder_path = importlib.resources.files(test_src).joinpath( "adder.py" )
+adder_uri = pathlib.Path(program_path).as_uri()
+
 input_dictionary = {
         AUTGEN.tactic: tactic.tactic,
         }
@@ -13,7 +21,7 @@ input_dictionary.update(programloader.input_dict)
 
 class TestInfogenerator( unittest.TestCase ):
     def test_simple(self):
-        g = rdflib.Graph().parse(format="ttl", data="""
+        g = rdflib.Graph().parse(format="ttl", data=f"""
             @prefix proloa: <http://example.com/programloader/> .
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -26,7 +34,7 @@ class TestInfogenerator( unittest.TestCase ):
                             <file://path/to/numbertoaxiom> .
 
             #Program number 1
-            <file://path/to/adder> a proloa:program ;
+            <{adder_uri}> a proloa:program ;
                 proloa:hasArgument _:add1, _:add2 .
             _:add1 proloa:id 0 ;
                 rdfs:comment "loadfile" ;
