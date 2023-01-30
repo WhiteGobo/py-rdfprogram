@@ -165,9 +165,9 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
     if missing_wanted_resources:
         logger.warning(f"missing wanted resources: %s"
                        %([str(x) for x in missing_wanted_resources]))
-        logger.warning("further needed resources of the algorithm: %s"
-                       %([str(x) for x in wanted_resources if x not in asdf 
-                          and x not in missing_wanted_resources]) )
+        #logger.warning("further needed resources of the algorithm: %s"
+        #               %([str(x) for x in wanted_resources if x not in asdf 
+        #                  and x not in missing_wanted_resources]) )
     return asdf
 
 def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
