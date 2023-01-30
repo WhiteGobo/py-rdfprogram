@@ -57,5 +57,5 @@ class TestInfogenerator( unittest.TestCase ):
         raise Exception(generated_objects)
         
 if __name__=="__main__":
-    logging.basicConfig( level=logging.WARNING )
+    logging.basicConfig( level=logging.DEBUG )
     unittest.main()
