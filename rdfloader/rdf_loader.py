@@ -89,6 +89,7 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
     :param wanted_resources: All Resources that ought to be loaded.
             Resources must be described by the knowledgegraph. If no
             wanted_resources are given, tries to load every available Resource
+    :TODO: new objects from _get_creationinfo should be a eindeutige form
     """
     if not hasattr( rdf_graph, "all_nodes" ):
         raise TypeError( "rdf_graph expected rdflib.Graph, got", rdf_graph )
@@ -125,6 +126,7 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
             construct_id = _complex( uri_resource, constructor, helpconst )
             uri_to_construct.setdefault( uri_resource, []).append(construct_id)
             construct_with_attr_to_uri[ construct_id ] = attr_to_uri
+            #Here is a todo: new_objects should have a eindeutige form
             for x in new_objects:
                 if isinstance( x, rdflib.IdentifiedNode ):
                     if x not in wanted_resources:
