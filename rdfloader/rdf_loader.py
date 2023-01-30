@@ -101,6 +101,8 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
         wanted_resources = [ x if isinstance( x, rdflib.IdentifiedNode ) \
                                 else rdflib.URIRef(x) \
                                 for x in wanted_resources ]
+    starting_wanted_resources = list(wanted_resources)
+
     assert all( isinstance( x, rdflib.IdentifiedNode) \
                                 for x in wanted_resources ), wanted_resources
     assert all( isinstance(x, rdflib.IdentifiedNode ) \
@@ -137,9 +139,10 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
                 else:
                     raise Exception( x )
 
-    logger.debug( "Needed but not generatable: %s"% ( 
-                    _find_needed_but_not_generatable_resources( \
-                    uri_to_construct, construct_with_attr_to_uri )))
+    #logger.debug( "Needed but not generatable: %s"% ( 
+    #                _find_needed_but_not_generatable_resources( \
+    #                uri_to_construct, construct_with_attr_to_uri )))
+    logger.debug( f"wanted resources: {wanted_resources}" )
 
     
     constructlist: list[_complex] = list( construct_with_attr_to_uri.keys() )
@@ -154,6 +157,11 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
     for x in object_wrapper_list:
         assert isinstance( x.construct.uri, rdflib.IdentifiedNode ), type(x.construct.uri)
         asdf.setdefault( x.construct.uri, list() ).append( x.obj )
+    
+    missing_wanted_resources = [x for x in starting_wanted_resources 
+                                if x not in asdf ]
+    if missing_wanted_resources:
+        logger.warning(f"missing wanted resources: {missing_wanted_resources}")
     return asdf
 
 def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
@@ -197,6 +205,7 @@ def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
 
 def _find_needed_but_not_generatable_resources( uri_to_construct, \
                                                 construct_with_attr_to_uri, ):
+    raise NotImplementedError("Seems to not work anymore")
     all_generatable_objects = set( x.uri for x \
                         in it.chain.from_iterable( uri_to_construct.values()))
     logger.debug( "List of all used constructs: %s" %(all_generatable_objects))
