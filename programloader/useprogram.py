@@ -249,14 +249,14 @@ class filelink(_iri_repr_class):
     """Last time, the filelink was updated"""
     def __init__( self, iri ):
         self.iri = iri
+        split: urllib.parse.SplitResult = urllib.parse.urlsplit( iri )
         if isinstance( iri, rdflib.BNode ):
             self._tempfile = tempfile.NamedTemporaryFile()
             self.filepath = self._tempfile.name
-        self.update_change()
-        split: urllib.parse.SplitResult = urllib.parse.urlsplit( iri )
-        if split.scheme == "file":
+        elif split.scheme == "file":
             assert not (split.query and split.fragment)
             self.filepath = split.netloc + split.path
+        self.update_change()
 
     def update_change(self):
         """Tests if the file was since changed, since the last time this
