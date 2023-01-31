@@ -39,18 +39,24 @@ class TestProgramloader( unittest.TestCase ):
             @prefix asdf: <http://example.com/> .
             @prefix proloa: <http://example.com/programloader/> .
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
             <{evaluator_uri}> a proloa:evaluator ;
                 proloa:hasArgument _:1 .
-            _:1 proloa:id "--loadfile" ;
-                a proloa:arg .
+            _:1 proloa:id 0;
+                rdfs:comment "loadfile" ;
+                a proloa:arg ;
+                proloa:describedBy [a proloa:mutable_resource].
 
-            asdf:meinBefehl proloa:executes <{program_uri}> ;
+            asdf:meinBefehl proloa:executes <{evaluator_uri}> ;
                 a proloa:app ;
                 _:1 <{number_uri}>.
             <{number_uri}> a proloa:link .
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+        myapp = asdf[URIRef("http://example.com/meinBefehl")][0]
+        returnstring, new_axioms = myapp()
+        raise Exception(returnstring, new_axioms)
 
     def test_simple( self ):
         g = rdflib.Graph().parse( format="ttl", data=f"""
@@ -117,5 +123,5 @@ class TestProgramloader( unittest.TestCase ):
 
 
 if __name__=="__main__":
-    logging.basicConfig( level=logging.DEBUG )
+    logging.basicConfig( level=logging.WARNING )
     unittest.main()

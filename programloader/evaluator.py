@@ -8,6 +8,8 @@ import typing as typ
 import urllib
 import os
 import mimetypes
+import itertools as it
+import sys
 from . import PROLOA_NS
 from rdfloader import extension_classes as extc
 
@@ -43,7 +45,7 @@ class _iri_repr_class:
 
 class evaluator(_iri_repr_class):
     def __init__(self, iri, app_args, program_container:_program ):
-        self.uri = iri
+        self.iri = iri
         self.app_args = app_args
         self.program_container = program_container
 
