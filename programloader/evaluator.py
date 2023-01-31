@@ -5,6 +5,9 @@ defined for a placeholder-resources are also valid for the program input.
 import abc
 import subprocess
 import typing as typ
+import urllib
+import os
+import mimetypes
 from . import PROLOA_NS
 from rdfloader import extension_classes as extc
 
@@ -39,11 +42,12 @@ class _iri_repr_class:
 
 
 class evaluator(_iri_repr_class):
-    def __init__(self, iri, app_args, programcontainer:_program ):
+    def __init__(self, iri, app_args, program_container:_program ):
         self.uri = iri
         self.app_args = app_args
         self.program_container = program_container
 
+    @classmethod
     def from_rdf(cls, iri,
                  app_args: extc.info_attr_list(PROLOA_NS.hasArgument),
                  ):
@@ -57,7 +61,7 @@ class evaluator(_iri_repr_class):
                 programcontainer = python_program_container(filepath)
         else:
             raise NotImplementedError("only scheme file is implemented")
-        cls(iri, app_args, programcontainer)
+        return cls(iri, app_args, programcontainer)
 
     def __call__(self, input_args: typ.Dict):
         kwargs, args = {},{}
