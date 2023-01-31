@@ -84,7 +84,17 @@ class program_python(program, _iri_repr_class):
         self.filepath = filepath
         self.app_args = app_args
 
-    def __call__(self, *args, **kwargs) -> str:
+    def __call__(self, input_args) -> str:
+        kwargs, args = {},{}
+        for arg, val in input_args.items():
+            if isinstance(arg.id, str):
+                kwargs[arg.id] = val
+            else:
+                args[arg.id] = val
+        args = [args[x] for x in sorted(args.keys())]
+        return self._exe( *args, **kwargs )
+
+    def _exe(self, *args, **kwargs):
         commandarray = ["python", str(self.filepath)]
         for x in it.chain(args, it.chain.from_iterable(kwargs.items())):
             try:
@@ -195,14 +205,7 @@ class app(_iri_repr_class):
         return rvalue, new_axioms
 
     def _execute_program( self ) -> str:
-        kwargs, args = {},{}
-        for arg, val in self.input_args.items():
-            if isinstance(arg.id, str):
-                kwargs[arg.id] = val
-            else:
-                args[arg.id] = val
-        args = [args[x] for x in sorted(args.keys())]
-        return self.executes( *args, **kwargs )
+        return self.executes(self.input_args)
 
     def _find_new_axioms( self ) -> typ.List:
         new_axioms: list
