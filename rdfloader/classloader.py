@@ -169,10 +169,14 @@ class info_from_class_constructor:
                                                     class_constructor.__init__)
         else:
             constructor_annotations =inspect.get_annotations(class_constructor)
-        attr_to_annotation = { attr: (anno.to_uri_identifier() \
+        try:
+            attr_to_annotation = { attr: (anno.to_uri_identifier() \
                         if hasattr(anno, "to_uri_identifier")\
                         else rdflib.term.URIRef(anno.uri) )\
                         for attr, anno in constructor_annotations.items() }
+        except AttributeError as err:
+            raise TypeError("constructor hasnt the expected annotations", 
+                            class_constructor) from err
         assert all( hasattr( uritransformer, "find_objects" ) \
                         for uritransformer in attr_to_annotation.values() ), \
                         attr_to_annotation
