@@ -16,9 +16,29 @@ import os.path
 from . import test_src
 program_path = importlib.resources.files(test_src).joinpath( "myprogram.py" )
 program_uri = pathlib.Path(program_path).as_uri()
+evaluator_path = importlib.resources.files(test_src).joinpath("myevaluator.py")
+evaluator_uri = pathlib.Path(evaluator_path).as_uri()
+number_path = importlib.resources.files(test_src).joinpath("number")
+number_uri = pathlib.Path(number_path).as_uri()
 
 
 class TestProgramloader( unittest.TestCase ):
+    def test_evaluator(self):
+        g = rdflib.Graph().parse( format="ttl", data=f"""
+            @prefix asdf: <http://example.com/> .
+            @prefix proloa: <http://example.com/programloader/> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            <{evaluator_uri}> a proloa:program ;
+                proloa:hasArgument _:1 .
+            _:1 proloa:id "--savefile" ;
+                a proloa:arg .
+
+            asdf:meinBefehl proloa:executes <{program_uri}> ;
+                a proloa:app ;
+                _:1 <{number_uri}>.
+            <{number_uri}> a proloa:link .
+        """)
+
     def test_simple( self ):
         g = rdflib.Graph().parse( format="ttl", data=f"""
             @prefix asdf: <http://example.com/> .
