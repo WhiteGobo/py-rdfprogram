@@ -7,6 +7,7 @@ program = URIRef( f"{BASE}program" )
 """Class of a executable program.
 Possible inputarguments are described via hasArgument
 """
+evaluator = URIRef(f"{BASE}evaluator")
 hasArgument = URIRef( f"{BASE}hasArgument")
 """Target arg of this property describes the inputargument of a program."""
 arg = URIRef( f"{BASE}arg" )
