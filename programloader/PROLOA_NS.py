@@ -37,6 +37,10 @@ describedBy = URIRef( f"{BASE}describedBy" )
 """Target mutable_resource by this property describes the resource
 used of this node.
 """
+declaresInfoLike = URIRef(f"{BASE}declaresInfoLike")
+"""Target mutable_resource by this property describes new information
+about the resource after the program was succesfully executed
+"""
 executes = URIRef( f"{BASE}executes" )
 """Target program by this property is executed in place of the app.
 """

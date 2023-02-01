@@ -12,6 +12,7 @@ def get_args():
     return args
 
 def main(loadfile):
+    print( "brubru" )
     pass
 
 if __name__=="__main__":

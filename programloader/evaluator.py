@@ -10,6 +10,7 @@ import os
 import mimetypes
 import itertools as it
 import sys
+import rdflib
 from . import PROLOA_NS
 from rdfloader import extension_classes as extc
 
@@ -44,10 +45,12 @@ class _iri_repr_class:
 
 
 class evaluator(_iri_repr_class):
-    def __init__(self, iri, app_args, program_container:_program ):
+    def __init__(self, iri, app_args, program_container:_program, needed_axioms, new_axioms ):
         self.iri = iri
         self.app_args = app_args
         self.program_container = program_container
+        self.needed_axioms = needed_axioms
+        self.new_axioms = new_axioms
 
     @classmethod
     def from_rdf(cls, iri,
@@ -63,9 +66,39 @@ class evaluator(_iri_repr_class):
                 programcontainer = python_program_container(filepath)
         else:
             raise NotImplementedError("only scheme file is implemented")
-        return cls(iri, app_args, programcontainer)
 
-    def __call__(self, input_args: typ.Dict):
+
+        return cls(iri, app_args, programcontainer, needed_axioms, new_axioms)
+
+    def __call__(self, input_args: typ.Dict, not_needed_node_translator, 
+                 default_existing_resources):
+        node_translator = self._inputargs_to_nodetranslator(input_args)
+
+        args, kwargs = self._inputargs_to_programinput(input_args)
+        try:
+            returnstring = self.program_container(*args, **kwargs)
+        except ProgramFailed as err:
+            returnstring = err.args[0]
+            new_axiom = []
+            return returnstring, new_axiom
+        new_axioms = self._find_new_axioms(returnstring, input_args, 
+                                           node_translator)
+        raise NotImplementedError("find new axioms")
+
+    def _find_new_axioms(self, returnstring, input_args, mutable_to_target):
+        new_axioms = []
+        try:
+            g = rdflib.Graph().parse(data=returnstring)
+            new_axioms.extend( g )
+        except rdflib.exceptions.ParserError:
+            pass
+        new_axioms.extend(tuple(mutable_to_target.get(x,x) for x in axiom)
+                      for axiom in self.new_axioms)
+        return new_axioms
+
+
+    def _inputargs_to_programinput(self, input_args) \
+            -> (list[str], dict[str, str]):
         kwargs, args = {},{}
         for arg, val in input_args.items():
             try:
@@ -77,8 +110,25 @@ class evaluator(_iri_repr_class):
                     raise TypeError(arg, arg.id)
             except (AttributeError, TypeError) as err:
                 raise TypeError(input_args) from err
-        args = [args[x] for x in sorted(args.keys())]
-        return self.program_container(*args, **kwargs)
+
+        return [args[x] for x in sorted(args.keys())], kwargs
+
+    def _inputargs_to_nodetranslator(self, input_args):
+        node_to_target = {}
+        for x, target in input_args.items():
+            try:
+                x.example_node
+            except AttributeError:
+                continue
+            try:
+                node_to_target[x.example_node.iri] = target.iri 
+            except AttributeError as err:
+                if isinstance(target, (str, float, int)):
+                    node_to_target[x.example_node.iri] = rdflib.Literal(target)
+                else:
+                    raise Exception("expected object with iri or str, "
+                                    "float, int" ) from err
+        return node_to_target
 
 
 class python_program_container(_program):
@@ -101,8 +151,8 @@ class python_program_container(_program):
             asdf = q.check_returncode()
             program_return_str = q.stdout.decode()
         except subprocess.CalledProcessError as err:
-            print(f"failed to execute {self.filepath}", file=sys.stderr)
-            print(q.stderr.decode(), file=sys.stderr)
-            raise ProgramFailed(self.filepath) from err
+            #print(f"failed to execute {self.filepath}", file=sys.stderr)
+            #print(q.stderr.decode(), file=sys.stderr)
+            raise ProgramFailed(q.stdout.decode()) from err
         return program_return_str
 

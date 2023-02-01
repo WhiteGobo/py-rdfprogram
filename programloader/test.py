@@ -34,7 +34,7 @@ input_dict = {\
         }
 
 class TestProgramloader( unittest.TestCase ):
-    @unittest.skip("first change simple")
+    #@unittest.skip("first change simple")
     def test_evaluator(self):
         g = rdflib.Graph().parse( format="ttl", data=f"""
             @prefix asdf: <http://example.com/> .
@@ -46,12 +46,14 @@ class TestProgramloader( unittest.TestCase ):
             _:1 proloa:id 0;
                 rdfs:comment "loadfile" ;
                 a proloa:arg ;
-                proloa:describedBy [a proloa:mutable_resource].
+                proloa:describedBy [a proloa:mutable_resource];
+                proloa:declaresInfoLike [a proloa:mutable_resource].
 
             asdf:meinBefehl proloa:executes <{evaluator_uri}> ;
                 a proloa:app ;
                 _:1 <{number_uri}>.
             <{number_uri}> a proloa:link .
+
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
@@ -126,5 +128,5 @@ class TestProgramloader( unittest.TestCase ):
 
 
 if __name__=="__main__":
-    logging.basicConfig( level=logging.WARNING )
+    logging.basicConfig( level=logging.DEBUG )
     unittest.main()

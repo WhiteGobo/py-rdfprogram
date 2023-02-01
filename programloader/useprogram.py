@@ -92,6 +92,7 @@ class program_python(program, _iri_repr_class):
                 mytarget.was_created()
             except AttributeError:
                 pass
+
         kwargs, args = {},{}
         for arg, val in input_args.items():
             if isinstance(arg.id, str):
@@ -184,7 +185,8 @@ class arg(_iri_repr_class):
     example_node: mutable_resource
 
     def __init__( self, iri, id: extc.info_attr( PROLOA_NS.id ), 
-                 example_node: extc.info_attr( PROLOA_NS.describedBy ) ):
+                 example_node: extc.info_attr( PROLOA_NS.describedBy ),
+                 generated_node: extc.info_attr( PROLOA_NS.declaresInfoLike, needed=True )=None ):
         self.iri = iri
         assert isinstance(id, (str, int)), type(id)
         self.id = id
