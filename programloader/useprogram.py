@@ -83,8 +83,15 @@ class program_python(program, _iri_repr_class):
         self.iri = iri
         self.filepath = filepath
         self.app_args = app_args
+        self._axioms = self._find_all_axioms()
 
-    def __call__(self, input_args) -> str:
+    def __call__(self, input_args, node_translator, 
+                 default_existing_resources) -> str:
+        for mytarget in input_args.values():
+            try:
+                mytarget.was_created()
+            except AttributeError:
+                pass
         kwargs, args = {},{}
         for arg, val in input_args.items():
             if isinstance(arg.id, str):
@@ -92,7 +99,10 @@ class program_python(program, _iri_repr_class):
             else:
                 args[arg.id] = val
         args = [args[x] for x in sorted(args.keys())]
-        return self._exe( *args, **kwargs )
+        returnstring = self._exe( *args, **kwargs )
+
+        new_axioms = self._find_new_axioms(input_args, default_existing_resources, node_translator)
+        return returnstring, new_axioms
 
     def _exe(self, *args, **kwargs):
         commandarray = ["python", str(self.filepath)]
@@ -110,6 +120,51 @@ class program_python(program, _iri_repr_class):
             print( q.stderr.decode(), file=sys.stderr )
             raise Exception( "failed to execute program" ) from err
         return program_return_str
+
+    def _find_new_axioms(self, input_args, default_existing_resources, 
+                         mutable_to_target) -> typ.List:
+        """
+    
+        :param mutable_to_target: translation of the mutable resources to
+            the real inputs of the program
+        :param input_args: Map of the args to the inputs
+        :type input_args: typ.Dict[arg, (str, int, float, resource_link)]
+        """
+        new_axioms: list
+        existing_resources = list(default_existing_resources)
+        updated_resources = []
+        for mytarget in input_args.values():
+            try:
+                mytarget.update_change
+            except AttributeError:
+                continue
+            if mytarget.update_change():
+                updated_resources.append(mytarget.iri)
+                existing_resources.append(mytarget.iri)
+        for mytarget in input_args.values():
+            try:
+                if mytarget.exists():
+                    existing_resources.append(mytarget.iri)
+            except AttributeError:
+                #is added to default_exisitin_resources in __init__
+                pass
+        all_axioms = [tuple(mutable_to_target.get(x,x) for x in axiom)
+                      for axiom in self._axioms]
+        new_axioms = [ax 
+                      for ax in all_axioms
+                      if any(x in updated_resources for x in ax) 
+                      and all(x in existing_resources for x in ax)]
+        return new_axioms
+
+    def _find_all_axioms(self):
+        axioms = []
+        for x in self.app_args:
+            try:
+                x.example_node.info
+            except AttributeError:
+                continue
+            axioms.extend([axiom for axiom in x.example_node.info])
+        return axioms
 
 
 class arg(_iri_repr_class):
@@ -148,6 +203,9 @@ class app(_iri_repr_class):
         app is executed
     :type executes: newuseprogram.program
     """
+    node_translator: typ.Dict
+    """Translation of the mutable resources to the resources used in this app
+    """
     def __init__( self, iri, \
             input_args: extc.info_custom_property( PROLOA_NS.arg ),\
             executes: extc.info_attr( PROLOA_NS.executes ), \
@@ -159,10 +217,14 @@ class app(_iri_repr_class):
         self.iri = iri
         self.executes = executes
         self.input_args = input_args
-        self._axioms, self._default_existing_resources \
+        self._default_existing_resources, self.node_translator \
                 = self._find_all_axioms_and_existing_nodes()
 
     def _find_all_axioms_and_existing_nodes(self):
+        """
+
+        :TODO: maybe move default_existing_resources to program
+        """
         node_to_target = {}
         default_existing_resources = set()
         for x, target in self.input_args.items():
@@ -178,62 +240,30 @@ class app(_iri_repr_class):
                     default_existing_resources.add(rdflib.Literal(target))
                 else:
                     raise Exception("expected object with iri or str, "
-                                    "flow, int" ) from err
-        axioms = []
+                                    "float, int" ) from err
         for x in self.input_args.keys():
             try:
                 x.example_node.info
             except AttributeError:
                 continue
-            axioms.extend([tuple(node_to_target.get(x,x) for x in axiom)
-                                 for axiom in x.example_node.info])
             for axiom in x.example_node.info:
                 for n in axiom:
                     if n not in node_to_target:
                         default_existing_resources.add(n)
-        return axioms, default_existing_resources
+        return default_existing_resources, node_to_target
 
 
     def __call__( self ) -> (str, typ.List):
-        for mytarget in self.input_args.values():
-            try:
-                mytarget.was_created()
-            except AttributeError:
-                pass
-        rvalue = self._execute_program()
-        new_axioms = self._find_new_axioms()
+        rvalue, new_axioms = self.executes(self.input_args, \
+                self.node_translator, self._default_existing_resources)
         return rvalue, new_axioms
 
-    def _execute_program( self ) -> str:
-        return self.executes(self.input_args)
+class resource_link(abc.ABC):
+    @abc.abstractmethod
+    def update_change(self) -> bool:
+        pass
 
-    def _find_new_axioms( self ) -> typ.List:
-        new_axioms: list
-        existing_resources = list(self._default_existing_resources)
-        updated_resources = []
-        for mytarget in self.input_args.values():
-            try:
-                mytarget.update_change
-            except AttributeError:
-                continue
-            if mytarget.update_change():
-                updated_resources.append(mytarget.iri)
-                existing_resources.append(mytarget.iri)
-        for mytarget in self.input_args.values():
-            try:
-                if mytarget.exists():
-                    existing_resources.append(mytarget.iri)
-            except AttributeError:
-                #is added to default_exisitin_resources in __init__
-                pass
-        new_axioms = [ax 
-                      for ax in self._axioms 
-                      if any(x in updated_resources for x in ax) 
-                      and all(x in existing_resources for x in ax)]
-        return new_axioms
-
-
-class filelink(_iri_repr_class):
+class filelink(_iri_repr_class): #also resource_link but that doesnt work
     """This object is an interface for files. So if a program has to work
     on or with a file, this object enables this.
 
