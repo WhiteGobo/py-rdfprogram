@@ -66,6 +66,14 @@ class TestRDFLoader( unittest.TestCase ):
 
 
     def test_skipattribute(self):
+        #g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
+        #    <1> a <{testinfo.obj5}> .
+        #    <1> <{testinfo.prop1}> <2> .
+        #    <2> a <{testinfo.obj2}> .
+        #""")
+        #qwe = rl.load_from_graph( testinfo.input_dict, g )
+        #self.assertEqual(set(g.subjects()), set(qwe.keys() ))
+
         g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
             <1> a <{testinfo.obj5}> .
         """)
