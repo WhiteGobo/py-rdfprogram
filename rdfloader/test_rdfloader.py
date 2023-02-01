@@ -65,6 +65,14 @@ class TestRDFLoader( unittest.TestCase ):
         self.assertEqual( set(wanted_resources), set(qwe.keys() ))
 
 
+    def test_skipattribute(self):
+        g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
+            <1> a <{testinfo.obj5}> .
+        """)
+        qwe = rl.load_from_graph( testinfo.input_dict, g )
+        self.assertEqual(set(g.subjects()), set(qwe.keys() ))
+
+
     def test_dependencyskip( self ):
         """Tries to load objects, where the dependencies are not loadable \
         <3> is not loadable and <2> requires <3> as input
