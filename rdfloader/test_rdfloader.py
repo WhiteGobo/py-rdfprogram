@@ -52,6 +52,18 @@ class TestRDFLoader( unittest.TestCase ):
         self.assertEqual( qwe[ rdflib.URIRef("http://example.com/1") ][0].val,
                          qwe[rdflib.URIRef("http://example.com/2") ][0] )
 
+        #Test that load_from_graph only loads wanted_resources
+        g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
+            <1> a <{testinfo.obj2}> .
+            <2> a <{testinfo.obj2}>.
+        """)
+        wanted_resources = [
+                                rdflib.URIRef("http://example.com/1"),
+                                #rdflib.URIRef("http://example.com/2"),
+                                ]
+        qwe = rl.load_from_graph( testinfo.input_dict, g, wanted_resources )
+        self.assertEqual( set(wanted_resources), set(qwe.keys() ))
+
 
     def test_dependencyskip( self ):
         """Tries to load objects, where the dependencies are not loadable \
@@ -101,14 +113,6 @@ class TestRDFLoader( unittest.TestCase ):
         #                 qwe[rdflib.URIRef("http://example.com/2") ][0] )
         self.assertEqual( set(g.subjects()), set(qwe.keys() ) )
 
-        g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
-            <1> a <{testinfo.obj4}> .
-            <1> <{testinfo.prop1}> <2> .
-            <2> a <{testinfo.obj4}>.
-            <2> <{testinfo.prop1}> <1> .
-        """)
-        qwe = rl.load_from_graph( testinfo.input_dict, g )
-        self.assertEqual( set(g.subjects()), set(qwe.keys() ) )
         a = qwe[ rdflib.URIRef("http://example.com/1") ][0]
         b = qwe[ rdflib.URIRef("http://example.com/2") ][0]
         self.assertEqual( a.val, b )
@@ -226,6 +230,7 @@ class testinfo:
     obj2 = rdflib.URIRef( "a://object2" )
     obj3 = rdflib.URIRef( "a://object3" )
     obj4 = rdflib.URIRef( "a://object4" )
+    obj5 = rdflib.URIRef( "a://object5" )
     any_prop_obj = any_prop_obj
     has_bnode_property_obj = rdflib.URIRef( "a://hasbnode_object" )
     #prop1 = rdflib.URIRef( "a://property1" )
@@ -264,7 +269,14 @@ class testinfo:
             if not all( isinstance( x, (base, int, str, float) ) for x in self.val3 ):
                 raise TypeError( self.val3, )
     class D( base ):
-        def __init__( self, uri, val: ext.info_attr( prop1, needed=True )=None):
+        def __init__( self, uri, val: ext.info_attr(prop1, needed=True) = None):
+            self.uri = uri
+            if val is not None:
+                self.val = val
+                if not isinstance( self.val, (base, int, str, float) ):
+                    raise TypeError( self.val )
+    class E( base ):
+        def __init__( self, uri, val: ext.info_attr(prop1, needed=False)):
             self.uri = uri
             if val is not None:
                 self.val = val
@@ -284,6 +296,7 @@ class testinfo:
             obj2: B,
             obj3: C,
             obj4: D,
+            obj5: E,
             any_prop_obj: any_prop_class,
             has_bnode_property_obj: has_bnode_property,
             property_type: empty,
