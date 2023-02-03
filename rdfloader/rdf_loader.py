@@ -208,25 +208,6 @@ def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
         yield constructor, attr_to_uri, infoobject, new_objects
 
 
-
-def _find_needed_but_not_generatable_resources( uri_to_construct, \
-                                                construct_with_attr_to_uri, ):
-    raise NotImplementedError("Seems to not work anymore")
-    all_generatable_objects = set( x.uri for x \
-                        in it.chain.from_iterable( uri_to_construct.values()))
-    logger.debug( "List of all used constructs: %s" %(all_generatable_objects))
-    dependencies = [ y \
-                        for y in it.chain.from_iterable( x.values() \
-                        for x in construct_with_attr_to_uri.values()
-                        ) if type(y) != rdflib.term.Literal ]
-    all_single_dependencies = set( it.chain.from_iterable( \
-                                [x] if type(x) == rdflib.term.URIRef \
-                                else x for x in dependencies ) )
-    needed_but_not_generatable = [str(i) for i in all_single_dependencies \
-                                if str(i) not in all_generatable_objects ]
-    return needed_but_not_generatable
-
-
 def parse_rdfresources(rdf_sources, uri_to_constructor, execute_reasoner=None)\
         -> rdflib.Graph:
     """
@@ -268,55 +249,6 @@ def reason_resource_has_property( uri_main, uri_prop, rdf_graph ):
 def reason_whatis_class( uri_main, rdf_graph ):
     logger.debug( "reason_whatis_class not implemented" )
     return rdf_graph
-
-
-
-
-def _get_creationinfo( g: rdflib.Graph, \
-                        uri_to_constructor: typ.Dict[ str, typ.Callable ],\
-                        old_constructed_complexes: list[ _complex ] = []):
-    """
-
-    :returns: For each differentiable generatable construct, this method
-            yields:
-                - URI
-                - constructor-method
-                - pre-initializaion needed other URIs
-                - post-initialization needed other URIs
-                - attributename of the constructor and the generated 
-                    object to used URIs
-    :rtype: Iterable[ (uri, callable, list[uri], list[uri], dict[ str, uri ] )]
-    """
-    raise Exception()
-    get_all_of_type = lambda x: ( uri_resource for uri_resource,_,_ \
-                        in g.triples((None, URI_type, rdflib.term.URIRef( x))))
-    for uri_main, constructor in uri_to_constructor.items():
-        for uri_resource in get_all_of_type( uri_main ):
-            if _complex(uri_resource,constructor) in old_constructed_complexes:
-                continue
-            try:
-                infoobject = _ObjectfromUri_generator.from_class_constructor( \
-                                                                constructor)
-                attr_to_uri =infoobject.process_argument_info( uri_resource, g)
-                pre = infoobject.pre_needed_attributes
-                post = infoobject.post_needed_attributes
-                missing = tuple(filter( lambda x: x not in attr_to_uri, \
-                                        it.chain( pre, post )))
-                if missing:
-                    logger.info( f"missing Uris {missing} to {uri_resource} "\
-                                    f"with {constructor}" )
-                    continue
-            #        raise MissingNeededUris( missing )
-            #except MissingNeededUris as err:
-            #    logger.info( f"missing Uris {err.missing} to {uri_resource} "\
-            #                   f"with {constructor}" )
-            #    continue
-            except MultipleUrisToSingleAttribute as err:
-                logger.warning( f"multiple property-uris {err.attribute}: "\
-                                f"{err.found_properties} found to "\
-                                f"{uri_resource} with {constructor}" )
-                continue
-            yield uri_resource, constructor, pre, post, attr_to_uri
 
 
 class _urimapper( collections.abc.MutableMapping ):
