@@ -141,12 +141,20 @@ class info_from_class_constructor:
             post_needed_attributes, \
             optional_attributes, \
             class_constructor, \
+            needed_token, \
+            at_generation_token, \
             ):
+        """
+
+        :TODO: Remove pre_needed_attributes and post_needed_attributes
+        """
         self.attr_from_uri = attr_from_uri
         self.pre_needed_attributes = pre_needed_attributes
         self.post_needed_attributes = post_needed_attributes
         self.optional_attributes = optional_attributes
         self.class_constructor = class_constructor
+        self.needed_token = needed_token
+        self.at_generation_token = at_generation_token
 
 
     @classmethod
@@ -180,8 +188,28 @@ class info_from_class_constructor:
         assert all( hasattr( uritransformer, "find_objects" ) \
                         for uritransformer in attr_to_annotation.values() ), \
                         attr_to_annotation
-        needed_token = [attr for attr, anno in constructor_annotations.items()\
-                            if anno.needed ]
+        attr_and_info_iter = iter( sig.parameters.items() )
+        try:
+            attr1, _ = attr_and_info_iter.__next__()
+            #attr2, _ = attr_and_info_iter.__next__() #filters ontology
+        except StopIteration as err:
+            raise TypeError( f"Given constructor {class_constructor} doesnt "
+                            "comply to Uri_to_python_constructor" ) from err
+        needed_token = []
+        at_generation_token = []
+        for attr, info in attr_and_info_iter:
+            anno = constructor_annotations[attr]
+            if info.default == inspect._empty:
+                needed_token.append( attr )
+                at_generation_token.append(attr)
+            elif anno.needed:
+                needed_token.append(attr)
+            elif anno.at_generation:
+                at_generation_token.append(attr)
+        #needed_token = [attr for attr, anno in constructor_annotations.items()\
+        #                    if anno.needed]
+        #at_generation_token = [attr for attr, anno in constructor_annotations.items()\
+        #                    if anno.at_generation]
         is_preneeded = lambda x: x.default == inspect._empty \
                         and x.kind \
                         in (P.POSITIONAL_ONLY, P.POSITIONAL_OR_KEYWORD)
@@ -220,7 +248,8 @@ class info_from_class_constructor:
                 pre_needed_attributes, \
                 post_needed_attributes, \
                 optional_attributes, \
-                class_constructor )
+                class_constructor,\
+                needed_token, at_generation_token)
 
 class ObjectfromUri_generator(argument_processor, info_from_class_constructor):
     pre_needed_attributes: typ.Final[ str ]

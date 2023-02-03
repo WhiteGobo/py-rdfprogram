@@ -78,7 +78,7 @@ class TestRDFLoader( unittest.TestCase ):
             <1> a <{testinfo.obj5}> .
         """)
         qwe = rl.load_from_graph( testinfo.input_dict, g )
-        self.assertEqual(set(g.subjects()), set(qwe.keys() ))
+        self.assertEqual(set(g.subjects()), set(qwe.keys()))
 
 
     def test_dependencyskip( self ):

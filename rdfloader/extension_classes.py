@@ -23,7 +23,15 @@ class constructor_annotation( abc.ABC ):
     uri: str
     """This might not be nneded anymore"""
     needed: bool
-    """This option specifies if there must exist a resource to the attribute"""
+    """Resources can be optional or needed. If the attribute has a
+    default value, the resource is always needed and this option
+    will be ignored.
+    """
+    at_generation: bool
+    """If the resource has a default value and the resource is not needed,
+    this option specifies, if the resource can be set after the creation.
+    In any other case, this option will be ignored
+    """
 
     # to_uri_identifier seems optional as long as uri is provided
     #@abc.abstractmethod
@@ -84,11 +92,13 @@ class info_anyprop(constructor_annotation):
     :type ignore_axioms: list[(IRI, IRI)]
     """
     needed=True
-    def __init__(self, ignore_uris: typ.List[rdflib.IdentifiedNode], \
-            ignore_axioms: typ.List[typ.Tuple[rdflib.IdentifiedNode, rdflib.IdentifiedNode]]):
+    def __init__(self, ignore_uris: typ.List[rdflib.IdentifiedNode], 
+                 ignore_axioms: typ.List[typ.Tuple[rdflib.IdentifiedNode, rdflib.IdentifiedNode]],
+                 at_generation = False):
         self._axioms=None
         self.ignore_axioms = ignore_axioms
         self.ignore_uris = list(ignore_uris)
+        self.at_generation = at_generation
         assert all(isinstance(x, rdflib.IdentifiedNode) \
                 for x in self.ignore_uris)
 
@@ -137,6 +147,7 @@ class info_attr_list( constructor_annotation ):
     """
     uri: str
     needed: bool = True
+    at_generation: bool = False
 
     def __repr__(self):
         name = ".".join((type(self).__module__, type(self).__name__))
@@ -186,6 +197,7 @@ class info_attr( constructor_annotation ):
     """
     uri: str
     needed: bool = False
+    at_generation: bool = False
     def to_uri_identifier( self ):# -> URI_IDENTIFIER:
         return self
 
@@ -244,6 +256,7 @@ class info_custom_property( constructor_annotation  ):
     """
     uri: str
     needed = False
+    at_generation = False
     def to_uri_identifier( self ):# -> URI_IDENTIFIER:
         return self
 
