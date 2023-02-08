@@ -38,13 +38,39 @@ class MissingPreUri( KeyError ):
 
 
 class argument_processor:
+    """class to process the annoatations of the constructor
+
+    :var attr_from_uri: Mapping
+    :var attr_to_uri: lasdf
+    :var possible_dependencies: dependencies as resources
+    :var pre_needed_resources: dependencies of resources at generation
+    """
     attr_from_uri: typ.Final[ typ.Dict[ str, constructor_annotation ] ]
+    """Mapping of attributes of this object to a resource identifier,
+    that are used. This might be not correct anymore, because input will be
+    generated directly by the annotations
+    """
 
     uri_main: str
-    attr_to_uri: typ.Dict[str, object]
-    possible_dependencies: list[ rdflib.IdentifiedNode ]
-    pre_needed_resources: typ.Final[ set[ rdflib.IdentifiedNode ] ]
+    """identifier of the resource"""
 
+    attr_to_uri: typ.Dict[str, object]
+    """Mapping of attribute to the used python object"""
+    possible_dependencies: list[ rdflib.IdentifiedNode ]
+    """List of other resources, needed as pythonobject"""
+    pre_needed_resources: typ.Final[ set[ rdflib.IdentifiedNode ] ]
+    """List of other resources, that are needed as pythonobjects
+    at the time of generation of this object
+    """
+
+    def __str__(self):
+        name = type(self).__name__
+        return f"<{name}:{self.uri_main}>"
+
+    def __repr__(self):
+        name = type(self).__name__
+        constructor_name = self.class_constructor.__name__
+        return f"<{name}:{self.uri_main}:{constructor_name}>"
 
     def process_argument_info( self, uri_main, rdf_graph ):
         """Returns a dictionary that maps the arguments of constructor

@@ -15,6 +15,7 @@ from . import extension_classes as ext
 import logging
 import rdflib
 from . import RDF
+from . import classloader_objectcreator as cloc
 
 class TestRDFLoader( unittest.TestCase ):
 
@@ -285,12 +286,25 @@ class testinfo:
             if not all( isinstance( x, (base, int, str, float) ) for x in self.val3 ):
                 raise TypeError( self.val3, )
     class D( base ):
-        def __init__( self, uri, val: ext.info_attr(prop1, needed=True) = None):
+        def __init__(self, uri, val: ext.info_attr(prop1, needed=True) = None):
             self.uri = uri
             if val is not None:
                 self.val = val
-                if not isinstance( self.val, (base, int, str, float) ):
-                    raise TypeError( self.val )
+
+        def _set_val(self, val):
+            if not isinstance( val, (base, int, str, float) ):
+                raise Exception(val)
+                raise TypeError(val)
+            self._val = val
+
+        def _get_val(self):
+            try:
+                return self._val
+            except AttributeError:
+                return None
+
+        val = property(fget=_get_val, fset=_set_val)
+
     class E( base ):
         def __init__( self, uri, val: ext.info_attr(prop1, needed=False)):
             self.uri = uri

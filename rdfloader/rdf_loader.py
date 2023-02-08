@@ -73,7 +73,9 @@ myConstructor = typ.Callable
 
 """
 
-def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
+from .classloader_objectcreator import load_from_graph
+
+def load_from_graph_old( uri_to_constructor, rdf_graph, wanted_resources=None ):
     """Loads all IRIs in wanted_resources from the knowledgegraph described
     by rdf_graph as python-objects. The resources are depending on 
     uri_to_constructor loaded as python-objects. 
@@ -98,10 +100,10 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
                                 lambda x: isinstance(x, rdflib.URIRef) \
                                 and x not in uri_to_constructor, \
                                 rdf_graph.subjects() ) )
-    else:
-        wanted_resources = [ x if isinstance( x, rdflib.IdentifiedNode ) \
-                                else rdflib.URIRef(x) \
-                                for x in wanted_resources ]
+    #else:
+    #    wanted_resources = [ x if isinstance( x, rdflib.IdentifiedNode ) \
+            #                            else rdflib.URIRef(x) \
+            #                            for x in wanted_resources ]
     starting_wanted_resources = list(wanted_resources)
 
     assert all( isinstance( x, rdflib.IdentifiedNode) \
