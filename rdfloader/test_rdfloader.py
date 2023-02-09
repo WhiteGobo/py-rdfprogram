@@ -13,6 +13,7 @@ except ModuleNotFoundError:
 from . import extension_classes as ext
 
 import logging
+logger = logging.getLogger()
 import rdflib
 from . import RDF
 from . import classloader_objectcreator as cloc
@@ -86,6 +87,7 @@ class TestRDFLoader( unittest.TestCase ):
         """Tries to load objects, where the dependencies are not loadable \
         <3> is not loadable and <2> requires <3> as input
         """
+        logger.debug("first part")
         #This should fail because missing Resource to attribute
         with self.subTest( "asdf" ):
             g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
@@ -95,6 +97,7 @@ class TestRDFLoader( unittest.TestCase ):
             self.assertEqual( qwe, dict(), msg="Could load despite missing "\
                                                 "dependencies" )
 
+        logger.debug("second part")
         #<1> should be removed at the end of algorithm, because it couldnt
         #get any valid resource for attribute
         g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
@@ -103,8 +106,12 @@ class TestRDFLoader( unittest.TestCase ):
             <2> a <{testinfo.obj1}>.
         """)
         qwe = rl.load_from_graph( testinfo.input_dict, g )
+        self.assertTrue(rdflib.URIRef("http://example.com/2") not in qwe,
+                         msg=f"Loaded unloadable resource")
         self.assertEqual( qwe, dict(), msg="Could load despite missing "\
                                             "dependencies" )
+
+        logger.debug("third part")
         #<1> should be removed at the end of algorithm, because <2> got 
         #removed in the algorithm
         g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
@@ -306,7 +313,7 @@ class testinfo:
         val = property(fget=_get_val, fset=_set_val)
 
     class E( base ):
-        def __init__( self, uri, val: ext.info_attr(prop1, needed=False)):
+        def __init__( self, uri, val: ext.info_attr(prop1, needed=False)=None):
             self.uri = uri
             if val is not None:
                 self.val = val
