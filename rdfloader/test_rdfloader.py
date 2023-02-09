@@ -122,7 +122,7 @@ class TestRDFLoader( unittest.TestCase ):
             <3> a <{testinfo.obj1}>.
         """)
         qwe = rl.load_from_graph( testinfo.input_dict, g )
-        self.assertEqual( qwe, dict(), msg="Could load despite missing "\
+        self.assertEqual( set(qwe), set(), msg="Could load despite missing "\
                                             "dependencies" )
 
     def test_circledependency( self ):

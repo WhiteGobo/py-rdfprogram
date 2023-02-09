@@ -89,7 +89,6 @@ class argument_processor:
                         f"constructor for {uri_main} arent compatible to "
                         f"{constructor_annotation}" )
         self.uri_main = uri_main
-        logger.debug( f"Process: {uri_main}" )
         all_objects = {}
         for _, p, o in rdf_graph.triples((uri_main, None, None)):
             all_objects.setdefault( o, [] ).append(p)
@@ -113,7 +112,6 @@ class argument_processor:
         for attr, uri_prop in self.attr_from_uri.items():
             found_prop_objects = list( uri_prop.find_objects( \
                                                 rdf_graph, uri_main ))
-            logger.debug( f"found_prop_objects: {found_prop_objects}" )
             if len( found_prop_objects ) == 1:
                 self.attr_to_uri[ attr ] = found_prop_objects[0]
             elif len( found_prop_objects ) > 1:
@@ -323,23 +321,13 @@ class ObjectfromUri_generator(argument_processor, info_from_class_constructor):
             for q in it.permutations( posts, r=r ):
                 input_arguments = list( it.chain( pres, q ) )
                 #Workaround if input_arguments==[]:
-                try:
-                    tmp2 = list(asdf( input_arguments )) 
-                    #        if input_arguments else [[]]
-                except IndexError: #seems to be a relict
-                    continue
-                                
-                for myinput, used_objects in tmp2:
+                for myinput, used_objects in asdf( input_arguments ):
                     try:
                         newobj = self.class_constructor( self.uri_main, \
                                                         **myinput )
                     except TypeError as err:
                         logger.debug( "".join(traceback.format_exception(err)))
                         continue
-                    except Exception as err:
-                        raise
-                        raise Exception( myinput, input_objects, input_arguments, [arg_to_input(x) \
-                                    for x in input_arguments] ) from err
                     return newobj, dict( myinput ), set(used_objects)
         raise SkipAllCreation(pres, posts, uri_to_pythonobjects)
 

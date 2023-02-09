@@ -171,24 +171,16 @@ class info_attr_list( constructor_annotation ):
         return self
     def create_input_generator(self, rdf_graph, uri_subject):
         uri_list = iter(self.find_objects(rdf_graph, uri_subject)).__next__()
-        def input_generator(iri_to_pythonobjects):
+        def input_generator(iri_to_pythonobjectcontainers):
             possible_objects: list[list[object]] \
-                    = [iri_to_pythonobjects[x] for x in uri_list]
-            #assert all(possible_objects)
-            for x in it.product( *possible_objects ):
-                used_objects = set(it.compress( x, \
-                        (isinstance(u, rdflib.IdentifiedNode) \
-                        for u  in uri_list)))
-                yield x, used_objects
-        def input_generator_new(iri_to_pythonobjectcontainers):
-            possible_objects: list[list[object]] \
-                    = [iri_to_pythonobjects[x] for x in uri_list]
+                    = [iri_to_pythonobjectcontainers[x] for x in uri_list]
             #assert all(possible_objects)
             for obj_container_list in it.product( *possible_objects ):
                 used_objects = set(it.compress( obj_container_list, \
                         (isinstance(u, rdflib.IdentifiedNode) \
                         for u  in uri_list)))
                 object_list = [x.obj for x in obj_container_list]
+                #object_list = [x for x in obj_container_list]
                 yield object_list, used_objects
 
         return input_generator
@@ -226,12 +218,8 @@ class info_attr( constructor_annotation ):
                 except KeyError: #ends if uri has no possible objects
                     continue
                 for x in tmp:
-                    try:
-                        yield (x, [x])\
-                            if isinstance(node, rdflib.IdentifiedNode)\
-                            else (x, [])
-                    except Exception as err:
-                        raise Exception(x, iri_to_pythonobjectcontainers, tmp) from err
+                    #yield (x, [x])\
+                    yield (x.obj, [x])
         return input_generator
 
     def __repr__(self):
@@ -297,42 +285,16 @@ class info_custom_property( constructor_annotation  ):
             try:
                 for uri_to_obj in _get_combinations(uri_to_pythonobjects, \
                                 all_uris):
-                    try:
-                        asd = { uri_to_obj[key]: uri_to_obj[val] \
-                                for key, val in node_dict.items() }
-                        used_objects = set( uri_to_obj[tmp_uri] \
-                                for tmp_uri in it.chain( \
-                                node_dict.keys(), \
-                                node_dict.values()) \
-                                if isinstance( tmp_uri, rdflib.IdentifiedNode))
-                        #yield asd, list( it.chain( asd.keys(), asd.values() ))
-                        yield asd, used_objects
-                    except Exception as err:
-                        raise Exception( node_dict, uri_to_obj ) from err
-            except KeyError as err:
-                return #im not sure what to do best here
-                #because this function returns several possible inputs i
-                #feel save just to end this function here instead of
-                #doing something else
-
-        return input_generator
-        def input_generator(uri_to_pythonobjectcontainers):
-            all_uris = set( it.chain( node_dict.keys(), node_dict.values()))
-            try:
-                for uri_to_obj in _get_combinations(uri_to_pythonobjects, \
-                                all_uris):
-                    try:
-                        asd = { uri_to_obj[key].obj: uri_to_obj[val].obj \
-                                for key, val in node_dict.items() }
-                        used_objects = set( uri_to_obj[tmp_uri] \
-                                for tmp_uri in it.chain( \
-                                node_dict.keys(), \
-                                node_dict.values()) \
-                                if isinstance( tmp_uri, rdflib.IdentifiedNode))
-                        #yield asd, list( it.chain( asd.keys(), asd.values() ))
-                        yield asd, used_objects
-                    except Exception as err:
-                        raise Exception( node_dict, uri_to_obj ) from err
+                    #asd = { uri_to_obj[key]: uri_to_obj[val] \
+                    asd = { uri_to_obj[key].obj: uri_to_obj[val].obj \
+                            for key, val in node_dict.items() }
+                    used_objects = set( uri_to_obj[tmp_uri] \
+                            for tmp_uri in it.chain( \
+                            node_dict.keys(), \
+                            node_dict.values()) \
+                            if isinstance( tmp_uri, rdflib.IdentifiedNode))
+                    #yield asd, list( it.chain( asd.keys(), asd.values() ))
+                    yield asd, used_objects
             except KeyError as err:
                 return #im not sure what to do best here
                 #because this function returns several possible inputs i

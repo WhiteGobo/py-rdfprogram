@@ -125,7 +125,7 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
         :raises FailedCreation: If failing because missing resources, this
             exception will be raised
         """
-        uri_to_pythonobjects = { key:[x.obj for x in valuelist] for key, valuelist in iri_to_objectcontainers.items() }
+        #uri_to_pythonobjects = { key:[x.obj for x in valuelist] for key, valuelist in iri_to_objectcontainers.items() }
         assert not any(getattr(self, x, None) for x in ("obj", \
                 "needed_attributes", "addable", "added_attributes", \
                 "used_objects"))
@@ -139,7 +139,7 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
         logger.debug( F"Try creating {self.uri_main}" )
         try:
             self.obj, added_attr, used_objects = super().create_object( \
-                                uri_to_pythonobjects )
+                                iri_to_objectcontainers )
         except (cl.MissingPreUri, cl.SkipAllCreation) as err:
             #logger.debug( f"skipped, cause: {sys.exc_info()[0]} with " \
             #                   f"description: {sys.exc_info()[1]}" )
@@ -162,7 +162,7 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
 
         logger.debug( f"Created {self.obj}" )
         #uri_to_pythonobjects.setdefault( uri_object,[]).append( newobj )
-        logger.debug( f"Yet Created: {list(uri_to_pythonobjects)}" )
+        #logger.debug( f"Yet Created: {list(uri_to_pythonobjects)}" )
 
     def add_all_input_resources(self, uri_to_objects) -> bool:
         """Checks if available resources can be added and returns if all
@@ -185,7 +185,7 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
             logger.debug(f"try adding to {attr}")
             for val, dependencylist in self.attr_to_inputgenerator[attr](uri_to_objects):
                 try:
-                    setattr(self.obj, attr, val.obj )
+                    setattr(self.obj, attr, val )
                     logger.debug( f"for {self.obj} set attribute "\
                                     f"'{attr}' with '{val}'.")
                 except TypeError as err:
@@ -273,7 +273,7 @@ def _create_all_objects(constructlist: typ.List[object_creator]):
     logger.debug( f"All created: {iri_to_objectcontainers}" )
     ret = []
     deleted = []
-    logger.debug( f"missing dependencies for {to_add_something}")
+    logger.debug( f"deleting {to_add_something} for missing dependencies")
     for mylist in iri_to_objectcontainers.values():
         for generator in mylist:
             if generator not in to_add_something:
