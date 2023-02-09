@@ -179,7 +179,6 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
         dependencylist: typ.List[object_creator]
         val: object_creator
         attr: str
-        skipped = False
         done_something = False
 
         for attr in list(self.addable):
@@ -193,7 +192,6 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
                     logger.debug( f"skipped setting attribute "\
                                     f"'{attr}' with '{val}'. "\
                                     f"Cause: '{repr(err)}'")
-                    skipped = True
                     continue
                 #self.added_attributes[attr] = val
                 #tmp_container.added_attributes[ attr ] = val
@@ -202,9 +200,9 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
                 self.further_needed_attributes.remove(attr)
                 done_something = True
                 break
-        if skipped and done_something:
+        if self.addable and done_something:
             raise SkippedSomeInput()
-        elif skipped:
+        elif self.addable:
             raise SkippedEveryInput()
 
     def dependent_on_objects(self, objectcreator_list):
@@ -256,6 +254,7 @@ def _create_all_objects(constructlist: typ.List[object_creator]):
             iri_to_objectcontainers.setdefault(generator.uri_main, []).append(generator)
             to_add_something.append(generator)
             done_something = True
+        print( "toadd something: ",to_add_something )
         for generator in tuple(to_add_something):
             logger.debug(f"Adding all missing to {generator}")
             try:
@@ -270,6 +269,7 @@ def _create_all_objects(constructlist: typ.List[object_creator]):
             logger.debug( f"everything added")
             to_add_something.remove(generator)
             done_something = True
+        print( "after: to add something: ",to_add_something )
     logger.debug( f"All created: {iri_to_objectcontainers}" )
     ret = []
     deleted = []
@@ -388,12 +388,12 @@ def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
         return
     assert isinstance( target_resource, (rdflib.URIRef, rdflib.BNode) )
     for _,_,x in g.triples((target_resource, RDF.a, None)):
-        logger.debug( f"find to {target_resource} the type {x}" )
         try:
             constructor = uri_to_constructor[x]
         except KeyError:
-            logger.warning( f"skip {target_resource} cause no constructor to type {x}" )
+            logger.warning( f"skip to {target_resource} the type {x}, cause no constructor" )
             continue
+        logger.debug(f"Create via {constructor}")
         infoobject = object_creator.from_class_constructor(constructor)
         infoobject.process_argument_info(target_resource, g)
         missing = infoobject.get_any_missing()
