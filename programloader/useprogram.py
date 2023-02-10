@@ -186,7 +186,7 @@ class arg(_iri_repr_class):
 
     def __init__( self, iri, id: extc.info_attr( PROLOA_NS.id ), 
                  example_node: extc.info_attr( PROLOA_NS.describedBy ),
-                 generated_node: extc.info_attr( PROLOA_NS.declaresInfoLike, needed=True )=None ):
+                 generated_node: extc.info_attr( PROLOA_NS.declaresInfoLike, needed=False )=None ):
         self.iri = iri
         assert isinstance(id, (str, int)), type(id)
         self.id = id
