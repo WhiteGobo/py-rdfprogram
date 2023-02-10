@@ -82,7 +82,7 @@ class evaluator(_iri_repr_class):
                 needed_axioms.extend([axiom for axiom in x.example_node.info])
                 new_axioms.extend([axiom for axiom in x.generated_node.info])
             except AttributeError as err:
-                raise TypeError("All args need example_node and generated_node")
+                raise TypeError("Args need example_node and generated_node")
         return cls(iri, app_args, programcontainer, needed_axioms, new_axioms)
 
     def __call__(self, input_args: typ.Dict, not_needed_node_translator, 
