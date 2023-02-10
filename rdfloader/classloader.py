@@ -36,6 +36,8 @@ class MissingPreUri( KeyError ):
     def __init__( self, preuri, *args, **kwargs ):
         super().__init__( preuri, *args, **kwargs )
 
+class MissingPrerequisites(Exception):
+    pass
 
 class argument_processor:
     """class to process the annoatations of the constructor
@@ -54,7 +56,7 @@ class argument_processor:
     uri_main: str
     """identifier of the resource"""
 
-    attr_to_uri: typ.Dict[str, object]
+    attr_to_uri: typ.Dict[str, rdflib.IdentifiedNode]
     """Mapping of attribute to the used python object"""
     possible_dependencies: list[ rdflib.IdentifiedNode ]
     """List of other resources, needed as pythonobject"""
@@ -79,9 +81,7 @@ class argument_processor:
         self.possible_dependencies
         self.pre_needed_resources
 
-        :todo: remove as described in code
-        :todo: write logging for unused axioms
-        :todo: rewrite typecontrol to assertion instead
+        :TODO: remove attr_to_uri
         """
         if not all( hasattr(x, "find_objects") \
                 for x in self.attr_from_uri.values()):
@@ -122,6 +122,14 @@ class argument_processor:
             self.possible_dependencies.update(asf)
             if attr in self.pre_needed_attributes:
                 self.pre_needed_resources.update(asf)
+
+
+        missing = tuple(filter( lambda x: x not in self.attr_to_uri, \
+                                it.chain( self.pre_needed_attributes, \
+                                self.post_needed_attributes )))
+        if missing:
+            raise MissingPrerequisites("Missing", missing)
+
         return self.attr_to_uri
 
 

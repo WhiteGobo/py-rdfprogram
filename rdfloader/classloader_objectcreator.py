@@ -62,10 +62,6 @@ class abc_creator(abc.ABC):
         """
         pass
 
-    @abc.abstractmethod
-    def get_any_missing(self):
-        pass
-
 
 class literal_creator(abc_creator):
     possible_dependencies = []
@@ -87,9 +83,6 @@ class literal_creator(abc_creator):
 
     def add_all_input_resources(self, uri_to_objects):
         return
-
-    def get_any_missing(self):
-        return []
 
 class object_creator(cl.ObjectfromUri_generator, abc_creator):
     """Contains all information for rdf_loader.load_from_graph
@@ -216,21 +209,6 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
             of the given object_containers
         """
         return any( x in self.used_objects for x in objectcreator_list )
-
-    def get_any_missing(self):
-        return []
-        pre = infoobject.pre_needed_attributes
-        post = infoobject.post_needed_attributes
-        attr_to_uri = infoobject.attr_to_uri
-        missing = tuple(filter( lambda x: x not in attr_to_uri, \
-                                it.chain( pre, post )))
-        if missing:
-            logger.info( f"skip {target_resource} with {constructor} "
-                            f"cause missing input for attribute {missing}" )
-        new_objects = infoobject.possible_dependencies
-        #new_objects = list(attr_to_uri.values())
-        assert all( isinstance( x, (rdflib.IdentifiedNode, rdflib.Literal) ) for x in new_objects ), new_objects
-        #yield constructor, attr_to_uri, infoobject, new_objects
 
 
 def _create_all_objects(constructlist: typ.List[object_creator]):
@@ -395,10 +373,9 @@ def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
             continue
         logger.debug(f"Create via {constructor}")
         infoobject = object_creator.from_class_constructor(constructor)
-        infoobject.process_argument_info(target_resource, g)
-        missing = infoobject.get_any_missing()
-        if not missing:
-            yield infoobject
-        else:
-            logger.info( f"skip {target_resource} with {constructor} "
-                            f"cause missing input for attribute {missing}" )
+        try:
+            infoobject.process_argument_info(target_resource, g)
+        except cl.MissingPrerequisites as err:
+            logger.info(f"skipped cause: {err.args}")
+            continue
+        yield infoobject
