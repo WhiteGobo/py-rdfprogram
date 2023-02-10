@@ -13,6 +13,8 @@ import sys
 import rdflib
 from . import PROLOA_NS
 from rdfloader import extension_classes as extc
+import logging
+logger = logging.getLogger(__name__)
 
 
 class ProgramFailed(Exception):
@@ -56,6 +58,7 @@ class evaluator(_iri_repr_class):
     def from_rdf(cls, iri,
                  app_args: extc.info_attr_list(PROLOA_NS.hasArgument),
                  ):
+        #load programcontainer
         split: urllib.parse.SplitResult = urllib.parse.urlsplit( iri )
         if split.scheme == "file":
             filepath = os.path.abspath( split.netloc + split.path )
@@ -67,7 +70,19 @@ class evaluator(_iri_repr_class):
         else:
             raise NotImplementedError("only scheme file is implemented")
 
-
+        #load axioms
+        needed_axioms = []
+        new_axioms = []
+        for x in app_args:
+            try:
+                x.example_node.info
+            except AttributeError:
+                continue
+            try:
+                needed_axioms.extend([axiom for axiom in x.example_node.info])
+                new_axioms.extend([axiom for axiom in x.generated_node.info])
+            except AttributeError as err:
+                raise TypeError("All args need example_node and generated_node")
         return cls(iri, app_args, programcontainer, needed_axioms, new_axioms)
 
     def __call__(self, input_args: typ.Dict, not_needed_node_translator, 
@@ -83,7 +98,7 @@ class evaluator(_iri_repr_class):
             return returnstring, new_axiom
         new_axioms = self._find_new_axioms(returnstring, input_args, 
                                            node_translator)
-        raise NotImplementedError("find new axioms")
+        return returnstring, new_axioms
 
     def _find_new_axioms(self, returnstring, input_args, mutable_to_target):
         new_axioms = []
@@ -91,9 +106,12 @@ class evaluator(_iri_repr_class):
             g = rdflib.Graph().parse(data=returnstring)
             new_axioms.extend( g )
         except rdflib.exceptions.ParserError:
+            logger.debug("Return string is not readable by rdflib")
             pass
+
         new_axioms.extend(tuple(mutable_to_target.get(x,x) for x in axiom)
                       for axiom in self.new_axioms)
+
         return new_axioms
 
 
@@ -122,9 +140,11 @@ class evaluator(_iri_repr_class):
                 continue
             try:
                 node_to_target[x.example_node.iri] = target.iri 
+                node_to_target[x.generated_node.iri] = target.iri 
             except AttributeError as err:
                 if isinstance(target, (str, float, int)):
                     node_to_target[x.example_node.iri] = rdflib.Literal(target)
+                    node_to_target[x.generated_node.iri] = rdflib.Literal(target)
                 else:
                     raise Exception("expected object with iri or str, "
                                     "float, int" ) from err

@@ -34,7 +34,6 @@ input_dict = {\
         }
 
 class TestProgramloader( unittest.TestCase ):
-    #@unittest.skip("first change simple")
     def test_evaluator(self):
         g = rdflib.Graph().parse( format="ttl", data=f"""
             @prefix asdf: <http://example.com/> .
@@ -47,7 +46,10 @@ class TestProgramloader( unittest.TestCase ):
                 rdfs:comment "loadfile" ;
                 a proloa:arg ;
                 proloa:describedBy [a proloa:mutable_resource];
-                proloa:declaresInfoLike [a proloa:mutable_resource].
+                proloa:declaresInfoLike _:generatedNode.
+
+            _:generatedNode a proloa:mutable_resource;
+                asdf:customProp1 asdf:customResource1 .
 
             asdf:meinBefehl proloa:executes <{evaluator_uri}> ;
                 a proloa:app ;
@@ -59,7 +61,21 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
         myapp = asdf[URIRef("http://example.com/meinBefehl")][0]
         returnstring, new_axioms = myapp()
-        raise Exception(returnstring, new_axioms)
+
+        asdf_customProp1 = URIRef("http://example.com/customProp1")
+        asdf_customResource1 = URIRef("http://example.com/customResource1")
+        linkid = iter(g.query("""
+            SELECT ?x
+            WHERE {
+                <http://example.com/meinBefehl> ?y ?x .
+                ?y proloa:id 0 .
+            }""")).__next__()[0]
+        shouldbeaxioms = set([ 
+                              (linkid, asdf_customProp1, asdf_customResource1),
+                              ])
+        print("\n\n")
+        print(g.serialize(format="n3"))
+        self.assertEqual(set(new_axioms), shouldbeaxioms)
 
     def test_simple( self ):
         g = rdflib.Graph().parse( format="ttl", data=f"""

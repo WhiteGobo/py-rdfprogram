@@ -192,6 +192,8 @@ class arg(_iri_repr_class):
         self.id = id
         if example_node is not None:
             self.example_node = example_node
+        if generated_node is not None:
+            self.generated_node = generated_node
 
 
 class app(_iri_repr_class):
