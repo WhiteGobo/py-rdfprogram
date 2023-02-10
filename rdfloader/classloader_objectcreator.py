@@ -232,7 +232,6 @@ def _create_all_objects(constructlist: typ.List[object_creator]):
             iri_to_objectcontainers.setdefault(generator.uri_main, []).append(generator)
             to_add_something.append(generator)
             done_something = True
-        print( "toadd something: ",to_add_something )
         for generator in tuple(to_add_something):
             logger.debug(f"Adding all missing to {generator}")
             try:
@@ -247,7 +246,6 @@ def _create_all_objects(constructlist: typ.List[object_creator]):
             logger.debug( f"everything added")
             to_add_something.remove(generator)
             done_something = True
-        print( "after: to add something: ",to_add_something )
     logger.debug( f"All created: {iri_to_objectcontainers}" )
     ret = []
     deleted = []
@@ -369,7 +367,7 @@ def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
         try:
             constructor = uri_to_constructor[x]
         except KeyError:
-            logger.warning( f"skip to {target_resource} the type {x}, cause no constructor" )
+            logger.warning(f"skip at {target_resource} the type {x}, cause no constructor")
             continue
         logger.debug(f"Create via {constructor}")
         infoobject = object_creator.from_class_constructor(constructor)

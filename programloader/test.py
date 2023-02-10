@@ -73,8 +73,6 @@ class TestProgramloader( unittest.TestCase ):
         shouldbeaxioms = set([ 
                               (linkid, asdf_customProp1, asdf_customResource1),
                               ])
-        print("\n\n")
-        print(g.serialize(format="n3"))
         self.assertEqual(set(new_axioms), shouldbeaxioms)
 
     def test_simple( self ):
