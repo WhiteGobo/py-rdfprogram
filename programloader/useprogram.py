@@ -92,8 +92,11 @@ class program(abc.ABC, _iri_repr_class):
 
     """
     iri: rdflib.IdentifiedNode
+    """Resource identifier in the knowledge graph"""
     example_nodes: list[rdflib.IdentifiedNode]
+    """Resources, that describe the input for the program"""
     generated_nodes: list[rdflib.IdentifiedNode]
+    """Resources, that describe the output of the program"""
 
     def __init__(self, iri, app_args):
         self.iri = iri
@@ -112,6 +115,29 @@ class program(abc.ABC, _iri_repr_class):
         on new generated links. See filelink for how new generated links
         are determined. The new generated links are determined by app_args
         and given node_translator.
+
+        Example:
+                >>> def __call__(self, input_args, node_translator, default_existing_resources):
+                >>>     args, kwargs = self.get_args_and_kwargs(input_args)
+                >>>     returnstring = self._exe( *args, **kwargs )
+                >>>     new_axioms = self.get_new_axioms(input_args, default_existing_resources, node_translator)
+                >>>     return returnstring, new_axioms
+                >>> def _exe():
+                >>>     commandarray = ["python", str(self.filepath)]
+                >>>     for x in it.chain(args, it.chain.from_iterable(kwargs.items())):
+                >>>         try:
+                >>>             commandarray.append(x.as_inputstring())
+                >>>         except AttributeError:
+                >>>             commandarray.append(str(x))
+                >>>     q = subprocess.run( commandarray, capture_output=True )
+                >>>     try:
+                >>>         asdf = q.check_returncode()
+                >>>         program_return_str = q.stdout.decode()
+                >>>     except subprocess.CalledProcessError as err:
+                >>>         print( f"failed to execute {self.filepath}", file=sys.stderr)
+                >>>         print( q.stderr.decode(), file=sys.stderr )
+                >>>         raise Exception( "failed to execute program" ) from err
+                >>>     return program_return_str
         """
         pass
 
