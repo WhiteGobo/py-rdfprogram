@@ -68,25 +68,79 @@ def create_program(iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
 
 class program(abc.ABC, _iri_repr_class):
     """Abstract class for every program. Each program must be a callable
+
+    :cvar app_args: List of available input arguments for the program
+
+    :param input_args: asdf
+    :type input_args: dict
+    :param node_translator: qwer
+    :type node_translator: node_translator
+    :param default_existing_resources: yxcv
+    :type default_existing_resources: list[rdflib.IdentifiedNode]
+    :return: output of the executed program and all new axioms
+    :rtype: (str, typ.Iterable[rdflib.graph._TripleType])
+
+    Example
+        >>> myprogram: program
+        >>> my_information_graph: rdflib.Graph
+        >>> input_args = {0:input1, "--arg":input2}
+        >>> trans = {BNode("placeholder"): 
+        >>>          URIRef("file://path/to/file")}
+        >>> output, new_axioms = myprogram(input_args, trans, [])
+        >>> for ax in new_axioms:
+        >>>     my_information_graph.add(ax)
+
     """
-    def __call__(self, *args, **kwargs):
+    iri: rdflib.IdentifiedNode
+    example_nodes: list[rdflib.IdentifiedNode]
+    generated_nodes: list[rdflib.IdentifiedNode]
+
+    def __init__(self, iri, app_args):
+        self.iri = iri
+        self.app_args = app_args
+
+        self.old_axioms, self.new_axioms, self.possible_new_nodes \
+                = self._process_app_args(app_args)
+        self._axioms = self.new_axioms
+
+    @abc.abstractmethod
+    def __call__(self, input_args, node_translator, \
+            default_existing_resources) \
+            -> (str, typ.Iterable[rdflib.graph._TripleType]):
+        """Executes the program with given arguments. Returns
+        the stdout of the program and returns all new axioms dependent
+        on new generated links. See filelink for how new generated links
+        are determined. The new generated links are determined by app_args
+        and given node_translator.
+        """
         pass
 
+    def _process_app_args(self, app_args):
+        has_generated = []
+        has_example = []
+        example_axioms = []
+        generated_axioms = []
+        for x in self.app_args:
+            try:
+                x.example_node.info
+                example_axioms.extend(x.example_node.info)
+                has_example.append(x.example_node.iri)
+            except AttributeError:
+                continue
+            try:
+                x.generated_node.info
+                generated_axioms.extend(x.generated_node.info)
+                has_generated.append(x.generated_node.iri)
+            except AttributeError:
+                continue
+        if has_generated:
+            possible_new_nodes = has_generated
+        else:
+            generated_axioms = example_axioms
+            possible_new_nodes = has_example
+        return example_axioms, generated_axioms, possible_new_nodes
 
-class program_python(program, _iri_repr_class):
-    """This uses as input for the commandline the method as_inputstring
-    and if that fails str(element). repr cant be used because it adds \'.
-
-    """
-    def __init__(self, iri, filepath, app_args):
-        assert os.path.exists( filepath )
-        self.iri = iri
-        self.filepath = filepath
-        self.app_args = app_args
-        self._axioms = self._find_all_axioms()
-
-    def __call__(self, input_args, node_translator, 
-                 default_existing_resources) -> str:
+    def get_args_and_kwargs(self, input_args):
         for mytarget in input_args.values():
             try:
                 mytarget.was_created()
@@ -100,9 +154,79 @@ class program_python(program, _iri_repr_class):
             else:
                 args[arg.id] = val
         args = [args[x] for x in sorted(args.keys())]
+        return args, kwargs
+
+
+    def get_new_axioms(self, input_args, default_existing_resources,
+                       mutable_to_target) -> typ.List:
+        """
+    
+        :param mutable_to_target: translation of the mutable resources to
+            the real inputs of the program
+        :param input_args: Map of the args to the inputs
+        :type input_args: typ.Dict[arg, (str, int, float, resource_link)]
+        """
+        new_axioms: list
+        #existing_resources = list(default_existing_resources)
+        existing_resources = []
+        updated_resources = []
+        for mytarget in input_args.values():
+            try:
+                mytarget.update_change
+            except AttributeError:
+                continue
+            if mytarget.update_change():
+                updated_resources.append(mytarget.iri)
+                existing_resources.append(mytarget.iri)
+        for mytarget in input_args.values():
+            try:
+                if mytarget.exists():
+                    existing_resources.append(mytarget.iri)
+            except AttributeError:
+                pass
+
+        all_axioms = [tuple(mutable_to_target.get(x,x) for x in axiom)
+                      for axiom in self._axioms]
+        not_valid = {y for y in (mutable_to_target.get(x,x) 
+                     for x in self.possible_new_nodes)
+                     if y not in existing_resources 
+                     and isinstance(y, rdflib.IdentifiedNode)}
+        new_axioms = [ax for ax in all_axioms
+                      if not any(x in not_valid for x in ax)
+                      and any(x in updated_resources for x in ax)]
+        return new_axioms
+
+    def get_example_axioms(self) -> typ.Iterable[rdflib.graph._TripleType]:
+        """Extract info from all example mutable nodes. Specifies, which 
+        axioms must already be valid.
+        """
+        pass
+
+
+    def get_generated_axioms(self) -> typ.Iterable[rdflib.graph._TripleType]:
+        """Extract info from all example generated nodes. Specifies, which 
+        axioms will be valid after this program succeeds.
+        """
+        pass
+
+
+class program_python(program, _iri_repr_class):
+    """This uses as input for the commandline the method as_inputstring
+    and if that fails str(element). repr cant be used because it adds \'.
+
+    """
+    def __init__(self, iri, filepath, app_args):
+        assert os.path.exists( filepath )
+        super().__init__(iri, app_args)
+        #self.iri = iri
+        #self.app_args = app_args
+        self.filepath = filepath
+
+    def __call__(self, input_args, node_translator, default_existing_resources):
+        args, kwargs = self.get_args_and_kwargs(input_args)
         returnstring = self._exe( *args, **kwargs )
 
-        new_axioms = self._find_new_axioms(input_args, default_existing_resources, node_translator)
+        new_axioms = self.get_new_axioms(input_args, default_existing_resources, node_translator)
         return returnstring, new_axioms
 
     def _exe(self, *args, **kwargs):
@@ -121,51 +245,6 @@ class program_python(program, _iri_repr_class):
             print( q.stderr.decode(), file=sys.stderr )
             raise Exception( "failed to execute program" ) from err
         return program_return_str
-
-    def _find_new_axioms(self, input_args, default_existing_resources, 
-                         mutable_to_target) -> typ.List:
-        """
-    
-        :param mutable_to_target: translation of the mutable resources to
-            the real inputs of the program
-        :param input_args: Map of the args to the inputs
-        :type input_args: typ.Dict[arg, (str, int, float, resource_link)]
-        """
-        new_axioms: list
-        existing_resources = list(default_existing_resources)
-        updated_resources = []
-        for mytarget in input_args.values():
-            try:
-                mytarget.update_change
-            except AttributeError:
-                continue
-            if mytarget.update_change():
-                updated_resources.append(mytarget.iri)
-                existing_resources.append(mytarget.iri)
-        for mytarget in input_args.values():
-            try:
-                if mytarget.exists():
-                    existing_resources.append(mytarget.iri)
-            except AttributeError:
-                #is added to default_exisitin_resources in __init__
-                pass
-        all_axioms = [tuple(mutable_to_target.get(x,x) for x in axiom)
-                      for axiom in self._axioms]
-        new_axioms = [ax 
-                      for ax in all_axioms
-                      if any(x in updated_resources for x in ax) 
-                      and all(x in existing_resources for x in ax)]
-        return new_axioms
-
-    def _find_all_axioms(self):
-        axioms = []
-        for x in self.app_args:
-            try:
-                x.example_node.info
-            except AttributeError:
-                continue
-            axioms.extend([axiom for axiom in x.example_node.info])
-        return axioms
 
 
 class arg(_iri_repr_class):
