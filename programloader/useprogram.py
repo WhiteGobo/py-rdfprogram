@@ -145,20 +145,26 @@ class program(abc.ABC, _iri_repr_class):
         has_generated = []
         has_example = []
         example_axioms = []
+        ambivalent_axioms = []
         generated_axioms = []
         for x in self.app_args:
             try:
                 x.example_node.info
-                example_axioms.extend(x.example_node.info)
+                ambivalent_axioms.extend(x.example_node.info)
                 has_example.append(x.example_node.iri)
             except AttributeError:
-                continue
+                pass
             try:
                 x.generated_node.info
                 generated_axioms.extend(x.generated_node.info)
                 has_generated.append(x.generated_node.iri)
             except AttributeError:
-                continue
+                pass
+        for ax in ambivalent_axioms:
+            if any(x in has_generated for x in ax):
+                generated_axioms.append(ax)
+            else:
+                example_axioms.append(ax)
         if has_generated:
             possible_new_nodes = has_generated
         else:
@@ -290,7 +296,7 @@ class arg(_iri_repr_class):
     example_node: mutable_resource
 
     def __init__( self, iri, id: extc.info_attr( PROLOA_NS.id ), 
-                 example_node: extc.info_attr( PROLOA_NS.describedBy ),
+                 example_node: extc.info_attr( PROLOA_NS.describedBy, needed=False )=None,
                  generated_node: extc.info_attr( PROLOA_NS.declaresInfoLike, needed=False )=None ):
         self.iri = iri
         assert isinstance(id, (str, int)), type(id)
@@ -337,25 +343,43 @@ class app(_iri_repr_class):
         node_to_target = {}
         default_existing_resources = set()
         for x, target in self.input_args.items():
+            translate_nodes = []
             try:
-                x.example_node
+                translate_nodes.append(x.example_node)
             except AttributeError:
-                continue
+                pass
             try:
-                node_to_target[x.example_node.iri] = target.iri 
-            except AttributeError as err:
-                if isinstance(target, (str, float, int)):
-                    node_to_target[x.example_node.iri] = rdflib.Literal(target)
-                    default_existing_resources.add(rdflib.Literal(target))
-                else:
-                    raise Exception("expected object with iri or str, "
-                                    "float, int" ) from err
+                translate_nodes.append(x.generated_node)
+            except AttributeError:
+                pass
+            if hasattr(target, "iri"):
+                for node in translate_nodes:
+                    node_to_target[node.iri] = target.iri 
+            elif isinstance(target, (str, float, int)):
+                for node in translate_nodes:
+                    try:
+                        node_to_target[node.iri] = rdflib.Literal(target)
+                    except AttributeError:
+                        pass
+                default_existing_resources.add(rdflib.Literal(target))
+            else:
+                raise Exception("expected object with iri or str, "
+                                "float, int" ) from err
         for x in self.input_args.keys():
             try:
                 x.example_node.info
             except AttributeError:
                 continue
             for axiom in x.example_node.info:
+                for n in axiom:
+                    if n not in node_to_target:
+                        default_existing_resources.add(n)
+        for x in self.input_args.keys():
+            try:
+                x.generated_node.info
+            except AttributeError:
+                continue
+            for axiom in x.generated_node.info:
                 for n in axiom:
                     if n not in node_to_target:
                         default_existing_resources.add(n)

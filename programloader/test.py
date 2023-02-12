@@ -99,7 +99,8 @@ class TestProgramloader( unittest.TestCase ):
             _:1 proloa:describedBy _:res1 .
             _:res1 a proloa:mutable_resource ;
                 asdf:customProp1 asdf:customResource1 .
-            _:2 proloa:describedBy _:res2 .
+            #_:2 proloa:describedBy _:res2 .
+            _:2 proloa:declaresInfoLike _:res2 .
             _:res2 a proloa:mutable_resource ;
                 asdf:customProp2 asdf:customResource2 .
             _:res2 asdf:customProp3 _:res1 .
