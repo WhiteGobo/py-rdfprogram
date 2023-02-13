@@ -82,7 +82,12 @@ class TestInfogenerator( unittest.TestCase ):
         g.parse(data = info_adder_uri)
         generated_objects = rl.load_from_graph(input_dictionary, g)
         self.assertEqual(set(generated_objects), set(g.subjects()))
-        raise Exception(generated_objects)
+
+        mytactic = generated_objects[rdflib.URIRef("file://mytactic")][0]
+
+        infograph = rdflib.Graph()
+        asdf = mytactic.get_priorities(infograph)
+        raise Exception(asdf)
         
 if __name__=="__main__":
     logging.basicConfig( level=logging.DEBUG )
