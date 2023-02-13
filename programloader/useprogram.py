@@ -94,12 +94,17 @@ class program(abc.ABC, _iri_repr_class):
     iri: rdflib.IdentifiedNode
     """Resource identifier in the knowledge graph"""
     example_nodes: list[rdflib.IdentifiedNode]
-    """Resources, that describe the input for the program"""
+    """Resources, that describe the input for the program. Specifies, which 
+    axioms must already be valid.
+    """
     generated_nodes: list[rdflib.IdentifiedNode]
-    """Resources, that describe the output of the program"""
+    """Resources, that describe the output of the program. Specifies, which 
+    axioms will be valid after this program succeeds.
+    """
     old_axioms: list[rdflib.graph._TripleType]
-
+    """Extracted info from all example mutable nodes."""
     new_axioms: list[rdflib.graph._TripleType]
+    """Extract info from all example generated nodes."""
 
     def __init__(self, iri, app_args):
         self.iri = iri
@@ -227,7 +232,6 @@ class program(abc.ABC, _iri_repr_class):
                       if not any(x in not_valid for x in ax)
                       and any(x in updated_resources for x in ax)]
         return new_axioms
-
 
 
 class program_python(program, _iri_repr_class):
