@@ -4,6 +4,7 @@ import programloader
 
 class tactic:
     uses: programloader.program
+    """all availagle programs which are used, by this tactic"""
     def __init__(self, uri, uses: extc.info_attr_list(AUTGEN.uses)):
         self.uri = uri
         self._typecontrol_uses(uses)
