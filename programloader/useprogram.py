@@ -172,6 +172,7 @@ class program(abc.ABC, _iri_repr_class):
         if has_generated:
             possible_new_nodes = has_generated
         else:
+            raise NotImplementedError("im thinking about deleting this case")
             generated_axioms = example_axioms
             possible_new_nodes = has_example
         return example_axioms, generated_axioms, has_example, possible_new_nodes
