@@ -12,7 +12,11 @@ class tactic:
     @classmethod
     def _typecontrol_uses(cls, uses: list[programloader.program]):
         for p in uses:
-            p.example_nodes
-            p.generated_nodes
-            p.old_axioms
-            p.new_axioms
+            try:
+                p.example_nodes
+                p.generated_nodes
+                p.old_axioms
+                p.new_axioms
+            except AttributeError as err:
+                raise TypeError("must all be programloader.program") from err
+
