@@ -85,9 +85,18 @@ class TestInfogenerator( unittest.TestCase ):
 
         mytactic = generated_objects[rdflib.URIRef("file://mytactic")][0]
 
-        infograph = rdflib.Graph()
+        fileuri =rdflib.URIRef("file://asdf")
+        infograph = rdflib.Graph().parse(format="ttl", data=f"""
+            @prefix asdf: <http://example.com/> .
+            @prefix proloa: <http://example.com/programloader/> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+            <{fileuri}> a asdf:number .
+            """)
         asdf = mytactic.get_priorities(infograph)
-        raise Exception(asdf)
+        expected_axioms = {(fileuri, AUTGEN.priority, rdflib.Literal(0.0))}
+        self.assertEqual(set(asdf), expected_axioms)
         
 if __name__=="__main__":
     logging.basicConfig( level=logging.DEBUG )
