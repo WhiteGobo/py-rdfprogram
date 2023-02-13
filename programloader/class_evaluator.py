@@ -49,6 +49,10 @@ class _iri_repr_class:
 
 class evaluator(_iri_repr_class, useprogram.program):
     def __init__(self, iri, app_args, program_container:_program, needed_axioms, new_axioms ):
+        """
+
+        :TODO: remove needed_axioms cause double with useprogram.program.old_axioms
+        """
         self.app_args = app_args
         self.program_container = program_container
         self.needed_axioms = needed_axioms
