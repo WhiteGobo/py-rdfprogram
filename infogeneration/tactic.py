@@ -7,10 +7,19 @@ import typing as typ
 class rdfgraph_finder:
     def __init__(self, program):
         self.program = program
+
+        #        p.generated_nodes
+        #        p.new_axioms
+        var_to_node = {x:f"?x{i}" for i,x in enumerate(program.example_nodes)}
+        search_axioms = [tuple(var_to_node.get(x,x) for x in ax) for ax in program.old_axioms]
         self.queryterm ="""
-            SELECT ?x
-            WHERE {?x ?x ?x}
-            """
+            SELECT %s
+            WHERE {%s
+            }""" %(" ".join(var_to_node.keys()),
+                   "\n".join(f"{s} {p} {o} ." for s,p,o in search_axioms)
+                  )
+        print(self.queryterm)
+        assert all(all(isinstance(x, (rdflib.URIRef, rdflib.Literal)) or x in var_to_node for x in ax) for ax in program.old_axioms)
 
     def find_in_graph(self, rdfgraph: rdflib.Graph):
         for found_nodes in rdfgraph.query(self.queryterm):
