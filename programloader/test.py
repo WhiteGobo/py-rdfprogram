@@ -19,7 +19,7 @@ from . import class_evaluator
 program_path = importlib.resources.files(test_src).joinpath( "myprogram.py" )
 program_uri = rdflib.URIRef(pathlib.Path(program_path).as_uri())
 evaluator_path = importlib.resources.files(test_src).joinpath("myevaluator.py")
-evaluator_uri = pathlib.Path(evaluator_path).as_uri()
+evaluator_uri = rdflib.URIRef(pathlib.Path(evaluator_path).as_uri())
 number_path = importlib.resources.files(test_src).joinpath("number")
 number_uri = pathlib.Path(number_path).as_uri()
 
@@ -74,6 +74,16 @@ class TestProgramloader( unittest.TestCase ):
                               (linkid, asdf_customProp1, asdf_customResource1),
                               ])
         self.assertEqual(set(new_axioms), shouldbeaxioms)
+
+        myprogram = asdf[evaluator_uri][0]
+        ex_node = myprogram.example_nodes[0]
+        ge_node = myprogram.generated_nodes[0]
+        self.assertEqual(myprogram.old_axioms, [])
+        asdf_customProp1 = URIRef("http://example.com/customProp1")
+        asdf_customResource1 = URIRef("http://example.com/customResource1")
+        self.assertEqual( set(myprogram.new_axioms), 
+                         {(ge_node, asdf_customProp1, asdf_customResource1)}
+                         )
 
     def test_get_information(self):
         g = rdflib.Graph().parse( format="ttl", data=f"""
