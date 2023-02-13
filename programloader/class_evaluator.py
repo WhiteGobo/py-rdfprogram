@@ -12,6 +12,7 @@ import itertools as it
 import sys
 import rdflib
 from . import PROLOA_NS
+from . import useprogram
 from rdfloader import extension_classes as extc
 import logging
 logger = logging.getLogger(__name__)
@@ -46,13 +47,13 @@ class _iri_repr_class:
         return f"<{name}:{str(self.iri)}>"
 
 
-class evaluator(_iri_repr_class):
+class evaluator(_iri_repr_class, useprogram.program):
     def __init__(self, iri, app_args, program_container:_program, needed_axioms, new_axioms ):
-        self.iri = iri
         self.app_args = app_args
         self.program_container = program_container
         self.needed_axioms = needed_axioms
         self.new_axioms = new_axioms
+        useprogram.program.__init__(self, iri, app_args)
 
     @classmethod
     def from_rdf(cls, iri,
