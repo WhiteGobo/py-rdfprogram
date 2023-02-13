@@ -97,6 +97,9 @@ class program(abc.ABC, _iri_repr_class):
     """Resources, that describe the input for the program"""
     generated_nodes: list[rdflib.IdentifiedNode]
     """Resources, that describe the output of the program"""
+    old_axioms: list[rdflib.graph._TripleType]
+
+    new_axioms: list[rdflib.graph._TripleType]
 
     def __init__(self, iri, app_args):
         self.iri = iri
@@ -225,18 +228,6 @@ class program(abc.ABC, _iri_repr_class):
                       and any(x in updated_resources for x in ax)]
         return new_axioms
 
-    def get_example_axioms(self) -> typ.Iterable[rdflib.graph._TripleType]:
-        """Extract info from all example mutable nodes. Specifies, which 
-        axioms must already be valid.
-        """
-        pass
-
-
-    def get_generated_axioms(self) -> typ.Iterable[rdflib.graph._TripleType]:
-        """Extract info from all example generated nodes. Specifies, which 
-        axioms will be valid after this program succeeds.
-        """
-        pass
 
 
 class program_python(program, _iri_repr_class):

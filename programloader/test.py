@@ -111,10 +111,29 @@ class TestProgramloader( unittest.TestCase ):
         app_iri = URIRef("http://example.com/meinBefehl")
         #myApp = asdf[ app_iri ][0]
         myProgram = asdf[program_uri][0]
-        myProgram.example_nodes
+
+        #dont need extra test. later tests sufficient
+        myProgram.example_nodes 
         myProgram.generated_nodes
-        myProgram.get_example_axioms()
-        myProgram.get_generated_axioms()
+
+        ex_node = myProgram.example_nodes[0]
+        ge_node = myProgram.generated_nodes[0]
+        asdf_customProp1 = URIRef("http://example.com/customProp1")
+        asdf_customProp2 = URIRef("http://example.com/customProp2")
+        asdf_customProp3 = URIRef("http://example.com/customProp3")
+        asdf_customResource1 = URIRef("http://example.com/customResource1")
+        asdf_customResource2 = URIRef("http://example.com/customResource2")
+        ex_axioms = {
+                (ex_node, asdf_customProp1, asdf_customResource1),
+                }
+        ge_axioms = {
+                (ge_node, asdf_customProp2, asdf_customResource2),
+                (ge_node, asdf_customProp3, ex_node),
+                }
+        self.assertEqual(ex_axioms, set(myProgram.old_axioms))
+        self.assertEqual(ge_axioms, set(myProgram.new_axioms))
+        #self.assertEqual(ex_axioms, set(myProgram.get_example_axioms()))
+        #self.assertEqual(ge_axioms, set(myProgram.get_generated_axioms()))
 
 
     def test_simple( self ):
