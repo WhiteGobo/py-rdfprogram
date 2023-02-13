@@ -149,12 +149,15 @@ class program(abc.ABC, _iri_repr_class):
         has_generated = []
         has_example = []
         example_axioms = []
-        ambivalent_axioms = []
         generated_axioms = []
         for x in self.app_args:
             try:
                 x.example_node.info
-                ambivalent_axioms.extend(x.example_node.info)
+                for ax in x.example_node.info:
+                    if any(x in has_generated for x in ax):
+                        generated_axioms.append(ax)
+                    else:
+                        example_axioms.append(ax)
                 has_example.append(x.example_node.iri)
             except AttributeError:
                 pass
@@ -164,11 +167,6 @@ class program(abc.ABC, _iri_repr_class):
                 has_generated.append(x.generated_node.iri)
             except AttributeError:
                 pass
-        for ax in ambivalent_axioms:
-            if any(x in has_generated for x in ax):
-                generated_axioms.append(ax)
-            else:
-                example_axioms.append(ax)
         return example_axioms, generated_axioms, has_example, has_generated
 
     def get_args_and_kwargs(self, input_args):
