@@ -15,7 +15,7 @@ import pathlib
 import os.path
 from . import test_src
 from . import PROLOA_NS
-from . import evaluator
+from . import class_evaluator
 program_path = importlib.resources.files(test_src).joinpath( "myprogram.py" )
 program_uri = rdflib.URIRef(pathlib.Path(program_path).as_uri())
 evaluator_path = importlib.resources.files(test_src).joinpath("myevaluator.py")
@@ -30,7 +30,7 @@ input_dict = {\
         PROLOA_NS.arg: useprogram.arg,\
         PROLOA_NS.link: useprogram.filelink,\
         PROLOA_NS.app: useprogram.app,\
-        PROLOA_NS.evaluator: evaluator.evaluator.from_rdf,\
+        PROLOA_NS.evaluator: class_evaluator.evaluator.from_rdf,\
         }
 
 class TestProgramloader( unittest.TestCase ):
