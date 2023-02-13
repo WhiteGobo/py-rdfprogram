@@ -13,4 +13,7 @@ internal modules
    :members:
    :undoc-members:
    :show-inheritance:
+   :special-members: __call__
+   :exclude-members: __dict__,__weakref__
+
 
