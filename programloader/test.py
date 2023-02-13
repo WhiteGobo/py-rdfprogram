@@ -17,7 +17,7 @@ from . import test_src
 from . import PROLOA_NS
 from . import evaluator
 program_path = importlib.resources.files(test_src).joinpath( "myprogram.py" )
-program_uri = pathlib.Path(program_path).as_uri()
+program_uri = rdflib.URIRef(pathlib.Path(program_path).as_uri())
 evaluator_path = importlib.resources.files(test_src).joinpath("myevaluator.py")
 evaluator_uri = pathlib.Path(evaluator_path).as_uri()
 number_path = importlib.resources.files(test_src).joinpath("number")
@@ -111,6 +111,8 @@ class TestProgramloader( unittest.TestCase ):
         app_iri = URIRef("http://example.com/meinBefehl")
         #myApp = asdf[ app_iri ][0]
         myProgram = asdf[program_uri][0]
+        myProgram.example_nodes
+        myProgram.generated_nodes
         myProgram.get_example_axioms()
         myProgram.get_generated_axioms()
 
