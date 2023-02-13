@@ -102,8 +102,12 @@ class program(abc.ABC, _iri_repr_class):
         self.iri = iri
         self.app_args = app_args
 
-        self.old_axioms, self.new_axioms, self.possible_new_nodes \
+        self.old_axioms, self.new_axioms, example_nodes, generated_nodes\
                 = self._process_app_args(app_args)
+        self.example_nodes = example_nodes
+        self.generated_nodes = generated_nodes
+
+        self.possible_new_nodes = generated_nodes
         self._axioms = self.new_axioms
 
     @abc.abstractmethod
@@ -170,7 +174,7 @@ class program(abc.ABC, _iri_repr_class):
         else:
             generated_axioms = example_axioms
             possible_new_nodes = has_example
-        return example_axioms, generated_axioms, possible_new_nodes
+        return example_axioms, generated_axioms, has_example, possible_new_nodes
 
     def get_args_and_kwargs(self, input_args):
         for mytarget in input_args.values():
