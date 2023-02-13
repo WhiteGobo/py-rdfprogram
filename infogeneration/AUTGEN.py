@@ -8,3 +8,5 @@ tactic = URIRef( f"{BASE}tactic" )
 
 uses = URIRef( f"{BASE}uses")
 """Targeted proloa:program by this property is used by tactic"""
+
+priority = URIRef(f"{BASE}priority")
