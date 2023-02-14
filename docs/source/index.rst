@@ -12,6 +12,7 @@ Welcome to program_from_rdf's documentation!
 
    rdfloader/index
    programloader/index
+   infogeneration/index
 
 
 
