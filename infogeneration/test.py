@@ -4,6 +4,8 @@ import logging
 logger = logging.getLogger( __name__ )
 from . import tactic
 from . import AUTGEN
+from programloader import RDF_NS as RDF
+from programloader import PROLOA_NS as PROLOA
 import rdfloader as rl
 import programloader
 
@@ -13,9 +15,9 @@ import os.path
 from . import test_src
 mypath_prefix = pathlib.Path(importlib.resources.files(test_src)).as_uri() + "/"
 adder_path = importlib.resources.files(test_src).joinpath( "adder.py" )
-adder_uri = pathlib.Path(adder_path).as_uri()
+adder_uri = rdflib.URIRef(pathlib.Path(adder_path).as_uri())
 numbertoaxiom_path = importlib.resources.files(test_src).joinpath( "numbertoaxiom.py" )
-numbertoaxiom_uri = pathlib.Path(numbertoaxiom_path).as_uri()
+numbertoaxiom_uri = rdflib.URIRef(pathlib.Path(numbertoaxiom_path).as_uri())
 
 input_dictionary = {
         AUTGEN.tactic: tactic.tactic,
@@ -68,6 +70,11 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
 class TestInfogenerator( unittest.TestCase ):
     #@unittest.skip("asdf")
     def test_simple(self):
+        """
+        
+        :TODO: remake priority. It should be some kind of property bound
+            to the tactic.
+        """
         g = rdflib.Graph().parse(format="ttl", data=f"""
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -96,11 +103,23 @@ class TestInfogenerator( unittest.TestCase ):
             <{fileuri}> a asdf:number .
             """)
         asdf = mytactic.get_priorities(infograph)
-        expected_axioms = {(fileuri, AUTGEN.priority, rdflib.Literal(0.0))}
-        q = rdflib.Graph()
-        for ax in asdf:
-            q.add(ax)
-        print(q.serialize())
+        app_resources = [s for s,p,o in asdf if p==RDF.a and o==PROLOA.app]
+        self.assertEqual(len(app_resources), 1, msg="There should be exactly "
+                                f"one BNode here: {app_resources}")
+        res_app = app_resources[0]
+        arg_resource = iter(g.query(f"""
+            SELECT ?x
+            WHERE {{
+                <{numbertoaxiom_uri}> proloa:hasArgument ?x .
+                ?x proloa:id 0 .
+            }}""")).__next__()[0]
+        print(g.serialize(format="ntriples"))
+        expected_axioms = {
+                (res_app, RDF.a, PROLOA.app),
+                (res_app, PROLOA.executes, numbertoaxiom_uri),
+                (res_app, AUTGEN.priority, rdflib.Literal(0.0)),
+                (res_app, arg_resource, fileuri),
+                }
         self.assertEqual(set(asdf), expected_axioms)
         
 if __name__=="__main__":

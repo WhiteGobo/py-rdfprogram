@@ -10,9 +10,20 @@ import itertools as it
 class rdfgraph_finder:
     program: object
     var_to_mutable: dict
+    mutable_to_arg: dict[programloader.mutable_resource, programloader.arg]
 
     def __init__(self, program):
         self.program = program
+        self.mutable_to_arg = {}
+        for arg in program.app_args:
+            try:
+                self.mutable_to_arg[arg.example_node] = arg
+            except AttributeError:
+                pass
+            try:
+                self.mutable_to_arg[arg.generated_node] = arg
+            except AttributeError:
+                pass
 
         #        p.generated_nodes
         #        p.new_axioms
@@ -49,7 +60,8 @@ class rdfgraph_finder:
         for found_nodes in rdfgraph.query(self.queryterm):
             arg_to_resource = {}
             for var, mutable in self.var_to_mutable.items():
-                arg_to_resource[mutable] = found_nodes[var]
+                arg = self.mutable_to_arg[mutable]
+                arg_to_resource[arg] = found_nodes[var]
             yield arg_to_resource
 
     def create_app(self, arg_to_resource, app_identifier=None):
