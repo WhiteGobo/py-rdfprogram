@@ -69,6 +69,13 @@ def create_program(iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
 class program(abc.ABC, _iri_repr_class):
     """Abstract class for every program. Each program must be a callable
 
+    :cvar iri: iri of this resource
+    :cvar example_nodes: all mutable nodes used, when finding the input
+    :cvar generated_nodes: all mutable_nodes used, when determing
+        what the output looks like
+    :cvar old_axioms: all needed axioms for input. Must be translated
+        via example_nodes to given input resources
+    :cvar new_axioms: all generated axioms from output.
     :cvar app_args: List of available input arguments for the program
 
     :param input_args: asdf
@@ -105,6 +112,7 @@ class program(abc.ABC, _iri_repr_class):
     """Extracted info from all example mutable nodes."""
     new_axioms: list[rdflib.graph._TripleType]
     """Extract info from all example generated nodes."""
+    app_args: list["arg"]
 
     def __init__(self, iri, app_args):
         self.iri = iri
