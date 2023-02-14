@@ -113,7 +113,6 @@ class TestInfogenerator( unittest.TestCase ):
                 <{numbertoaxiom_uri}> proloa:hasArgument ?x .
                 ?x proloa:id 0 .
             }}""")).__next__()[0]
-        print(g.serialize(format="ntriples"))
         expected_axioms = {
                 (res_app, RDF.a, PROLOA.app),
                 (res_app, PROLOA.executes, numbertoaxiom_uri),
