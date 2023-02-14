@@ -22,6 +22,8 @@ evaluator_path = importlib.resources.files(test_src).joinpath("myevaluator.py")
 evaluator_uri = rdflib.URIRef(pathlib.Path(evaluator_path).as_uri())
 number_path = importlib.resources.files(test_src).joinpath("number")
 number_uri = pathlib.Path(number_path).as_uri()
+notnumber_path = importlib.resources.files(test_src).joinpath("notnumber")
+notnumber_uri = pathlib.Path(number_path).as_uri()
 
 
 input_dict = {\
@@ -34,6 +36,39 @@ input_dict = {\
         }
 
 class TestProgramloader( unittest.TestCase ):
+    @unittest.skip("not yet implemented")
+    def test_failing_evaluator(self):
+        """Testing what happens if an evaluator fails, when applied to
+        a list of resources. There must be a returned axiom that specifies,
+        that the evaluator fails on given input
+        """
+        g = rdflib.Graph().parse( format="ttl", data=f"""
+            @prefix asdf: <http://example.com/> .
+            @prefix proloa: <http://example.com/programloader/> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+            <{evaluator_uri}> a proloa:evaluator ;
+                proloa:hasArgument _:1 .
+            _:1 proloa:id 0;
+                rdfs:comment "loadfile" ;
+                a proloa:arg ;
+                proloa:describedBy [a proloa:mutable_resource];
+                proloa:declaresInfoLike _:generatedNode.
+
+            _:generatedNode a proloa:mutable_resource;
+                asdf:customProp1 asdf:customResource1 .
+
+            asdf:meinBefehl proloa:executes <{evaluator_uri}> ;
+                a proloa:app ;
+                _:1 <{notnumber_uri}>.
+            <{notnumber_uri}> a proloa:link .
+        """)
+        asdf: dict = rl.load_from_graph( input_dict, g )
+        self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+        myapp = asdf[URIRef("http://example.com/meinBefehl")][0]
+        returnstring, new_axioms = myapp()
+
+
     def test_evaluator(self):
         g = rdflib.Graph().parse( format="ttl", data=f"""
             @prefix asdf: <http://example.com/> .
@@ -76,14 +111,13 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(set(new_axioms), shouldbeaxioms)
 
         myprogram = asdf[evaluator_uri][0]
-        ex_node = myprogram.example_nodes[0]
-        ge_node = myprogram.generated_nodes[0]
+        ex_node = myprogram.example_nodes[0].iri
+        ge_node = myprogram.generated_nodes[0].iri
         self.assertEqual(myprogram.old_axioms, [])
         asdf_customProp1 = URIRef("http://example.com/customProp1")
         asdf_customResource1 = URIRef("http://example.com/customResource1")
-        self.assertEqual( set(myprogram.new_axioms), 
-                         {(ge_node, asdf_customProp1, asdf_customResource1)}
-                         )
+        self.assertEqual(set(myprogram.new_axioms), 
+                         {(ge_node, asdf_customProp1, asdf_customResource1)})
 
     def test_get_information(self):
         g = rdflib.Graph().parse( format="ttl", data=f"""
@@ -126,8 +160,8 @@ class TestProgramloader( unittest.TestCase ):
         myProgram.example_nodes 
         myProgram.generated_nodes
 
-        ex_node = myProgram.example_nodes[0]
-        ge_node = myProgram.generated_nodes[0]
+        ex_node = myProgram.example_nodes[0].iri
+        ge_node = myProgram.generated_nodes[0].iri
         asdf_customProp1 = URIRef("http://example.com/customProp1")
         asdf_customProp2 = URIRef("http://example.com/customProp2")
         asdf_customProp3 = URIRef("http://example.com/customProp3")
@@ -211,6 +245,11 @@ class TestProgramloader( unittest.TestCase ):
                               (linkid, asdf_customProp3, rdflib.Literal(2)),
                               ])
         self.assertEqual(set(new_axioms), shouldbeaxioms)
+
+        #test if application recognizes, that it was already applied
+        for ax in new_axioms:
+            g.add(ax)
+        #asdf[ app_iri ][0].was_already_executed(g)
 
 
 if __name__=="__main__":
