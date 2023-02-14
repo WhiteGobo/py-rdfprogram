@@ -66,6 +66,7 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
 """
 
 class TestInfogenerator( unittest.TestCase ):
+    #@unittest.skip("asdf")
     def test_simple(self):
         g = rdflib.Graph().parse(format="ttl", data=f"""
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -96,6 +97,10 @@ class TestInfogenerator( unittest.TestCase ):
             """)
         asdf = mytactic.get_priorities(infograph)
         expected_axioms = {(fileuri, AUTGEN.priority, rdflib.Literal(0.0))}
+        q = rdflib.Graph()
+        for ax in asdf:
+            q.add(ax)
+        print(q.serialize())
         self.assertEqual(set(asdf), expected_axioms)
         
 if __name__=="__main__":

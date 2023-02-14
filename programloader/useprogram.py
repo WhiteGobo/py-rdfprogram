@@ -93,11 +93,11 @@ class program(abc.ABC, _iri_repr_class):
     """
     iri: rdflib.IdentifiedNode
     """Resource identifier in the knowledge graph"""
-    example_nodes: list[rdflib.IdentifiedNode]
+    example_nodes: list[mutable_resource]
     """Resources, that describe the input for the program. Specifies, which 
     axioms must already be valid.
     """
-    generated_nodes: list[rdflib.IdentifiedNode]
+    generated_nodes: list[mutable_resource]
     """Resources, that describe the output of the program. Specifies, which 
     axioms will be valid after this program succeeds.
     """
@@ -166,15 +166,16 @@ class program(abc.ABC, _iri_repr_class):
                         generated_axioms.append(ax)
                     else:
                         example_axioms.append(ax)
-                has_example.append(x.example_node.iri)
+                has_example.append(x.example_node)
             except AttributeError:
                 pass
             try:
                 x.generated_node.info
                 generated_axioms.extend(x.generated_node.info)
-                has_generated.append(x.generated_node.iri)
+                has_generated.append(x.generated_node)
             except AttributeError:
                 pass
+        #assert not set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)), "not every example node is represented in axioms: %s"%(set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)),)
         return example_axioms, generated_axioms, has_example, has_generated
 
     def get_args_and_kwargs(self, input_args):
@@ -286,6 +287,7 @@ class arg(_iri_repr_class):
     iri: rdflib.IdentifiedNode
     id: (str, int)
     example_node: mutable_resource
+    generated_node: mutable_resource
 
     def __init__( self, iri, id: extc.info_attr( PROLOA_NS.id ), 
                  example_node: extc.info_attr( PROLOA_NS.describedBy, needed=False )=None,
