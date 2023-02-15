@@ -8,6 +8,7 @@ from programloader import RDF_NS as RDF
 from programloader import PROLOA_NS as PROLOA
 import rdfloader as rl
 import programloader
+import queue
 
 import importlib.resources
 import pathlib
@@ -120,6 +121,9 @@ class TestInfogenerator( unittest.TestCase ):
                 (res_app, arg_resource, fileuri),
                 }
         self.assertEqual(set(asdf), expected_axioms)
+
+        #mytactic.execute_first_app()
+        self.assertRaises(queue.Empty, mytactic.execute_first_app)
         
 if __name__=="__main__":
     logging.basicConfig( level=logging.DEBUG )
