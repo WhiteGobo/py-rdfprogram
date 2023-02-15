@@ -12,6 +12,7 @@ except ModuleNotFoundError:
     import rdf_loader as rl
 from . import extension_classes as ext
 
+import itertools as it
 import logging
 logger = logging.getLogger()
 import rdflib
@@ -19,6 +20,18 @@ from . import RDF
 from . import classloader_objectcreator as cloc
 
 class TestRDFLoader( unittest.TestCase ):
+    def test_load_new_information(self):
+        """Load new resources, that are dependent on already built resources
+        """
+        old_res = rdflib.URIRef("http://example.com/2")
+        old_resources = {old_res: testinfo.empty(old_res)}
+        g = rdflib.Graph().parse(data="""@base <http://example.com/> .
+            <1> a <{testinfo.obj1}>;
+            <{testinfo.prop1}> <2>.
+        """)
+        qwe = rl.load_from_graph( testinfo.input_dict, g, old_resources )
+        self.assertEqual(set(it.chain(g.subjects(),old_resources)),
+                         set(qwe.keys()))
 
     def test_simple( self ):
         """Tries simple load. <1> and <2> are loadable but <3> is not. \
