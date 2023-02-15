@@ -129,6 +129,7 @@ class tactic_priority_organizer:
         for pro in uses:
             self.graphfinder[pro] = rdfgraph_finder(pro)
         self._app_priorityqueue = queue.PriorityQueue()
+        self._current_used_rdfgraph = rdflib.Graph()
 
     def get_priorities(self, rdfgraph: rdflib.Graph) \
             -> typ.Iterable[rdflib.graph._TripleType]:
@@ -142,9 +143,22 @@ class tactic_priority_organizer:
         for pro, finder in self.graphfinder.items():
             for arg_to_resource in finder._find_in_graph(rdfgraph):
                 app_identifier = rdflib.BNode()
-                newaxioms.extend(finder.create_app(arg_to_resource, app_identifier))
+                tmp_axioms = finder.create_app(arg_to_resource, app_identifier)
+                newaxioms.extend(tmp_axioms)
                 tmp_prio = rdflib.Literal(self.calculate_priority())
                 newaxioms.append((app_identifier, AUTGEN.priority, tmp_prio))
+
+                #tmp_graph = rdflib.Graph()
+                #for ax in tmp_axioms:
+                #    tmp_graph.add(ax)
+                #new_objects = rdfloader.load_from_graph(tmp_graph, input_dict,
+                #                                        self.saved_objects)
+                #new_app = new_objects[app_identifier][0]
+                #self._app_priorityqueue.put((tmp_prio, new_app))
+
+        for ax in it.chain(newaxioms, rdfgraph):
+            self._current_used_rdfgraph.add(ax)
+
         return newaxioms
 
     def calculate_priority(self):
