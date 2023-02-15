@@ -286,11 +286,15 @@ def _type_control_load_from_graph(uri_to_constructor, rdf_graph, wanted_resource
                                 if x not in rdf_graph.all_nodes()]
     assert not missing_resources, f"missing resources: {missing_resources}"
 
-def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
+def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
+                    iri_to_pythonobject: dict[rdflib.IdentifiedNode, object]=None):
     """Loads all IRIs in wanted_resources from the knowledgegraph described
     by rdf_graph as python-objects. The resources are depending on 
     uri_to_constructor loaded as python-objects. 
 
+    :param iri_to_pythonobject: Already build old objects. Will be reused and
+            also reiterated in returned dict
+    :type iri_to_pythonobject: dict[rdflib.IdentifiedNode, object]
     :type uri_to_constructor: Dict[ rdflib.URIRef, Callable ]
     :param uri_to_constructor: A mapping of a resource class to a constructor.
             All resources from the knowledgegraph classified as given resource
@@ -306,6 +310,8 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None ):
     :returns: mapping of uris to list of objects. Filters literals out.
     :TODO: new objects from _get_creationinfo should be a eindeutige form
     """
+    if iri_to_pythonobject is not None:
+        raise NotImplementedError()
     if wanted_resources is None:
         wanted_resources = set( filter( \
                                 lambda x: isinstance(x, rdflib.URIRef) \
