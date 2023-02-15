@@ -211,13 +211,17 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
         return any( x in self.used_objects for x in objectcreator_list )
 
 
-def _create_all_objects(constructlist: typ.List[object_creator]):
+def _create_all_objects(constructlist: typ.List[object_creator], \
+        already_constructed = None)\
+        -> dict[rdflib.IdentifiedNode, list]:
     """
 
+    :param constructlist: List of all available constructs
+    :return: Mapping of IRIs to a list of generated objects
     """
     done_something = True
     constructlist = list(constructlist)
-    iri_to_objectcontainers = {}
+    iri_to_objectcontainers = {} #already_constructed
     to_add_something = []
     while done_something and (constructlist or to_add_something):
         logger.debug( f"still trying to create following: {constructlist}")
@@ -249,7 +253,7 @@ def _create_all_objects(constructlist: typ.List[object_creator]):
     logger.debug( f"All created: {iri_to_objectcontainers}" )
     ret = []
     deleted = []
-    logger.debug( f"deleting {to_add_something} for missing dependencies")
+    logger.debug(f"deleting {to_add_something} for missing dependencies")
     for mylist in iri_to_objectcontainers.values():
         for generator in mylist:
             if generator not in to_add_something:
@@ -323,7 +327,7 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
 
     constructlist: typ.List[objectcreator] = []
     for uri_resource in wanted_resources: #will be extended in runtime
-        logger.debug( f"find information to {uri_resource}" )
+        logger.debug(f"find information to {uri_resource}")
         for infoobject in _get_creationinfo_to( uri_resource, \
                                 rdf_graph, uri_to_constructor ):
 
@@ -353,8 +357,8 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
             if isinstance(key, rdflib.IdentifiedNode)}
 
 
-def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
-                        uri_to_constructor: typ.Dict[ str, typ.Callable ] ):
+def _get_creationinfo_to(target_resource, g: rdflib.Graph, 
+                         uri_to_constructor: typ.Dict[str, typ.Callable]):
     """
 
     :returns: For each differentiable generatable construct, this method
@@ -363,7 +367,7 @@ def _get_creationinfo_to( target_resource, g: rdflib.Graph, \
                 - constructor-method
                 - attributename of the constructor and the generated 
                     object to used URIs
-    :rtype: Iterator[ (uri, callable, list[uri], list[uri], dict[ str, uri ] ) ]
+    :rtype: Iterator[(uri, callable, list[uri], list[uri], dict[str, uri])]
     """
     if isinstance(target_resource, rdflib.Literal):
         yield literal_creator(target_resource)
