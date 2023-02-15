@@ -122,7 +122,7 @@ class TestInfogenerator( unittest.TestCase ):
                 }
         self.assertEqual(set(asdf), expected_axioms)
 
-        #mytactic.execute_first_app()
+        mytactic.execute_first_app()
         self.assertRaises(queue.Empty, mytactic.execute_first_app)
         
 if __name__=="__main__":

@@ -3,6 +3,7 @@ from rdfloader import extension_classes as extc
 import programloader
 from programloader import PROLOA_NS as PROLOA
 from programloader import RDF_NS as RDF
+import rdfloader
 import rdflib
 import typing as typ
 import itertools as it
@@ -130,6 +131,7 @@ class tactic_priority_organizer:
             self.graphfinder[pro] = rdfgraph_finder(pro)
         self._app_priorityqueue = queue.PriorityQueue()
         self._current_used_rdfgraph = rdflib.Graph()
+        self.saved_objects = {program.iri: [program] for program in uses}
 
     def get_priorities(self, rdfgraph: rdflib.Graph) \
             -> typ.Iterable[rdflib.graph._TripleType]:
@@ -148,13 +150,20 @@ class tactic_priority_organizer:
                 tmp_prio = rdflib.Literal(self.calculate_priority())
                 newaxioms.append((app_identifier, AUTGEN.priority, tmp_prio))
 
-                #tmp_graph = rdflib.Graph()
-                #for ax in tmp_axioms:
-                #    tmp_graph.add(ax)
-                #new_objects = rdfloader.load_from_graph(tmp_graph, input_dict,
-                #                                        self.saved_objects)
-                #new_app = new_objects[app_identifier][0]
-                #self._app_priorityqueue.put((tmp_prio, new_app))
+                tmp_graph = rdflib.Graph()
+                for ax in tmp_axioms:
+                    tmp_graph.add(ax)
+                print("brubru")
+                print(self.saved_objects)
+                self.saved_objects = rdfloader.load_from_graph(\
+                        programloader.input_dict, tmp_graph, \
+                        wanted_resources=[app_identifier], \
+                        iri_to_pythonobjects=self.saved_objects)
+                try:
+                    new_app = self.saved_objects[app_identifier][0]
+                except Exception as err:
+                    raise Exception(self.saved_objects) from err
+                self._app_priorityqueue.put((tmp_prio, new_app))
 
         for ax in it.chain(newaxioms, rdfgraph):
             self._current_used_rdfgraph.add(ax)
