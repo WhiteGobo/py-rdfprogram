@@ -8,9 +8,20 @@ import typing as typ
 import itertools as it
 
 class rdfgraph_finder:
+    """This object is used to find the input for given program.
+
+    :cvar program: program 
+    :cvar var_to_mutable: Mapping
+    """
     program: object
+    """Program for which this object is created"""
     var_to_mutable: dict
+    """Mapping from program variables to mutable nodes, which hold the 
+    information about input and output arguments of the program.
+    """
     mutable_to_arg: dict[programloader.mutable_resource, programloader.arg]
+    """Mapping of mutable nodes of program-arguments to their arguments
+    """
 
     def __init__(self, program):
         self.program = program
@@ -55,7 +66,12 @@ class rdfgraph_finder:
                        for x in ax) 
                    for ax in program.old_axioms)
 
-    def find_in_graph(self, rdfgraph: rdflib.Graph) -> dict[programloader.arg, rdflib.IdentifiedNode]:
+    def _find_in_graph(self, rdfgraph: rdflib.Graph) -> dict[programloader.arg, rdflib.IdentifiedNode]:
+        """Find programinput in given rdfgraph
+
+        :return: Mapping of the program-arguments as object to the
+            resourcenames used
+        """
         arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
         for found_nodes in rdfgraph.query(self.queryterm):
             arg_to_resource = {}
@@ -93,10 +109,13 @@ class tactic_priority_organizer:
 
     def get_priorities(self, rdfgraph: rdflib.Graph) \
             -> typ.Iterable[rdflib.graph._TripleType]:
+        """Generates info, which programs can be used on the given data
+        and what the priority of those programs are
+        """
         arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
         newaxioms = []
         for p_iri, finder in self.graphfinder.items():
-            for arg_to_resource in finder.find_in_graph(rdfgraph):
+            for arg_to_resource in finder._find_in_graph(rdfgraph):
                 app_identifier = rdflib.BNode()
                 newaxioms.extend(finder.create_app(arg_to_resource, app_identifier))
                 tmp_prio = rdflib.Literal(self.calculate_priority())
@@ -104,11 +123,18 @@ class tactic_priority_organizer:
         return newaxioms
 
     def calculate_priority(self):
+        """Estimates the priority. This method isnt ready yet
+        """
         return 0.0
 
 
 
 class tactic(tactic_priority_organizer):
+    """To generate a certain output with given programs, this class
+    is used. It looks up all available input-constellation for the given 
+    programs and estimates, which program-usage should be used via 
+    a priority queue. It also organizes the usage of the programs.
+    """
     uses: programloader.program
     """all availagle programs which are used, by this tactic"""
     def __init__(self, uri, uses: extc.info_attr_list(AUTGEN.uses)):
