@@ -24,12 +24,13 @@ class TestRDFLoader( unittest.TestCase ):
         """Load new resources, that are dependent on already built resources
         """
         old_res = rdflib.URIRef("http://example.com/2")
-        old_resources = {old_res: testinfo.empty(old_res)}
+        old_resources = {old_res: [testinfo.empty(old_res)]}
         g = rdflib.Graph().parse(data=f"""@base <http://example.com/> .
             <1> a <{testinfo.obj1}>;
             <{testinfo.prop1}> <2>.
         """)
-        qwe = rl.load_from_graph( testinfo.input_dict, g, iri_to_pythonobject=old_resources )
+        qwe = rl.load_from_graph(testinfo.input_dict, g, 
+                                 iri_to_pythonobjects=old_resources)
         self.assertEqual(set(it.chain(g.subjects(),old_resources)),
                          set(qwe.keys()))
 

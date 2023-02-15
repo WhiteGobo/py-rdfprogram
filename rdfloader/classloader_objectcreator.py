@@ -62,6 +62,21 @@ class abc_creator(abc.ABC):
         """
         pass
 
+class object_holder(abc_creator):
+    possible_dependencies = []
+    def __init__(self, iri, obj):
+        self.iri = iri
+        self.uri_main = iri
+        self.obj = obj
+
+    def dependent_on_objects(self, objectcreator_list):
+        return False
+
+    def create_object(self, iri_to_objectcontainers):
+        pass
+
+    def add_all_input_resources(self, uri_to_objects):
+        return
 
 class literal_creator(abc_creator):
     possible_dependencies = []
@@ -137,6 +152,7 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
             #logger.debug( f"skipped, cause: {sys.exc_info()[0]} with " \
             #                   f"description: {sys.exc_info()[1]}" )
             logger.debug( f"skipped, cause: {traceback.format_exc()}" )
+            logger.debug
             raise FailedCreation() from err
         self.needed_attributes = tuple( filter( \
                                 lambda x: x not in added_attr, \
@@ -212,7 +228,7 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
 
 
 def _create_all_objects(constructlist: typ.List[object_creator], \
-        already_constructed = None)\
+        already_constructed:dict[rdflib.IdentifiedNode, list])\
         -> dict[rdflib.IdentifiedNode, list]:
     """
 
@@ -221,7 +237,8 @@ def _create_all_objects(constructlist: typ.List[object_creator], \
     """
     done_something = True
     constructlist = list(constructlist)
-    iri_to_objectcontainers = {} #already_constructed
+    iri_to_objectcontainers = {iri: [object_holder(iri, x) for x in objects] 
+                               for iri, objects in already_constructed.items()}
     to_add_something = []
     while done_something and (constructlist or to_add_something):
         logger.debug( f"still trying to create following: {constructlist}")
@@ -291,14 +308,14 @@ def _type_control_load_from_graph(uri_to_constructor, rdf_graph, wanted_resource
     assert not missing_resources, f"missing resources: {missing_resources}"
 
 def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
-                    iri_to_pythonobject: dict[rdflib.IdentifiedNode, object]={}):
+                    iri_to_pythonobjects: dict[rdflib.IdentifiedNode, list]={}):
     """Loads all IRIs in wanted_resources from the knowledgegraph described
     by rdf_graph as python-objects. The resources are depending on 
     uri_to_constructor loaded as python-objects. 
 
-    :param iri_to_pythonobject: Already build old objects. Will be reused and
+    :param iri_to_pythonobjects: Already build old objects. Will be reused and
             also reiterated in returned dict
-    :type iri_to_pythonobject: dict[rdflib.IdentifiedNode, object]
+    :type iri_to_pythonobjects: dict[rdflib.IdentifiedNode, object]
     :type uri_to_constructor: Dict[ rdflib.URIRef, Callable ]
     :param uri_to_constructor: A mapping of a resource class to a constructor.
             All resources from the knowledgegraph classified as given resource
@@ -326,9 +343,9 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
     constructlist: typ.List[objectcreator] = []
     for uri_resource in wanted_resources: #will be extended in runtime
         logger.debug(f"find information to {uri_resource}")
-        for infoobject in _get_creationinfo_to( uri_resource, \
+        for infoobject in _get_creationinfo_to(uri_resource, \
                                 rdf_graph, uri_to_constructor, \
-                                iri_to_pythonobject ):
+                                iri_to_pythonobjects):
             logger.debug(f"new constructor: {infoobject}")
             constructlist.append(infoobject)
             new_objects = infoobject.possible_dependencies
@@ -350,7 +367,8 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
                 else:
                     raise Exception("this should never happen",x)
     logger.debug( f"Create all objects {constructlist}" )
-    return_dict = _create_all_objects(constructlist)
+    
+    return_dict = _create_all_objects(constructlist, iri_to_pythonobjects)
     return { key:values for key, values in return_dict.items()
             if isinstance(key, rdflib.IdentifiedNode)}
 
@@ -383,8 +401,7 @@ def _get_creationinfo_to(target_resource, g: rdflib.Graph,
         try:
             infoobject.process_argument_info(target_resource, g)
         except cl.MissingPrerequisites as err:
-            logger.info(f"skipped cause: {err.args}")
             if any(x not in already_existing_resources for x in err.args[0]):
+                logger.info(f"skipped cause: {err.args}")
                 continue
-            logger.info("not skippd")
         yield infoobject
