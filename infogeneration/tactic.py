@@ -6,6 +6,7 @@ from programloader import RDF_NS as RDF
 import rdflib
 import typing as typ
 import itertools as it
+import queue
 
 class rdfgraph_finder:
     """This object is used to find the input for given program.
@@ -101,20 +102,44 @@ class rdfgraph_finder:
 
 
 class tactic_priority_organizer:
-    graphfinder: dict[rdflib.IdentifiedNode, rdfgraph_finder]
+    graphfinder: dict[programloader.program, rdfgraph_finder]
+    """Mapping of used programs their graphfinders."""
+    _app_prioritiyqueue: queue.PriorityQueue[float, programloader.app]
+
+    def execute_first_app(self, rdfgraph=None) \
+            -> (str, typ.Iterable[rdflib.graph._TripleType]):
+        """Returns the first app in the priorityQueue.
+        If a rdfgraph is given, checks in the graph the current priorities
+        and given apps. So if some other thing can execute the apps or
+        because of some other reason the graph changes, this will reload
+        all information.
+        :raises: queue.Empty
+        """
+        if rdfgraph is not None:
+            raise NotImplementedError("Yet no rdfgraph is supported as input")
+        try:
+            _, myApp = self._app_priorityqueue.get_nowait()
+        except queue.Empty:
+            raise
+        returnstring, new_axioms = myApp()
+        return returnstring, new_axioms
+
     def __init__(self, uses):
         self.graphfinder = {}
-        for p in uses:
-            self.graphfinder[p.iri] = rdfgraph_finder(p)
+        for pro in uses:
+            self.graphfinder[pro] = rdfgraph_finder(pro)
+        self._app_priorityqueue = queue.PriorityQueue()
 
     def get_priorities(self, rdfgraph: rdflib.Graph) \
             -> typ.Iterable[rdflib.graph._TripleType]:
         """Generates info, which programs can be used on the given data
         and what the priority of those programs are
         """
+        pro: programloader.program
+        finder: rdfgraph_finder
         arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
-        newaxioms = []
-        for p_iri, finder in self.graphfinder.items():
+        newaxioms: list[rdflib.graph._TripleType] = []
+        for pro, finder in self.graphfinder.items():
             for arg_to_resource in finder._find_in_graph(rdfgraph):
                 app_identifier = rdflib.BNode()
                 newaxioms.extend(finder.create_app(arg_to_resource, app_identifier))
@@ -135,13 +160,13 @@ class tactic(tactic_priority_organizer):
     programs and estimates, which program-usage should be used via 
     a priority queue. It also organizes the usage of the programs.
     """
-    uses: programloader.program
+    uses: list[programloader.program]
     """all availagle programs which are used, by this tactic"""
     def __init__(self, uri, uses: extc.info_attr_list(AUTGEN.uses)):
         self.uri = uri
-        self._typecontrol_uses(uses)
-        self.uses = uses
-        super().__init__(uses) #tactic_priority_organizer
+        self.uses = list(uses)
+        self._typecontrol_uses(self.uses)
+        super().__init__(self.uses) #tactic_priority_organizer
 
     @classmethod
     def _typecontrol_uses(cls, uses: list[programloader.program]):
