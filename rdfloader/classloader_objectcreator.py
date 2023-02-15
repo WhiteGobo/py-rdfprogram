@@ -291,7 +291,7 @@ def _type_control_load_from_graph(uri_to_constructor, rdf_graph, wanted_resource
     assert not missing_resources, f"missing resources: {missing_resources}"
 
 def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
-                    iri_to_pythonobject: dict[rdflib.IdentifiedNode, object]=None):
+                    iri_to_pythonobject: dict[rdflib.IdentifiedNode, object]={}):
     """Loads all IRIs in wanted_resources from the knowledgegraph described
     by rdf_graph as python-objects. The resources are depending on 
     uri_to_constructor loaded as python-objects. 
@@ -314,13 +314,11 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
     :returns: mapping of uris to list of objects. Filters literals out.
     :TODO: new objects from _get_creationinfo should be a eindeutige form
     """
-    if iri_to_pythonobject is not None:
-        raise NotImplementedError()
     if wanted_resources is None:
         wanted_resources = set( filter( \
                                 lambda x: isinstance(x, rdflib.URIRef) \
                                 and x not in uri_to_constructor, \
-                                rdf_graph.subjects() ) )
+                                set(rdf_graph.subjects()) ) )
     wanted_resources = list( set(wanted_resources) )
     _type_control_load_from_graph(uri_to_constructor, rdf_graph, wanted_resources)
     logger.debug( f"starting wanted resources: {wanted_resources}" )
@@ -329,8 +327,8 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
     for uri_resource in wanted_resources: #will be extended in runtime
         logger.debug(f"find information to {uri_resource}")
         for infoobject in _get_creationinfo_to( uri_resource, \
-                                rdf_graph, uri_to_constructor ):
-
+                                rdf_graph, uri_to_constructor, \
+                                iri_to_pythonobject ):
             logger.debug(f"new constructor: {infoobject}")
             constructlist.append(infoobject)
             new_objects = infoobject.possible_dependencies
@@ -358,7 +356,8 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
 
 
 def _get_creationinfo_to(target_resource, g: rdflib.Graph, 
-                         uri_to_constructor: typ.Dict[str, typ.Callable]):
+                         uri_to_constructor: typ.Dict[str, typ.Callable],
+                         already_existing_resources):
     """
 
     :returns: For each differentiable generatable construct, this method
@@ -385,5 +384,7 @@ def _get_creationinfo_to(target_resource, g: rdflib.Graph,
             infoobject.process_argument_info(target_resource, g)
         except cl.MissingPrerequisites as err:
             logger.info(f"skipped cause: {err.args}")
-            continue
+            if any(x not in already_existing_resources for x in err.args[0]):
+                continue
+            logger.info("not skippd")
         yield infoobject

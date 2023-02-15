@@ -128,7 +128,7 @@ class argument_processor:
                                 it.chain( self.pre_needed_attributes, \
                                 self.post_needed_attributes )))
         if missing:
-            raise MissingPrerequisites("Missing", missing)
+            raise MissingPrerequisites(missing)
 
         return self.attr_to_uri
 

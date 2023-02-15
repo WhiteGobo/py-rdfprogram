@@ -25,11 +25,11 @@ class TestRDFLoader( unittest.TestCase ):
         """
         old_res = rdflib.URIRef("http://example.com/2")
         old_resources = {old_res: testinfo.empty(old_res)}
-        g = rdflib.Graph().parse(data="""@base <http://example.com/> .
+        g = rdflib.Graph().parse(data=f"""@base <http://example.com/> .
             <1> a <{testinfo.obj1}>;
             <{testinfo.prop1}> <2>.
         """)
-        qwe = rl.load_from_graph( testinfo.input_dict, g, old_resources )
+        qwe = rl.load_from_graph( testinfo.input_dict, g, iri_to_pythonobject=old_resources )
         self.assertEqual(set(it.chain(g.subjects(),old_resources)),
                          set(qwe.keys()))
 
