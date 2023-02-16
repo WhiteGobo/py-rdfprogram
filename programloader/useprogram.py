@@ -18,7 +18,7 @@ import sys
 import typing as typ
 import collections.abc
 from .programcontainer.exceptions import ProgramFailed
-from .programcontainer.class_programcontainer import iri_to_programcontainer
+from .programcontainer.class_programcontainer import iri_to_programcontainer,_program
 
 class _iri_repr_class:
     def __repr__( self ):
@@ -47,25 +47,6 @@ class mutable_resource(_iri_repr_class):
     def __init__( self, iri, info: extc.info_anyprop([],[_is_mutable]) ):
         self.iri = iri
         self.info = info
-
-
-def create_program(iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
-    """qwer
-
-    :return: asdf
-    :rtype: program
-    """
-    split: urllib.parse.SplitResult = urllib.parse.urlsplit( iri )
-    if split.scheme == "file":
-        filepath = os.path.abspath( split.netloc + split.path )
-        if not os.path.exists( filepath ):
-            raise TypeError( filepath, "File must exist" )
-        mtype, encoding = mimetypes.guess_type(filepath)
-        if mtype=="text/x-python":
-            return program_python(iri, filepath, app_args)
-
-    else:
-        raise NotImplementedError("only scheme file is currently implemented")
 
 
 class program(abc.ABC, _iri_repr_class):
@@ -245,17 +226,24 @@ class program(abc.ABC, _iri_repr_class):
         return new_axioms
 
 
-class program_python(program, _iri_repr_class):
-    """This uses as input for the commandline the method as_inputstring
-    and if that fails str(element). repr cant be used because it adds \'.
-
+class rdfprogram(program, _iri_repr_class):
+    """This class is for loading per rdfloader.load_from_graph .
+    How the program is loaded is organized the program_container
     """
-    def __init__(self, iri, filepath, app_args):
-        assert os.path.exists( filepath )
+    program_container: _program
+
+    @classmethod
+    def from_rdf(cls, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
+        """
+
+        :TODO: Currently just using __init__ produces an Exception in rdfloader
+        """
+        return cls(iri, app_args)
+
+    def __init__(self, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
         super().__init__(iri, app_args)
         #self.iri = iri
         #self.app_args = app_args
-        self.filepath = filepath
         self.program_container = iri_to_programcontainer(iri)
 
     def __call__(self, input_args, node_translator, default_existing_resources):
@@ -264,7 +252,6 @@ class program_python(program, _iri_repr_class):
 
         new_axioms = self.get_new_axioms(input_args, default_existing_resources, node_translator)
         return returnstring, new_axioms
-
 
 
 class arg(_iri_repr_class):
@@ -443,7 +430,7 @@ class filelink(_iri_repr_class): #also resource_link but that doesnt work
 
 
 input_dict = {\
-        PROLOA_NS.program: create_program, \
+        PROLOA_NS.program: rdfprogram.from_rdf, \
         PROLOA_NS.mutable_resource: mutable_resource,\
         PROLOA_NS.arg: arg,\
         PROLOA_NS.link: filelink,\

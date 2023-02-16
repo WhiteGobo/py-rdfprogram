@@ -28,7 +28,7 @@ notnumber_uri = pathlib.Path(notnumber_path).as_uri()
 
 
 input_dict = {\
-        PROLOA_NS.program: useprogram.create_program, \
+        PROLOA_NS.program: useprogram.rdfprogram.from_rdf, \
         PROLOA_NS.mutable_resource: useprogram.mutable_resource,\
         PROLOA_NS.arg: useprogram.arg,\
         PROLOA_NS.link: useprogram.filelink,\

@@ -18,23 +18,7 @@ from rdfloader import extension_classes as extc
 import logging
 logger = logging.getLogger(__name__)
 from .useprogram import ProgramFailed
-from .programcontainer.class_programcontainer import iri_to_programcontainer
-
-
-class _program(abc.ABC):
-    """programcontainer so that you can implement a simple callable with
-    args and kwargs
-    """
-    @abc.abstractmethod
-    def __call__(self, *args, **kwargs) -> str:
-        """Executes the program with given positional arguments args
-        and keyword argument kwargs
-
-        :raises ProgramFailed: if program breaks with error
-        :returns: stdout of program execution will be forwarded
-        """
-        pass
-
+from .programcontainer.class_programcontainer import iri_to_programcontainer, _program
 
 class _iri_repr_class:
     def __repr__(self):
