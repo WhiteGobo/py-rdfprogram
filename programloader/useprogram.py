@@ -13,6 +13,8 @@ import os.path
 import os
 import abc
 import subprocess
+import logging
+logger = logging.getLogger(__name__)
 import itertools as it
 import sys
 import typing as typ
@@ -189,8 +191,8 @@ class program(abc.ABC, _iri_repr_class):
         return args, kwargs
 
 
-    def get_new_axioms(self, input_args, default_existing_resources,
-                       mutable_to_target) -> typ.List:
+    def get_new_axioms(self, returnstring, input_args, mutable_to_target)\
+            -> typ.List:
         """
     
         :param mutable_to_target: translation of the mutable resources to
@@ -198,18 +200,13 @@ class program(abc.ABC, _iri_repr_class):
         :param input_args: Map of the args to the inputs
         :type input_args: typ.Dict[arg, (str, int, float, resource_link)]
         """
-        new_axioms: list
-        #existing_resources = list(default_existing_resources)
+        new_axioms: list = []
+        try:
+            new_axioms.extend(rdflib.Graph().parse(data=returnstring))
+        except rdflib.exceptions.ParserError:
+            logger.debug("Return string is not readable by rdflib")
+
         existing_resources = []
-        updated_resources = []
-        for mytarget in input_args.values():
-            try:
-                mytarget.update_change
-            except AttributeError:
-                continue
-            if mytarget.update_change():
-                updated_resources.append(mytarget.iri)
-                existing_resources.append(mytarget.iri)
         for mytarget in input_args.values():
             try:
                 if mytarget.exists():
@@ -218,14 +215,14 @@ class program(abc.ABC, _iri_repr_class):
                 pass
 
         all_axioms = [tuple(mutable_to_target.get(x,x) for x in axiom)
-                      for axiom in self._axioms]
+                      for axiom in self.new_axioms]
+
         not_valid = {y for y in (mutable_to_target.get(x,x) 
                      for x in self.possible_new_nodes)
                      if y not in existing_resources 
                      and isinstance(y, rdflib.IdentifiedNode)}
-        new_axioms = [ax for ax in all_axioms
-                      if not any(x in not_valid for x in ax)
-                      and any(x in updated_resources for x in ax)]
+        new_axioms.extend([ax for ax in all_axioms
+                      if not any(x in not_valid for x in ax)])
         return new_axioms
 
 
@@ -253,7 +250,7 @@ class rdfprogram(program, _iri_repr_class):
         args, kwargs = self.get_args_and_kwargs(input_args)
         returnstring = self.program_container( *args, **kwargs )
 
-        new_axioms = self.get_new_axioms(input_args, default_existing_resources, node_translator)
+        new_axioms = self.get_new_axioms(returnstring, input_args, node_translator)
         return returnstring, new_axioms
 
 
@@ -300,6 +297,7 @@ class app(_iri_repr_class):
     node_translator: typ.Dict
     """Translation of the mutable resources to the resources used in this app
     """
+    executes: object
     def __init__( self, iri, \
             input_args: extc.info_custom_property( PROLOA_NS.arg ),\
             executes: extc.info_attr( PROLOA_NS.executes ), \

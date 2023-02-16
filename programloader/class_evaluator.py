@@ -60,6 +60,7 @@ class evaluator(_iri_repr_class, useprogram.program):
             raise
         new_axioms = self._find_new_axioms(returnstring, input_args, 
                                            node_translator)
+        #new_axioms2 = self.get_new_axioms(returnstring, input_args, default_existing_resources, node_translator)
         return returnstring, new_axioms
 
     def _find_new_axioms(self, returnstring, input_args, mutable_to_target):
@@ -75,5 +76,3 @@ class evaluator(_iri_repr_class, useprogram.program):
                       for axiom in self.new_axioms)
 
         return new_axioms
-
-

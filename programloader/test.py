@@ -261,6 +261,7 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
 
         app_iri = URIRef("http://example.com/meinBefehl")
+        myapp = asdf[ app_iri ][0]
         returnstring, new_axioms = asdf[ app_iri ][0]()
         #returnstring is determined by executed program. In this example
         #it just prints out the sum of the given number and 3
