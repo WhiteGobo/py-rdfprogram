@@ -122,7 +122,6 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(set(myprogram.new_axioms), 
                          {(ge_node, asdf_customProp1, asdf_customResource1)})
 
-    @unittest.skip("asdf")
     def test_failed_program(self):
         """Testing what happens if a program fails. It loads a program 
         then tries to execute it with an invalid input, namely a str
@@ -163,7 +162,7 @@ class TestProgramloader( unittest.TestCase ):
         returnstring, new_axioms = asdf[ app_iri ][0]()
 
         logger.debug("returnstring in test_failing_evaluator:\n%s"%(returnstring))
-        expected_axioms = {(appuri, RDF_NS.a, PROLOA_NS.failedApp)}
+        expected_axioms = {(app_iri, RDF_NS.a, PROLOA_NS.failedApp)}
         self.assertEqual(set(new_axioms), expected_axioms)
 
     def test_get_information(self):
