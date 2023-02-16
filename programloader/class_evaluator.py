@@ -57,21 +57,6 @@ class evaluator(_iri_repr_class, useprogram.program):
             returnstring = self.program_container(*args, **kwargs)
         except ProgramFailed as err:
             raise
-        new_axioms = self._find_new_axioms(returnstring, input_args, 
-                                           node_translator)
-        #new_axioms2 = self.get_new_axioms(returnstring, input_args, default_existing_resources, node_translator)
+        new_axioms = self.get_new_axioms(returnstring, input_args, node_translator)
         return returnstring, new_axioms
 
-    def _find_new_axioms(self, returnstring, input_args, mutable_to_target):
-        new_axioms = []
-        try:
-            g = rdflib.Graph().parse(data=returnstring)
-            new_axioms.extend( g )
-        except rdflib.exceptions.ParserError:
-            logger.debug("Return string is not readable by rdflib")
-            pass
-
-        new_axioms.extend(tuple(mutable_to_target.get(x,x) for x in axiom)
-                      for axiom in self.new_axioms)
-
-        return new_axioms
