@@ -17,10 +17,8 @@ import itertools as it
 import sys
 import typing as typ
 import collections.abc
-
-class ProgramFailed(Exception):
-    pass
-
+from .programcontainer.exceptions import ProgramFailed
+from .programcontainer.class_programcontainer import iri_to_programcontainer
 
 class _iri_repr_class:
     def __repr__( self ):
@@ -258,30 +256,15 @@ class program_python(program, _iri_repr_class):
         #self.iri = iri
         #self.app_args = app_args
         self.filepath = filepath
+        self.program_container = iri_to_programcontainer(iri)
 
     def __call__(self, input_args, node_translator, default_existing_resources):
         args, kwargs = self.get_args_and_kwargs(input_args)
-        returnstring = self._exe( *args, **kwargs )
+        returnstring = self.program_container( *args, **kwargs )
 
         new_axioms = self.get_new_axioms(input_args, default_existing_resources, node_translator)
         return returnstring, new_axioms
 
-    def _exe(self, *args, **kwargs):
-        commandarray = ["python", str(self.filepath)]
-        for x in it.chain(args, it.chain.from_iterable(kwargs.items())):
-            try:
-                commandarray.append(x.as_inputstring())
-            except AttributeError:
-                commandarray.append(str(x))
-        q = subprocess.run( commandarray, capture_output=True )
-        try:
-            asdf = q.check_returncode()
-            program_return_str = q.stdout.decode()
-        except subprocess.CalledProcessError as err:
-            print( f"failed to execute {self.filepath}", file=sys.stderr)
-            print( q.stderr.decode(), file=sys.stderr )
-            raise Exception( "failed to execute program" ) from err
-        return program_return_str
 
 
 class arg(_iri_repr_class):

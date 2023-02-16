@@ -124,6 +124,50 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(set(myprogram.new_axioms), 
                          {(ge_node, asdf_customProp1, asdf_customResource1)})
 
+    @unittest.skip("asdf")
+    def test_failed_program(self):
+        """Testing what happens if a program fails. It loads a program 
+        then tries to execute it with an invalid input, namely a str
+        instead of an int
+        """
+        g = rdflib.Graph().parse( format="ttl", data=f"""
+            @prefix asdf: <http://example.com/> .
+            @prefix proloa: <http://example.com/programloader/> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            # This is the description of the program
+            <{program_uri}> a proloa:program ;
+                proloa:hasArgument _:1, _:2 .
+            _:1 proloa:id 0 ;
+                a proloa:arg .
+            _:2 proloa:id "--savefile" ;
+                a proloa:arg .
+
+            # This is the description, how the program should be executed
+            asdf:meinBefehl proloa:executes <{program_uri}> ;
+                a proloa:app ;
+                _:1 "ein string" .
+
+            # This is a description what the programs needs as argument 
+            # and what the result of the program looks like
+            _:1 proloa:describedBy _:res1 .
+            _:res1 a proloa:mutable_resource ;
+                asdf:customProp1 asdf:customResource1 .
+            #_:2 proloa:describedBy _:res2 .
+            _:2 proloa:declaresInfoLike _:res2 .
+            _:res2 a proloa:mutable_resource ;
+                asdf:customProp2 asdf:customResource2 .
+            _:res2 asdf:customProp3 _:res1 .
+        """)
+        asdf: dict = rl.load_from_graph( useprogram.input_dict, g )
+        self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+
+        app_iri = URIRef("http://example.com/meinBefehl")
+        returnstring, new_axioms = asdf[ app_iri ][0]()
+
+        logger.debug("returnstring in test_failing_evaluator:\n%s"%(returnstring))
+        expected_axioms = {(appuri, RDF_NS.a, PROLOA_NS.failedApp)}
+        self.assertEqual(set(new_axioms), expected_axioms)
+
     def test_get_information(self):
         g = rdflib.Graph().parse( format="ttl", data=f"""
             @prefix asdf: <http://example.com/> .

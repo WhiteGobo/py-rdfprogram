@@ -18,6 +18,7 @@ from rdfloader import extension_classes as extc
 import logging
 logger = logging.getLogger(__name__)
 from .useprogram import ProgramFailed
+from .programcontainer.class_programcontainer import iri_to_programcontainer
 
 
 class _program(abc.ABC):
@@ -62,16 +63,7 @@ class evaluator(_iri_repr_class, useprogram.program):
                  app_args: extc.info_attr_list(PROLOA_NS.hasArgument),
                  ):
         #load programcontainer
-        split: urllib.parse.SplitResult = urllib.parse.urlsplit( iri )
-        if split.scheme == "file":
-            filepath = os.path.abspath( split.netloc + split.path )
-            if not os.path.exists( filepath ):
-                raise TypeError( filepath, "File must exist" )
-            mtype, encoding = mimetypes.guess_type(filepath)
-            if mtype=="text/x-python":
-                programcontainer = python_program_container(filepath)
-        else:
-            raise NotImplementedError("only scheme file is implemented")
+        programcontainer = iri_to_programcontainer(iri)
 
         #load axioms
         needed_axioms = []
