@@ -12,14 +12,12 @@ import itertools as it
 import sys
 import rdflib
 from . import PROLOA_NS
+from . import RDF_NS
 from . import useprogram
 from rdfloader import extension_classes as extc
 import logging
 logger = logging.getLogger(__name__)
-
-
-class ProgramFailed(Exception):
-    pass
+from .useprogram import ProgramFailed
 
 
 class _program(abc.ABC):
@@ -92,15 +90,15 @@ class evaluator(_iri_repr_class, useprogram.program):
 
     def __call__(self, input_args: typ.Dict, not_needed_node_translator, 
                  default_existing_resources):
+        """Returns stderr on error and stdout on success
+        """
         node_translator = self._inputargs_to_nodetranslator(input_args)
 
         args, kwargs = self._inputargs_to_programinput(input_args)
         try:
             returnstring = self.program_container(*args, **kwargs)
         except ProgramFailed as err:
-            returnstring = err.args[0]
-            new_axiom = []
-            return returnstring, new_axiom
+            raise
         new_axioms = self._find_new_axioms(returnstring, input_args, 
                                            node_translator)
         return returnstring, new_axioms
@@ -178,6 +176,6 @@ class python_program_container(_program):
         except subprocess.CalledProcessError as err:
             #print(f"failed to execute {self.filepath}", file=sys.stderr)
             #print(q.stderr.decode(), file=sys.stderr)
-            raise ProgramFailed(q.stdout.decode()) from err
+            raise ProgramFailed(q.stdout.decode(), q.stderr.decode()) from err
         return program_return_str
 

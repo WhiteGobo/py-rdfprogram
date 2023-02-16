@@ -18,6 +18,10 @@ import sys
 import typing as typ
 import collections.abc
 
+class ProgramFailed(Exception):
+    pass
+
+
 class _iri_repr_class:
     def __repr__( self ):
         name = f"{type(self).__module__}.{type(self).__name__}"
@@ -389,8 +393,13 @@ class app(_iri_repr_class):
 
 
     def __call__( self ) -> (str, typ.List):
-        rvalue, new_axioms = self.executes(self.input_args, \
+        try:
+            rvalue, new_axioms = self.executes(self.input_args, \
                 self.node_translator, self._default_existing_resources)
+        except ProgramFailed as err:
+            returnstring = err.args[1]
+            new_axiom = [(self.iri, RDF_NS.a, PROLOA_NS.failedApp)]
+            return returnstring, new_axiom
         return rvalue, new_axioms
 
 class resource_link(abc.ABC):
