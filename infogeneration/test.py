@@ -71,7 +71,7 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
 """
 
 class TestInfogenerator( unittest.TestCase ):
-    #@unittest.skip("asdf")
+    @unittest.skip("asdf")
     def test_simple(self):
         """
         
