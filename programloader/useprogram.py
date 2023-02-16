@@ -169,7 +169,8 @@ class program(abc.ABC, _iri_repr_class):
         #assert not set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)), "not every example node is represented in axioms: %s"%(set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)),)
         return example_axioms, generated_axioms, has_example, has_generated
 
-    def get_args_and_kwargs(self, input_args):
+    def get_args_and_kwargs(self, input_args)\
+            -> (list[str], dict[str, str]):
         for mytarget in input_args.values():
             try:
                 mytarget.was_created()
@@ -178,10 +179,12 @@ class program(abc.ABC, _iri_repr_class):
 
         kwargs, args = {},{}
         for arg, val in input_args.items():
-            if isinstance(arg.id, str):
+            if isinstance(arg.id, (str)):
                 kwargs[arg.id] = val
-            else:
+            elif isinstance(arg.id, int):
                 args[arg.id] = val
+            else:
+                raise TypeError(arg, arg.id, input_args)
         args = [args[x] for x in sorted(args.keys())]
         return args, kwargs
 

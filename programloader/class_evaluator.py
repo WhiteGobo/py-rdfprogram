@@ -55,7 +55,7 @@ class evaluator(_iri_repr_class, useprogram.program):
         """
         node_translator = self._inputargs_to_nodetranslator(input_args)
 
-        args, kwargs = self._inputargs_to_programinput(input_args)
+        args, kwargs = self.get_args_and_kwargs(input_args)
         try:
             returnstring = self.program_container(*args, **kwargs)
         except ProgramFailed as err:
@@ -77,23 +77,6 @@ class evaluator(_iri_repr_class, useprogram.program):
                       for axiom in self.new_axioms)
 
         return new_axioms
-
-
-    def _inputargs_to_programinput(self, input_args) \
-            -> (list[str], dict[str, str]):
-        kwargs, args = {},{}
-        for arg, val in input_args.items():
-            try:
-                if isinstance(arg.id, str):
-                    kwargs[arg.id] = val
-                elif isinstance(arg.id, int):
-                    args[arg.id] = val
-                else:
-                    raise TypeError(arg, arg.id)
-            except (AttributeError, TypeError) as err:
-                raise TypeError(input_args) from err
-
-        return [args[x] for x in sorted(args.keys())], kwargs
 
     def _inputargs_to_nodetranslator(self, input_args):
         node_to_target = {}
