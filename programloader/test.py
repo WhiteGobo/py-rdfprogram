@@ -16,7 +16,6 @@ import os.path
 from . import test_src
 from . import PROLOA_NS
 from . import RDF_NS
-from . import class_evaluator
 program_path = importlib.resources.files(test_src).joinpath( "myprogram.py" )
 program_uri = rdflib.URIRef(pathlib.Path(program_path).as_uri())
 evaluator_path = importlib.resources.files(test_src).joinpath("myevaluator.py")

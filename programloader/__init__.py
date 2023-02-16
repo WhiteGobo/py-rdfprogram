@@ -4,7 +4,6 @@
 from . import PROLOA_NS
 
 from .useprogram import program, mutable_resource, arg, filelink, app
-from .class_evaluator import evaluator
 
 from . import useprogram
 
