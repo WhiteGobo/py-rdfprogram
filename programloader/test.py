@@ -33,7 +33,6 @@ input_dict = {\
         PROLOA_NS.arg: useprogram.arg,\
         PROLOA_NS.link: useprogram.filelink,\
         PROLOA_NS.app: useprogram.app,\
-        PROLOA_NS.evaluator: class_evaluator.evaluator.from_rdf,\
         }
 
 class TestProgramloader( unittest.TestCase ):
@@ -47,7 +46,7 @@ class TestProgramloader( unittest.TestCase ):
             @prefix proloa: <http://example.com/programloader/> .
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-            <{evaluator_uri}> a proloa:evaluator ;
+            <{evaluator_uri}> a proloa:program ;
                 proloa:hasArgument _:1 .
             _:1 proloa:id 0;
                 rdfs:comment "loadfile" ;
@@ -79,7 +78,7 @@ class TestProgramloader( unittest.TestCase ):
             @prefix proloa: <http://example.com/programloader/> .
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-            <{evaluator_uri}> a proloa:evaluator ;
+            <{evaluator_uri}> a proloa:program ;
                 proloa:hasArgument _:1 .
             _:1 proloa:id 0;
                 rdfs:comment "loadfile" ;

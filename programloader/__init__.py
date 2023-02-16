@@ -14,6 +14,5 @@ input_dict = {\
         PROLOA_NS.arg: useprogram.arg,\
         PROLOA_NS.link: useprogram.filelink,\
         PROLOA_NS.app: useprogram.app,\
-        PROLOA_NS.evaluator: evaluator.from_rdf,\
         }
 """Use this as input for :py:meth:`rdfloader.load_from_graph`"""
