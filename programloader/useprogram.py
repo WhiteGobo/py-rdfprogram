@@ -309,7 +309,7 @@ class app(_iri_repr_class):
         self.iri = iri
         self.executes = executes
         self.input_args = input_args
-        self._default_existing_resources, self.node_translator \
+        self.node_translator \
                 = self._find_all_axioms_and_existing_nodes()
 
     def _find_all_axioms_and_existing_nodes(self):
@@ -318,7 +318,6 @@ class app(_iri_repr_class):
         :TODO: maybe move default_existing_resources to program
         """
         node_to_target = {}
-        default_existing_resources = set()
         for x, target in self.input_args.items():
             translate_nodes = []
             try:
@@ -338,29 +337,10 @@ class app(_iri_repr_class):
                         node_to_target[node.iri] = rdflib.Literal(target)
                     except AttributeError:
                         pass
-                default_existing_resources.add(rdflib.Literal(target))
             else:
                 raise Exception("expected object with iri or str, "
                                 "float, int" ) from err
-        for x in self.input_args.keys():
-            try:
-                x.example_node.info
-            except AttributeError:
-                continue
-            for axiom in x.example_node.info:
-                for n in axiom:
-                    if n not in node_to_target:
-                        default_existing_resources.add(n)
-        for x in self.input_args.keys():
-            try:
-                x.generated_node.info
-            except AttributeError:
-                continue
-            for axiom in x.generated_node.info:
-                for n in axiom:
-                    if n not in node_to_target:
-                        default_existing_resources.add(n)
-        return default_existing_resources, node_to_target
+        return node_to_target
 
 
     def __call__( self ) -> (str, typ.List):
