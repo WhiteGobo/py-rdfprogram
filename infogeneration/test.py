@@ -19,6 +19,8 @@ adder_path = importlib.resources.files(test_src).joinpath( "adder.py" )
 adder_uri = rdflib.URIRef(pathlib.Path(adder_path).as_uri())
 numbertoaxiom_path = importlib.resources.files(test_src).joinpath( "numbertoaxiom.py" )
 numbertoaxiom_uri = rdflib.URIRef(pathlib.Path(numbertoaxiom_path).as_uri())
+testnumber_path = importlib.resources.files(test_src).joinpath( "a_number" )
+testnumber_uri = rdflib.URIRef(pathlib.Path(testnumber_path).as_uri())
 
 input_dictionary = {
         AUTGEN.tactic: tactic.tactic,
@@ -94,14 +96,14 @@ class TestInfogenerator( unittest.TestCase ):
 
         mytactic = generated_objects[rdflib.URIRef("file://mytactic")][0]
 
-        fileuri =rdflib.URIRef("file://asdf")
         infograph = rdflib.Graph().parse(format="ttl", data=f"""
             @prefix asdf: <http://example.com/> .
             @prefix proloa: <http://example.com/programloader/> .
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-            <{fileuri}> a asdf:number .
+            <{testnumber_uri}> a asdf:number ;
+                a proloa:link .
             """)
         asdf = mytactic.get_priorities(infograph)
         app_resources = [s for s,p,o in asdf if p==RDF.a and o==PROLOA.app]
@@ -118,12 +120,14 @@ class TestInfogenerator( unittest.TestCase ):
                 (res_app, RDF.a, PROLOA.app),
                 (res_app, PROLOA.executes, numbertoaxiom_uri),
                 (res_app, AUTGEN.priority, rdflib.Literal(0.0)),
-                (res_app, arg_resource, fileuri),
+                (res_app, arg_resource, testnumber_uri),
+                (arg_resource, RDF.a, PROLOA.arg),
                 }
         self.assertEqual(set(asdf), expected_axioms)
 
-        mytactic.execute_first_app()
+        returnstring, new_axioms = mytactic.execute_first_app()
         self.assertRaises(queue.Empty, mytactic.execute_first_app)
+        raise Exception(returnstring, new_axioms)
         
 if __name__=="__main__":
     logging.basicConfig( level=logging.DEBUG )

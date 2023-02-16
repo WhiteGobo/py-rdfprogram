@@ -98,7 +98,9 @@ class rdfgraph_finder:
                 (app_identifier, PROLOA.executes, self.program.iri),
                 ]
         for arg, arg_target in arg_to_resource.items():
-            axioms.append((app_identifier, arg.iri, arg_target))
+            axioms.extend([(app_identifier, arg.iri, arg_target),
+                           (arg.iri, RDF.a, PROLOA.arg),
+                           ])
         return axioms
 
 
@@ -131,7 +133,11 @@ class tactic_priority_organizer:
             self.graphfinder[pro] = rdfgraph_finder(pro)
         self._app_priorityqueue = queue.PriorityQueue()
         self._current_used_rdfgraph = rdflib.Graph()
-        self.saved_objects = {program.iri: [program] for program in uses}
+        self.saved_objects = {}
+        for program in uses:
+            self.saved_objects[program.iri] = [program]
+            for arg in program.app_args:
+                self.saved_objects[arg.iri] = [arg]
 
     def get_priorities(self, rdfgraph: rdflib.Graph) \
             -> typ.Iterable[rdflib.graph._TripleType]:
@@ -151,10 +157,8 @@ class tactic_priority_organizer:
                 newaxioms.append((app_identifier, AUTGEN.priority, tmp_prio))
 
                 tmp_graph = rdflib.Graph()
-                for ax in tmp_axioms:
+                for ax in it.chain(tmp_axioms,rdfgraph):
                     tmp_graph.add(ax)
-                print("brubru")
-                print(self.saved_objects)
                 self.saved_objects = rdfloader.load_from_graph(\
                         programloader.input_dict, tmp_graph, \
                         wanted_resources=[app_identifier], \
