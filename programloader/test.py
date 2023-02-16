@@ -15,6 +15,7 @@ import pathlib
 import os.path
 from . import test_src
 from . import PROLOA_NS
+from . import RDF_NS
 from . import class_evaluator
 program_path = importlib.resources.files(test_src).joinpath( "myprogram.py" )
 program_uri = rdflib.URIRef(pathlib.Path(program_path).as_uri())
@@ -23,7 +24,7 @@ evaluator_uri = rdflib.URIRef(pathlib.Path(evaluator_path).as_uri())
 number_path = importlib.resources.files(test_src).joinpath("number")
 number_uri = pathlib.Path(number_path).as_uri()
 notnumber_path = importlib.resources.files(test_src).joinpath("notnumber")
-notnumber_uri = pathlib.Path(number_path).as_uri()
+notnumber_uri = pathlib.Path(notnumber_path).as_uri()
 
 
 input_dict = {\
@@ -36,7 +37,6 @@ input_dict = {\
         }
 
 class TestProgramloader( unittest.TestCase ):
-    @unittest.skip("not yet implemented")
     def test_failing_evaluator(self):
         """Testing what happens if an evaluator fails, when applied to
         a list of resources. There must be a returned axiom that specifies,
@@ -65,8 +65,12 @@ class TestProgramloader( unittest.TestCase ):
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
-        myapp = asdf[URIRef("http://example.com/meinBefehl")][0]
+        appuri = URIRef("http://example.com/meinBefehl")
+        myapp = asdf[appuri][0]
         returnstring, new_axioms = myapp()
+        logger.debug("returnstring in test_failing_evaluator:\n%s"%(returnstring))
+        expected_axioms = {(appuri, RDF_NS.a, PROLOA_NS.failedApp)}
+        self.assertEqual(set(new_axioms), expected_axioms)
 
 
     def test_evaluator(self):
@@ -107,8 +111,9 @@ class TestProgramloader( unittest.TestCase ):
             }""")).__next__()[0]
         shouldbeaxioms = set([ 
                               (linkid, asdf_customProp1, asdf_customResource1),
+                              (linkid,rdflib.URIRef("http://example.com/containsNumber"),rdflib.Literal(3))
                               ])
-        self.assertEqual(set(new_axioms), shouldbeaxioms)
+        self.assertEqual(set(new_axioms), shouldbeaxioms, returnstring)
 
         myprogram = asdf[evaluator_uri][0]
         ex_node = myprogram.example_nodes[0].iri
@@ -176,8 +181,6 @@ class TestProgramloader( unittest.TestCase ):
                 }
         self.assertEqual(ex_axioms, set(myProgram.old_axioms))
         self.assertEqual(ge_axioms, set(myProgram.new_axioms))
-        #self.assertEqual(ex_axioms, set(myProgram.get_example_axioms()))
-        #self.assertEqual(ge_axioms, set(myProgram.get_generated_axioms()))
 
 
     def test_simple( self ):
