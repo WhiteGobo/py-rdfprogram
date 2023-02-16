@@ -31,15 +31,13 @@ class _iri_repr_class:
 
 
 class evaluator(_iri_repr_class, useprogram.program):
-    def __init__(self, iri, app_args, program_container:_program, needed_axioms, new_axioms ):
+    def __init__(self, iri, app_args, program_container:_program):
         """
 
         :TODO: remove needed_axioms cause double with useprogram.program.old_axioms
         """
         self.app_args = app_args
         self.program_container = program_container
-        self.needed_axioms = needed_axioms
-        self.new_axioms = new_axioms
         useprogram.program.__init__(self, iri, app_args)
 
     @classmethod
@@ -49,20 +47,7 @@ class evaluator(_iri_repr_class, useprogram.program):
         #load programcontainer
         programcontainer = iri_to_programcontainer(iri)
 
-        #load axioms
-        needed_axioms = []
-        new_axioms = []
-        for x in app_args:
-            try:
-                x.example_node.info
-            except AttributeError:
-                continue
-            try:
-                needed_axioms.extend([axiom for axiom in x.example_node.info])
-                new_axioms.extend([axiom for axiom in x.generated_node.info])
-            except AttributeError as err:
-                raise TypeError("Args need example_node and generated_node")
-        return cls(iri, app_args, programcontainer, needed_axioms, new_axioms)
+        return cls(iri, app_args, programcontainer)
 
     def __call__(self, input_args: typ.Dict, not_needed_node_translator, 
                  default_existing_resources):
