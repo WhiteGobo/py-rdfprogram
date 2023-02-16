@@ -246,7 +246,7 @@ class rdfprogram(program, _iri_repr_class):
         #self.app_args = app_args
         self.program_container = iri_to_programcontainer(iri)
 
-    def __call__(self, input_args, node_translator, default_existing_resources):
+    def __call__(self, input_args, node_translator):
         args, kwargs = self.get_args_and_kwargs(input_args)
         returnstring = self.program_container( *args, **kwargs )
 
@@ -366,7 +366,7 @@ class app(_iri_repr_class):
     def __call__( self ) -> (str, typ.List):
         try:
             rvalue, new_axioms = self.executes(self.input_args, \
-                self.node_translator, self._default_existing_resources)
+                self.node_translator)
         except ProgramFailed as err:
             returnstring = err.args[1]
             new_axiom = [(self.iri, RDF_NS.a, PROLOA_NS.failedApp)]

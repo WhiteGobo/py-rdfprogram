@@ -49,8 +49,7 @@ class evaluator(_iri_repr_class, useprogram.program):
 
         return cls(iri, app_args, programcontainer)
 
-    def __call__(self, input_args: typ.Dict, node_translator, 
-                 default_existing_resources):
+    def __call__(self, input_args: typ.Dict, node_translator):
         """Returns stderr on error and stdout on success
         """
         args, kwargs = self.get_args_and_kwargs(input_args)
