@@ -49,12 +49,10 @@ class evaluator(_iri_repr_class, useprogram.program):
 
         return cls(iri, app_args, programcontainer)
 
-    def __call__(self, input_args: typ.Dict, not_needed_node_translator, 
+    def __call__(self, input_args: typ.Dict, node_translator, 
                  default_existing_resources):
         """Returns stderr on error and stdout on success
         """
-        node_translator = self._inputargs_to_nodetranslator(input_args)
-
         args, kwargs = self.get_args_and_kwargs(input_args)
         try:
             returnstring = self.program_container(*args, **kwargs)
@@ -77,25 +75,6 @@ class evaluator(_iri_repr_class, useprogram.program):
                       for axiom in self.new_axioms)
 
         return new_axioms
-
-    def _inputargs_to_nodetranslator(self, input_args):
-        node_to_target = {}
-        for x, target in input_args.items():
-            try:
-                x.example_node
-            except AttributeError:
-                continue
-            try:
-                node_to_target[x.example_node.iri] = target.iri 
-                node_to_target[x.generated_node.iri] = target.iri 
-            except AttributeError as err:
-                if isinstance(target, (str, float, int)):
-                    node_to_target[x.example_node.iri] = rdflib.Literal(target)
-                    node_to_target[x.generated_node.iri] = rdflib.Literal(target)
-                else:
-                    raise Exception("expected object with iri or str, "
-                                    "float, int" ) from err
-        return node_to_target
 
 
 class python_program_container(_program):
