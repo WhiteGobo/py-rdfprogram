@@ -409,12 +409,3 @@ class filelink(_iri_repr_class): #also resource_link but that doesnt work
         except AttributeError:
             pass
 
-
-input_dict = {\
-        PROLOA_NS.program: rdfprogram.from_rdf, \
-        PROLOA_NS.mutable_resource: mutable_resource,\
-        PROLOA_NS.arg: arg,\
-        PROLOA_NS.link: filelink,\
-        PROLOA_NS.app: app,\
-        }
-"""Use this dictionary as input for rdfloader.load_from_graph"""

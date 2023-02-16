@@ -158,7 +158,7 @@ class TestProgramloader( unittest.TestCase ):
                 asdf:customProp2 asdf:customResource2 .
             _:res2 asdf:customProp3 _:res1 .
         """)
-        asdf: dict = rl.load_from_graph( useprogram.input_dict, g )
+        asdf: dict = rl.load_from_graph( input_dict, g )
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
 
         app_iri = URIRef("http://example.com/meinBefehl")
@@ -198,7 +198,7 @@ class TestProgramloader( unittest.TestCase ):
                 asdf:customProp2 asdf:customResource2 .
             _:res2 asdf:customProp3 _:res1 .
         """)
-        asdf: dict = rl.load_from_graph( useprogram.input_dict, g )
+        asdf: dict = rl.load_from_graph( input_dict, g )
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
 
         app_iri = URIRef("http://example.com/meinBefehl")
@@ -257,7 +257,7 @@ class TestProgramloader( unittest.TestCase ):
                 asdf:customProp2 asdf:customResource2 .
             _:res2 asdf:customProp3 _:res1 .
         """)
-        asdf: dict = rl.load_from_graph( useprogram.input_dict, g )
+        asdf: dict = rl.load_from_graph( input_dict, g )
         self.assertEqual( set(asdf.keys()), set(g.subjects()) )
 
         app_iri = URIRef("http://example.com/meinBefehl")
