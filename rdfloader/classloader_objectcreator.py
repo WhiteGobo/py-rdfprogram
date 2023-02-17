@@ -340,13 +340,6 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
     wanted_resources = list( set(wanted_resources) )
     _type_control_load_from_graph(uri_to_constructor, rdf_graph, wanted_resources)
 
-    tmp = rdflib.Graph()
-    for ax in rdf_graph:
-        tmp.add(ax)
-    rdf_graph = tmp
-    for ax in ontology_updater.reason_update(rdf_graph):
-        rdf_graph.add(ax)
-
     logger.debug( f"starting wanted resources: {wanted_resources}" )
 
     constructlist: typ.List[objectcreator] = []
