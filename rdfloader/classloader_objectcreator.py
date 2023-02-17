@@ -8,7 +8,6 @@ from . import RDF
 import itertools as it
 import traceback
 import abc
-from . import ontology_updater
 
 class FailedCreation(Exception):
     """Is thrown, when an expected Error is thrown, while creating an object
