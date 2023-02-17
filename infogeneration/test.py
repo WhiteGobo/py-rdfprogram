@@ -71,6 +71,22 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
 """
 
 class TestInfogenerator( unittest.TestCase ):
+    def test_reasoning_support(self):
+        g = rdflib.Graph().parse(format="ttl", data=f"""
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+            @prefix autgen: <http://example.com/automaticgenerator#> .
+            @prefix proloa: <http://example.com/programloader/> .
+
+            #automatic generation tactic
+            <file://mytactic> a autgen:tactic ;
+                autgen:usesPriorityQueue _:myQueue;
+                autgen:uses <myProgram>.
+
+            <myApp> proloa:executes <myProgram>.
+
+            """)
+
     @unittest.skip("asdf")
     def test_simple(self):
         """
