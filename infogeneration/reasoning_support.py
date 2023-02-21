@@ -17,7 +17,7 @@ def reason_pellet(x, debug=1):
                    "-cp", _PELLET_CLASSPATH,
                    "pellet.Pellet",
                    "realize",
-                   "--loader", "Jena",
+                   #"--loader", "Jena", #jena isnt able to load BNodes correct
                    "--input-format", "N-Triples",
                    "--ignore-imports",
                    "--infer-prop-values",

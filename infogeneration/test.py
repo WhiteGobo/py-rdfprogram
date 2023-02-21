@@ -86,53 +86,25 @@ class TestInfogenerator( unittest.TestCase ):
             @prefix swrlb: <http://www.w3.org/2003/11/swrlb#> .
             @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-            ns1:myApp a owl:NamedIndividual ;
-                ns1:proArg ns1:myResource ;
+            ns1:myApp ns1:proArg ns1:myResource ;
                 ns3:proArg ns1:myResource ;
                 proloa:executes ns1:myProgram .
 
-            ns1:mytactic a autgen:tactic,
-                    owl:NamedIndividual ;
+            ns1:mytactic a autgen:tactic ;
                 autgen:uses ns1:myProgram ;
-                autgen:usesPriorityQueue ns1:myQueue .
+                autgen:usesPriorityQueue _:myQueue .
+            
+            ns1:myProgram proloa:hasArgument ns1:proArg .
+            ns1:myResource ns1:prop 3 .
 
-            autgen:uses a owl:AnnotationProperty .
-
-            autgen:usesPriorityQueue a owl:AnnotationProperty .
-
-            proloa:executes a owl:AnnotationProperty .
-
-            proloa:hasArgument a owl:AnnotationProperty .
-
-            ns2:isRuleEnabled a owl:AnnotationProperty .
-
-            ns1:proArg a owl:AnnotationProperty .
-
-            ns1:prop a owl:DatatypeProperty ;
-                rdfs:subPropertyOf owl:topDataProperty .
-
-            autgen:tactic a owl:Class .
-
+            ns1:prop a owl:DatatypeProperty .
             ns3:proArg a owl:ObjectProperty .
-
-            ns1:myProgram a owl:NamedIndividual ;
-                proloa:hasArgument ns1:proArg .
-
-            ns1:myQueue a owl:DatatypeProperty ;
-                rdfs:subPropertyOf owl:topDataProperty .
-
-            ns1:myResource a owl:NamedIndividual ;
-                ns1:prop 3 .
+            _:myQueue a owl:DatatypeProperty .
 
             <http://www.w3.org/2002/07/app> a swrl:Variable .
-
             <http://www.w3.org/2002/07/prio> a swrl:Variable .
-
             <http://www.w3.org/2002/07/res> a swrl:Variable .
-
             <http://www.w3.org/2002/07/val> a swrl:Variable .
-
-            [] a owl:Ontology .
 
             [] a swrl:Imp ;
                 rdfs:label "S1"^^xsd:string ;
@@ -152,7 +124,7 @@ class TestInfogenerator( unittest.TestCase ):
                 swrl:head ( [ a swrl:DatavaluedPropertyAtom ;
                             swrl:argument1 <http://www.w3.org/2002/07/app> ;
                             swrl:argument2 <http://www.w3.org/2002/07/prio> ;
-                            swrl:propertyPredicate ns1:myQueue ] ) .
+                            swrl:propertyPredicate _:myQueue ] ) .
         """)
 
         g.base = "http:/example.com/myrule#"
