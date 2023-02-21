@@ -10,6 +10,7 @@ import rdfloader as rl
 import programloader
 import queue
 
+from . import reasoning_support
 import importlib.resources
 import pathlib
 import os.path
@@ -73,19 +74,45 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
 class TestInfogenerator( unittest.TestCase ):
     def test_reasoning_support(self):
         g = rdflib.Graph().parse(format="ttl", data=f"""
-            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+            @base <http:/example.com/myrule#> .
             @prefix autgen: <http://example.com/automaticgenerator#> .
+            @prefix ns1: <http:/example.com/> .
             @prefix proloa: <http://example.com/programloader/> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix swrl: <http://www.w3.org/2003/11/swrl#> .
+            @prefix swrlb: <http://www.w3.org/2003/11/swrlb#> .
+            @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-            #automatic generation tactic
-            <file://mytactic> a autgen:tactic ;
-                autgen:usesPriorityQueue _:myQueue;
-                autgen:uses <myProgram>.
+            ns1:myApp proloa:executes ns1:myProgram ;
+                ns1:proArg ns1:myResource .
 
-            <myApp> proloa:executes <myProgram>.
+            ns1:mytactic a autgen:tactic ;
+                autgen:uses ns1:myProgram ;
+                autgen:usesPriorityQueue ns1:myQueue .
 
-            """)
+            ns1:myResource ns1:prop 3 .
+            ns1:myProgram proloa:hasArgument ns1:proArg .
+
+            <app> a swrl:Variable .
+            <val> a swrl:Variable .
+            <prio> a swrl:Variable .
+
+            [] a swrl:Imp ;
+                rdfs:comment "prop(?res, ?val) proArg(?app ?res) swrlb:add(?prio, ?val, 3) -> myQueue(?app, ?prio)" ;
+                swrl:body ( [ a swrl:BuiltinAtom ;
+                            swrl:arguments ( <prio> <val> 3 ) ;
+                            swrl:builtin swrlb:add ] ) ;
+                swrl:head ( [ a swrl:IndividualPropertyAtom ;
+                            swrl:argument1 <app> ;
+                            swrl:argument2 <prio> ;
+                            swrl:propertyPredicate <myQueue> ] ) .""")
+        g.base = "http:/example.com/myrule#"
+
+        for x in reasoning_support.reason_update(g):
+            raise Exception(x)
+            pass
+
 
     @unittest.skip("asdf")
     def test_simple(self):
