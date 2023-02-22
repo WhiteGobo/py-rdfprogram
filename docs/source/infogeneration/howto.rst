@@ -61,8 +61,8 @@ infogeneration.input_dictionary.
         from infogeneration import input_dictionary
         g = rdflib.Graph().parse("/path/to/ttl-file")
         generated_objects = rl.load_from_graph(input_dictionary, g)
-        tactic_uri = rdflib.URIRef("http://example.com/ex#myProject")
-        mytactic: tactic = generated_objects[tactic_uri][0]
+        myProject_uri = rdflib.URIRef("http://example.com/ex#myProject")
+        myProject: tactic = generated_objects[myProject_uri][0]
         ...
 
 
@@ -75,10 +75,10 @@ get_priorities and execute_first_app:
    ...
    save_directory = "path/for/extra_data/"
    tmp_newinfo: rdflib.graph._TripleType #axioms for rdflib
-   while mytactic.get_priorities():
-        tmp_newinfo = mytactic.execute_first_app()
+   while myProject.get_priorities():
+        tmp_newinfo = myProject.execute_first_app()
    #if target information is described via BNodes
-   tmp_newinfo = mytactic.put_data_in_directory(save_directory)
+   tmp_newinfo = myProject.put_data_in_directory(save_directory)
    #if you need to save the axioms
    for ax in tmp_newinfo:
         g.add(ax)
