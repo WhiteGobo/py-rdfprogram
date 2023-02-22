@@ -6,7 +6,7 @@ The :py:class:`rdfloader.classloader.constructor_annotation` is used as annotati
 example implementation of a loadable class
 ..........................................
 
-To tell how the algrithm of :py:func:`rdfloader.load_from_graph` can load
+To tell how the algorithm of :py:func:`rdfloader.load_from_graph` can load
 the information in the form of pythonclasses, you have to tell how it can 
 convert the resources given in the knowledge graph
 into attributes for the constructor. Every Annotation must be an subclass
