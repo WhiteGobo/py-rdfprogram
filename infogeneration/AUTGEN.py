@@ -17,3 +17,5 @@ apps should be executed.
 """
 usesPriorityQueue = URIRef(f"{BASE}usesPriorityQueue")
 """Connects a tactic to its priorityQueue."""
+controls = URIRef(f"{BASE}controls")
+"""Connects a priorityQueue to a program"""
