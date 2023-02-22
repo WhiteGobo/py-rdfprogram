@@ -128,8 +128,36 @@ class TestInfogenerator( unittest.TestCase ):
         """)
 
         g.base = "http:/example.com/myrule#"
+        node_myQueueBNode = iter(g.query("""SELECT ?x 
+                            WHERE {
+                                ns1:mytactic autgen:usesPriorityQueue ?x .
+                            }
+                            """)).__next__().x
 
-        reasoning_support.reason_pellet(g)
+        newaxioms = reasoning_support.reason_pellet(g)
+
+        from rdflib import URIRef, Literal
+        shouldbeaxioms = set((
+                    (URIRef('http://example.com/asdf#myApp'),
+                     RDF.a,
+                     URIRef('http://www.w3.org/2002/07/owl#Thing')),
+                    (URIRef('http://example.com/asdf#myResource'),
+                     RDF.a,
+                     URIRef('http://www.w3.org/2002/07/owl#Thing')),
+                    (URIRef('http://example.com/asdf#mytactic'),
+                     RDF.a,
+                     URIRef('http://example.com/automaticgenerator#tactic')),
+                    (URIRef('http://example.com/asdf#myApp'),
+                     URIRef('http://example.com/proArg'),
+                     URIRef('http://example.com/asdf#myResource')),
+                    (URIRef('http://example.com/asdf#myApp'),
+                     node_myQueueBNode,
+                     Literal(6)),
+                    (URIRef('http://example.com/asdf#myResource'),
+                     URIRef('http://example.com/asdf#prop'),
+                     Literal(3)),
+                    ))
+        self.assertEqual(set(newaxioms), set(shouldbeaxioms))
 
 
     @unittest.skip("asdf")
