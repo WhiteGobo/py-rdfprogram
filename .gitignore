@@ -5,3 +5,5 @@ rdfloader/__pycache__
 pathfinder/__pycache__
 */__pycache__
 pathfinder
+infogeneration/parser.out
+infogeneration/parsetab.py
