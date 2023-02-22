@@ -36,7 +36,7 @@ info_adder_uri = f"""@prefix asdf: <http://example.com/> .
         @prefix adder: <file://adder#> .
 
         <{adder_uri}> a proloa:program ;
-            proloa:hasArgument _:add1, _:add2 .
+            proloa:hasArgument adder:add1, adder:add2 .
         adder:add1 proloa:id 0 ;
             rdfs:comment "loadfile" ;
             a proloa:arg ;
@@ -61,7 +61,7 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
         @prefix info: <file://info#> .
 
         <{numbertoaxiom_uri}> a proloa:program ;
-            proloa:hasArgument _:ntaArg .
+            proloa:hasArgument info:ntaArg .
         info:ntaArg proloa:id 0 ;
             rdfs:comment "loadfile" ;
             a proloa:arg ;
