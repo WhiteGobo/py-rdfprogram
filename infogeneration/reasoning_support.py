@@ -41,10 +41,12 @@ def reason_pellet(x, debug=1):
         try:
             output = subprocess.run(command, stdout = subprocess.PIPE, stderr = subprocess.PIPE, check = True).stdout
         except subprocess.CalledProcessError as e:
-            if (e.returncode == 1) and (b"ERROR: Ontology is inconsistent" in (e.stderr or b"")): # XXX
+            if (e.returncode == 1) and (b"ERROR: Ontology is inconsistent" \
+                    in (e.stderr or b"")):
                 raise owl.OwlReadyInconsistentOntologyError()
             else:
-                raise owl.OwlReadyJavaError("Java error message is:\n%s" % (e.stderr or e.output or b"").decode("utf8"))
+                raise owl.OwlReadyJavaError("Java error message is:\n%s"\
+                        % (e.stderr or e.output or b"").decode("utf8"))
 
     try:
         output = output.decode("utf8")
