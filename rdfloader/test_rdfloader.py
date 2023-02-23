@@ -16,7 +16,13 @@ import itertools as it
 import logging
 logger = logging.getLogger()
 import rdflib
-from . import RDF
+#from . import RDF
+
+import importlib.resources
+from . import rdf_info
+info_rdf = importlib.resources.files(rdf_info).joinpath("22-rdf-syntax-ns.ttl")
+from . import rdf_namespace
+RDF = rdf_namespace.rdf_namespace.from_file(info_rdf)
 from . import classloader_objectcreator as cloc
 
 class TestRDFLoader( unittest.TestCase ):
@@ -338,7 +344,7 @@ class testinfo:
             self.uri = uri
 
     class any_prop_class:
-        def __init__(self, uri, axioms:ext.info_anyprop([ignoredprop],[(RDF.a,any_prop_obj)])):
+        def __init__(self, uri, axioms:ext.info_anyprop([ignoredprop], [(RDF.type, any_prop_obj)])):
             self.uri = uri
             self.axioms = axioms
 
