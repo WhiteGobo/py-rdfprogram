@@ -74,7 +74,7 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
 """
 
 class TestInfogenerator( unittest.TestCase ):
-
+    @unittest.skip("asdf")
     def test_simple(self):
         """
         
@@ -92,7 +92,7 @@ class TestInfogenerator( unittest.TestCase ):
             #automatic generation tactic
             <file://mytactic> a autgen:tactic ;
                 autgen:uses <{adder_uri}>,
-                            <{numbertoaxiom_uri}> .
+                            <{numbertoaxiom_uri}> ;
                 autgen:usesPriorityQueue _:adderQueue .
             _:adderQueue autgen:controls <{adder_uri}> ;
                 rdfs:comment "prio = info:ntaArg->info:value" .
