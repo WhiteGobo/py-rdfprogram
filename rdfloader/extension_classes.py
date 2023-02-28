@@ -24,7 +24,7 @@ class _objectcontainer(abc.ABC):
 
 INPUTGENERATOR = typ.Callable[
         typ.Dict[rdflib.IdentifiedNode, _objectcontainer], 
-        typ.Iterator[object, typ.List[_objectcontainer]]
+        typ.Iterator[typ.Tuple[object, typ.List[_objectcontainer]]]
         ]
 """Generator needed by load_from_graph algorithm. Generates possible
 parameter-inputs or attribute-inputs for given resource.
