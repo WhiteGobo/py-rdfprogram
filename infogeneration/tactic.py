@@ -1,5 +1,5 @@
 from . import AUTGEN
-from rdfloader import extension_classes as extc
+from rdfloader import annotations as extc
 import programloader
 from programloader import PROLOA_NS as PROLOA
 from programloader import RDF_NS as RDF

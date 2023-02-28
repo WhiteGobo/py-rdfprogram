@@ -1,6 +1,6 @@
 from . import tactic
 
-from rdfloader import extension_classes as extc
+from rdfloader import annotations as extc
 from . import namespaces
 import importlib.resources
 autgen_path = importlib.resources.files(namespaces).joinpath("autgen2.ttl")
@@ -18,7 +18,8 @@ class project:
     """Implements a tactic for a certain target
     """
     def __init__(self, uri, uses: extc.info_attr(AUTGEN.implements),
-                 target_information: extc.info_attr_list(AUTGEN.target)):
+                 target_information: extc.info_targetresourceinfo(AUTGEN.target)):
+        raise Exception
         pass
 
 

@@ -3,7 +3,7 @@ This module implements all available classes for rdfloader.load_graph
 """
 from . import PROLOA_NS
 from . import RDF_NS
-from rdfloader import extension_classes as extc
+from rdfloader import annotations as extc
 import tempfile
 import rdflib
 import urllib.parse
