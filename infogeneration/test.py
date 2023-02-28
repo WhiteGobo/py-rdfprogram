@@ -10,6 +10,7 @@ import rdfloader as rl
 import programloader
 import queue
 
+from . import Project
 from . import reasoning_support
 import importlib.resources
 import pathlib
@@ -74,6 +75,10 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
 """
 
 class TestInfogenerator( unittest.TestCase ):
+    def test_project(self):
+        pass
+
+
     @unittest.skip("asdf")
     def test_simple(self):
         """
