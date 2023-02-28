@@ -4,6 +4,7 @@ function :py:meth:`rdf_loader.load_from_graph`
 needs :py:class:`extension_classes.constructor_annotation` as annotations
 for the python-constructors.
 """
+from __future__ import annotations
 import dataclasses
 import rdflib
 import logging
@@ -14,17 +15,21 @@ import itertools as it
 
 from . import RDF
 
+
 class _objectcontainer(abc.ABC):
     uri: rdflib.IdentifiedNode
     obj: object
     def __hash__(self):
         pass
 
+INPUTGENERATOR = typ.Callable[typ.Dict[rdflib.IdentifiedNode, _objectcontainer], typ.Iterator]
+"""Generator needed by load_from_graph algorithm. Generates possible
+parameter-inputs or attribute-inputs for given resource.
+"""
+
 class constructor_annotation( abc.ABC ):
     """Every annotation of loadable objects in the load_from_graph
     algorithm must be an subclass of (or feasible as) this class.
-
-    :TODO: Reduce attributes of this class to 'needed'
     """
     uri: str
     """This might not be nneded anymore"""
@@ -49,11 +54,16 @@ class constructor_annotation( abc.ABC ):
         """This method will be called by the algorithm load_from_graph
         to identify how which resources, and how they will be used as 
         input for the annotated attribute
+
+        :TODO: This method should be obsolete but it isnt yet. Please
+            change!!!
         """
         pass
 
     @abc.abstractmethod
-    def find_dependencies( self, rdf_graph, uri_subject):
+    def find_dependencies( self, rdf_graph : rdflib.Graph, \
+            uri_subject: rdflib.IdentifiedNode) \
+            -> typ.Iterable[(rdflib.Identifier, rdflib.Literal)]:
         """Returns the same IRIs as in find_objects but all IRIs will
         be returned in a simple list. Just to get all dependencies in
         a standard format.
@@ -61,10 +71,16 @@ class constructor_annotation( abc.ABC ):
         pass
 
     @abc.abstractmethod
-    def create_input_generator(self, rdf_graph, uri_subject) -> typ.Callable:
+    def create_input_generator(self, rdf_graph:rdflib.Graph, uri_subject:rdflib.URIRef) -> INPUTGENERATOR:
         """Creates a generator object, which can generate the input
         for method if given a mapping of IRIs to all available
         python-objects
+
+        :param rdf_graph: Graph which describes all possible available 
+            resources.
+        :param uri_subject: Resource name for which the input is searched for
+        :returns: a generator needed by load_from_graph. See 
+            :py:object:`INPUTGENERATOR` for more information.
         """
         def input_generator(uri_to_pythonobjectcontainers: typ.Dict[rdflib.IdentifiedNode, _objectcontainer]) -> typ.Iterator:
             pass
