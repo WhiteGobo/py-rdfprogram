@@ -22,7 +22,10 @@ class _objectcontainer(abc.ABC):
     def __hash__(self):
         pass
 
-INPUTGENERATOR = typ.Callable[typ.Dict[rdflib.IdentifiedNode, _objectcontainer], typ.Iterator]
+INPUTGENERATOR = typ.Callable[
+        typ.Dict[rdflib.IdentifiedNode, _objectcontainer], 
+        typ.Iterator[object, typ.List[_objectcontainer]]
+        ]
 """Generator needed by load_from_graph algorithm. Generates possible
 parameter-inputs or attribute-inputs for given resource.
 """
