@@ -30,10 +30,25 @@ INPUTGENERATOR = typ.Callable[
 parameter-inputs or attribute-inputs for given resource.
 """
 
+#Inputgenerator = typ.Callable
+#"""Creates the input for the given attribute attr. This can be 
+#directly used as input for the constructor or used in a dictionary 
+#used as **dict for the constructor. Doesnt raise KeyError, when 
+#expected uri isnt in uri_to_pythonobject.
+#
+#:param attr: Argument of the constructor, for which, the pythonobject 
+#        should be searched for.
+#:type attr: str
+#:param uri_to_pythonobject: Mapping to find generated pythonobjects
+#:type uri_to_pythonobject: dict[ rdflib.IdentifiedNode, list[object] ]
+#"""
+
+
 class constructor_annotation( abc.ABC ):
     """Every annotation of loadable objects in the load_from_graph
     algorithm must be an subclass of (or feasible as) this class.
     """
+
     @property
     @abc.abstractmethod
     def inputtype(self) -> type:
@@ -77,6 +92,7 @@ class constructor_annotation( abc.ABC ):
     default value, the resource is always needed and this option
     will be ignored.
     """
+
     at_generation: bool
     """If the resource has a default value and the resource is not needed,
     this option specifies, if the resource can be set after the creation.
@@ -124,19 +140,6 @@ class constructor_annotation( abc.ABC ):
         """
         def input_generator(uri_to_pythonobjectcontainers: typ.Dict[rdflib.IdentifiedNode, _objectcontainer]) -> typ.Iterator:
             pass
-
-#Inputgenerator = typ.Callable
-#"""Creates the input for the given attribute attr. This can be 
-#directly used as input for the constructor or used in a dictionary 
-#used as **dict for the constructor. Doesnt raise KeyError, when 
-#expected uri isnt in uri_to_pythonobject.
-#
-#:param attr: Argument of the constructor, for which, the pythonobject 
-#        should be searched for.
-#:type attr: str
-#:param uri_to_pythonobject: Mapping to find generated pythonobjects
-#:type uri_to_pythonobject: dict[ rdflib.IdentifiedNode, list[object] ]
-#"""
 
 Uri = str
 """type hint equal to strings. Given Uri have this type"""
