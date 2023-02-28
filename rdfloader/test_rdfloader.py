@@ -11,6 +11,7 @@ try:
 except ModuleNotFoundError:
     import rdf_loader as rl
 from . import extension_classes as ext
+from . import extension_graphfilter as ext2
 
 import itertools as it
 import logging
@@ -26,6 +27,27 @@ RDF = rdf_namespace.rdf_namespace.from_file(info_rdf)
 from . import classloader_objectcreator as cloc
 
 class TestRDFLoader( unittest.TestCase ):
+    def test_treeinfo(self):
+        """Load a tree of information"""
+        g = rdflib.Graph().parse(data = f"""@base <http://example.com#> .
+            <1> a <{testinfo.tree_obj}> ;
+                <{testinfo.tree_target}> <child1> , <child2> .
+            <child1> <prop1> <object1> .
+            <child2> <prop2> <object2> .
+        """)
+        from rdflib import URIRef
+        asdf = rl.load_from_graph(testinfo.input_dict, g)
+        self.assertTrue( URIRef("http://example.com#1") in asdf, 
+                        "couldnt load")
+        root = asdf["http://example.com#1"][0]
+        self.assertEqual(type(root), testinfo.tree)
+        shouldbeaxioms = set([
+            (URIRef("http://example.com#child1"), URIRef("http://example.com#prop1"), URIRef("http://example.com#object1")),
+            (URIRef("http://example.com#child2"), URIRef("http://example.com#prop2"), URIRef("http://example.com#object2")),
+            ])
+        self.assertEqual(set(root.axioms), shouldbeaxioms)
+
+
     def test_load_new_information(self):
         """Load new resources, that are dependent on already built resources
         """
@@ -265,6 +287,7 @@ prop3 = "a://property3"
 property_type = rdflib.URIRef( "a://property_type" )
 ignoredprop = rdflib.URIRef("a://ignored_property")
 any_prop_obj = rdflib.URIRef( "a://anyprop_object" )
+tree_target = rdflib.URIRef( "a://tree_target" )
 class base:
     def __repr__( self ):
         return f"<{type(self)}:{self.uri}>"
@@ -275,6 +298,7 @@ class testinfo:
     obj3 = rdflib.URIRef( "a://object3" )
     obj4 = rdflib.URIRef( "a://object4" )
     obj5 = rdflib.URIRef( "a://object5" )
+    tree_obj  = rdflib.URIRef("a://treeobject")
     any_prop_obj = any_prop_obj
     has_bnode_property_obj = rdflib.URIRef( "a://hasbnode_object" )
     #prop1 = rdflib.URIRef( "a://property1" )
@@ -286,6 +310,8 @@ class testinfo:
     prop3 = prop3
     property_type = property_type
     ignoredprop = ignoredprop
+    tree_target = tree_target
+
     class has_bnode_property( base ):
         def __init__( self, uri, val: ext.info_custom_property(property_type) ):
             self.uri = uri
@@ -348,6 +374,11 @@ class testinfo:
             self.uri = uri
             self.axioms = axioms
 
+    class tree:
+        def __init__(self, uri, axioms:ext2.info_targetresourceinfo(tree_target)):
+            self.uri = uri
+            self.axioms = axioms
+
     input_dict = { 
             obj1: A,
             obj2: B,
@@ -357,6 +388,7 @@ class testinfo:
             any_prop_obj: any_prop_class,
             has_bnode_property_obj: has_bnode_property,
             property_type: empty,
+            tree_obj: tree,
             }
 
 
