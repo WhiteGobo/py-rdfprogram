@@ -10,7 +10,7 @@ import abc
 import typing as typ
 import itertools as it
 import traceback
-from .extension_classes import constructor_annotation
+from .annotations import constructor_annotation
 
 class MultipleUrisToSingleAttribute( Exception ):
     """Is thrown, when to an attribute multiple references are found

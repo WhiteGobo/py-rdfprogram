@@ -4,7 +4,7 @@ the method py:meth:´rdf_loader.load_from_graph´
 """
 #from .rdf_loader import load_from_graph
 from .classloader_objectcreator import load_from_graph
-from . import extension_classes as _ext
+from . import annotations as _ext
 #from . import classloader
 
 annotation = {

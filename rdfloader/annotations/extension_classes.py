@@ -13,7 +13,7 @@ logger = logging.getLogger( __name__ )
 import typing as typ
 import itertools as it
 
-from . import RDF
+from .. import RDF
 
 
 class _objectcontainer(abc.ABC):

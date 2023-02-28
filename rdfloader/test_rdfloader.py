@@ -10,8 +10,7 @@ try:
     from . import rdf_loader as rl
 except ModuleNotFoundError:
     import rdf_loader as rl
-from . import extension_classes as ext
-from . import extension_graphfilter as ext2
+from . import annotations as ext
 
 import itertools as it
 import logging
@@ -28,8 +27,8 @@ from . import classloader_objectcreator as cloc
 
 class TestRDFLoader( unittest.TestCase ):
     def test_treeinfo(self):
-        """Load a tree of information"""
-        g = rdflib.Graph().parse(data = f"""@base <http://example.com#> .
+        """Testing info_targetresourceinfo. Load a tree of information"""
+        g = rdflib.Graph().parse(data = f"""@base <http://example.com/> .
             <1> a <{testinfo.tree_obj}> ;
                 <{testinfo.tree_target}> <child1> , <child2> .
             <child1> <prop1> <object1> .
@@ -37,13 +36,11 @@ class TestRDFLoader( unittest.TestCase ):
         """)
         from rdflib import URIRef
         asdf = rl.load_from_graph(testinfo.input_dict, g)
-        self.assertTrue( URIRef("http://example.com#1") in asdf, 
-                        "couldnt load")
-        root = asdf["http://example.com#1"][0]
+        root = asdf[URIRef("http://example.com/1")][0]
         self.assertEqual(type(root), testinfo.tree)
         shouldbeaxioms = set([
-            (URIRef("http://example.com#child1"), URIRef("http://example.com#prop1"), URIRef("http://example.com#object1")),
-            (URIRef("http://example.com#child2"), URIRef("http://example.com#prop2"), URIRef("http://example.com#object2")),
+            (URIRef("http://example.com/child1"), URIRef("http://example.com/prop1"), URIRef("http://example.com/object1")),
+            (URIRef("http://example.com/child2"), URIRef("http://example.com/prop2"), URIRef("http://example.com/object2")),
             ])
         self.assertEqual(set(root.axioms), shouldbeaxioms)
 
@@ -375,7 +372,7 @@ class testinfo:
             self.axioms = axioms
 
     class tree:
-        def __init__(self, uri, axioms:ext2.info_targetresourceinfo(tree_target)):
+        def __init__(self, uri, axioms:ext.info_targetresourceinfo(tree_target)):
             self.uri = uri
             self.axioms = axioms
 
