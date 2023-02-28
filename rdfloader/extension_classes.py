@@ -34,8 +34,44 @@ class constructor_annotation( abc.ABC ):
     """Every annotation of loadable objects in the load_from_graph
     algorithm must be an subclass of (or feasible as) this class.
     """
+    @property
+    @abc.abstractmethod
+    def inputtype(self) -> type:
+        """Specifies the type of the argument, that is delivered, when this
+        annotation is used for a parameter or an attribute. Is not really
+        used yet. Is only for documentation purposes.
+
+        This type should match the type of the first part of the returnvalue
+        of the INPUTGENERATOR, that is yielded by create_input_generator:
+
+            >>> gen = anno.create_input_generator(...)
+            >>> for value, resourcelist in gen(...):
+            >>>     #Here value conforms with anno.type
+            >>>     (...)
+
+        Typecontrol will not be added because of 'duck typing'. For 
+        typecontrol please implment this by yourself as property or 
+        in __init__. As Example:
+
+            >>> def __init__(self, val: anno(type=int, ...)):
+            >>>     self.val = int(val)
+
+        or as property:
+            
+            >>> def __init__(self, val: anno(type=myclass)):
+            >>>     (...)
+            >>> 
+            >>> @property.set
+            >>> def val(self, val):
+            >>>     if not hasattr(val, "myclass_method1"):
+            >>>         raise TypeError(val)
+
+        """
+        pass
+
     uri: str
     """This might not be nneded anymore"""
+
     needed: bool
     """Resources can be optional or needed. If the attribute has a
     default value, the resource is always needed and this option
@@ -74,7 +110,8 @@ class constructor_annotation( abc.ABC ):
         pass
 
     @abc.abstractmethod
-    def create_input_generator(self, rdf_graph:rdflib.Graph, uri_subject:rdflib.URIRef) -> INPUTGENERATOR:
+    def create_input_generator(self, rdf_graph:rdflib.Graph, 
+                               uri_subject:rdflib.URIRef) -> INPUTGENERATOR:
         """Creates a generator object, which can generate the input
         for method if given a mapping of IRIs to all available
         python-objects
@@ -105,7 +142,7 @@ Uri = str
 """type hint equal to strings. Given Uri have this type"""
 
 class info_anyprop(constructor_annotation):
-    """This annoatets, that all axioms should be found, which arent
+    """This annotates, that all axioms should be found, which arent
     excluded explicitly. All axioms will be returned as axioms
     and wont be given as python-objects.
 
@@ -116,7 +153,8 @@ class info_anyprop(constructor_annotation):
         as property and object will be ignored.
     :type ignore_axioms: list[(IRI, IRI)]
     """
-    needed=True
+    inputtype = "rdflib.graph._TripleType"
+    needed = True
     def __init__(self, ignore_uris: typ.List[rdflib.IdentifiedNode], 
                  ignore_axioms: typ.List[typ.Tuple[rdflib.IdentifiedNode, rdflib.IdentifiedNode]],
                  at_generation = False):
@@ -173,6 +211,7 @@ class info_attr_list( constructor_annotation ):
     uri: str
     needed: bool = True
     at_generation: bool = False
+    inputtype: type = type
 
     def __repr__(self):
         name = ".".join((type(self).__module__, type(self).__name__))
@@ -225,6 +264,7 @@ class info_attr( constructor_annotation ):
     uri: str
     needed: bool = False
     at_generation: bool = False
+    inputtype: type = type
     def to_uri_identifier( self ):# -> URI_IDENTIFIER:
         return self
 
@@ -284,6 +324,7 @@ class info_custom_property( constructor_annotation  ):
     uri: str
     needed = False
     at_generation = False
+    inputtype: type = type
     def to_uri_identifier( self ):# -> URI_IDENTIFIER:
         return self
 
