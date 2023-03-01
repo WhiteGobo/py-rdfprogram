@@ -337,16 +337,19 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
                                 and x not in uri_to_constructor, \
                                 set(rdf_graph.subjects()) ) )
     wanted_resources = list( set(wanted_resources) )
-    _type_control_load_from_graph(uri_to_constructor, rdf_graph, wanted_resources)
+    _type_control_load_from_graph(uri_to_constructor, rdf_graph, 
+                                  wanted_resources)
 
     logger.debug( f"starting wanted resources: {wanted_resources}" )
 
     constructlist: typ.List[objectcreator] = []
     for uri_resource in wanted_resources: #will be extended in runtime
         logger.debug(f"find information to {uri_resource}")
+        found_any = False
         for infoobject in _get_creationinfo_to(uri_resource, \
                                 rdf_graph, uri_to_constructor, \
                                 iri_to_pythonobjects):
+            found_any = True
             logger.debug(f"new constructor: {infoobject}")
             constructlist.append(infoobject)
             new_objects = infoobject.possible_dependencies
@@ -367,6 +370,9 @@ def load_from_graph( uri_to_constructor, rdf_graph, wanted_resources=None,
                         wanted_resources.append( x )
                 else:
                     raise Exception("this should never happen",x)
+
+        if not found_any:
+            logger.info(f"couldnt find any constructors for {uri_resource}")
     logger.debug( f"Create all objects {constructlist}" )
     
     return_dict = _create_all_objects(constructlist, iri_to_pythonobjects)
