@@ -15,6 +15,7 @@ import abc
 import subprocess
 import logging
 logger = logging.getLogger(__name__)
+"""Logger for everything programloader does"""
 import itertools as it
 import sys
 import typing as typ
@@ -272,8 +273,8 @@ class arg(_iri_repr_class):
     generated_node: mutable_resource
 
     def __init__( self, iri, id: extc.info_attr( PROLOA_NS.id ), 
-                 example_node: extc.info_attr( PROLOA_NS.describedBy, needed=False )=None,
-                 generated_node: extc.info_attr( PROLOA_NS.declaresInfoLike, needed=False )=None ):
+                 example_node: extc.info_attr( PROLOA_NS.describedBy, needed=False, at_generation=True )=None,
+                 generated_node: extc.info_attr( PROLOA_NS.declaresInfoLike, needed=False, at_generation=True )=None ):
         self.iri = iri
         assert isinstance(id, (str, int)), type(id)
         self.id = id
