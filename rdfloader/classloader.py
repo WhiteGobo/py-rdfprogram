@@ -105,8 +105,6 @@ class argument_processor:
             except StopIteration:
                 pass
 
-
-
         attr: str
         uri_prop: constructor_annotation
         for attr, uri_prop in self.attr_from_uri.items():
@@ -120,9 +118,8 @@ class argument_processor:
         for attr, uri_prop in self.attr_from_uri.items():
             asf = uri_prop.find_dependencies(rdf_graph, uri_main)
             self.possible_dependencies.update(asf)
-            if attr in self.pre_needed_attributes:
+            if attr in self.pre_needed_attributes or attr in self.at_generation_token:
                 self.pre_needed_resources.update(asf)
-
 
         missing = tuple(filter( lambda x: x not in self.attr_to_uri, \
                                 it.chain( self.pre_needed_attributes, \
@@ -151,6 +148,7 @@ def _get_combinations( key_to_multiple_values, filter_keys=None ):
 
 class info_from_class_constructor:
     """Implements Class generator from_class_constructor as classmethod."""
+    at_generation_token: list[str]
     attr_from_uri: typ.Dict[str, constructor_annotation]
     """dictionary of attributename to constructor_annotation to search for"""
     pre_needed_attributes: typ.List[str]
@@ -238,10 +236,6 @@ class info_from_class_constructor:
                 needed_token.append(attr)
             elif anno.at_generation:
                 at_generation_token.append(attr)
-        #needed_token = [attr for attr, anno in constructor_annotations.items()\
-        #                    if anno.needed]
-        #at_generation_token = [attr for attr, anno in constructor_annotations.items()\
-        #                    if anno.at_generation]
         is_preneeded = lambda x: x.default == inspect._empty \
                         and x.kind \
                         in (P.POSITIONAL_ONLY, P.POSITIONAL_OR_KEYWORD)
@@ -256,6 +250,7 @@ class info_from_class_constructor:
         except StopIteration as err:
             raise TypeError( f"Given constructor {class_constructor} doesnt "
                             "comply to Uri_to_python_constructor" ) from err
+        info: inspect.Parameter
         for attr, info in attr_and_info_iter:
             #logger.debug( str( (attr, info, info.kind) ) )
             if is_preneeded( info ):
@@ -266,6 +261,8 @@ class info_from_class_constructor:
                 if attr in needed_token:
                     #logger.debug( f"{attr} is post_needed_attribute" )
                     post_needed_attributes.append( attr )
+                elif attr in at_generation_token:
+                    optional_attributes.append( attr )
                 else:
                     #logger.debug( f"{attr} is optional" )
                     optional_attributes.append( attr )

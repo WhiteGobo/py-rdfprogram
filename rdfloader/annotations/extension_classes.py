@@ -227,9 +227,9 @@ class info_attr_list( constructor_annotation ):
         b = [tuple(str(y) for y in x) for x in self.ignore_axioms]
         return f"<{type(self).__name__}: {a}: {b}>"
 
-
     def to_uri_identifier( self ):# -> URI_IDENTIFIER:
         return self
+
     def create_input_generator(self, rdf_graph, uri_subject):
         uri_list = iter(self.find_objects(rdf_graph, uri_subject)).__next__()
         def input_generator(iri_to_pythonobjectcontainers):

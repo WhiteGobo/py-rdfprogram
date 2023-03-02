@@ -182,6 +182,31 @@ class TestRDFLoader( unittest.TestCase ):
         self.assertEqual( b.val, a )
 
 
+    def test_atgeneration(self):
+        """This tries to load two objects, which are dependend on each other
+        tests the at_generation option
+        """
+        g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
+            <1> a <{testinfo.obj7}> .
+        """)
+        qwe = rl.load_from_graph( testinfo.input_dict, g )
+        #self.assertEqual( qwe[ rdflib.URIRef("http://example.com/1") ][0].val,
+        #                 qwe[rdflib.URIRef("http://example.com/2") ][0] )
+        self.assertEqual( set(g.subjects()), set(qwe.keys() ),
+                         "couldnt load, despite no param has input and "
+                         "is required")
+
+        g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
+            <1> a <{testinfo.obj7}> .
+            <1> <{testinfo.prop1}> <2> .
+            <2> a <{testinfo.obj7}>.
+            <2> <{testinfo.prop1}> <1> .
+        """)
+        qwe = rl.load_from_graph( testinfo.input_dict, g )
+        #self.assertEqual( qwe[ rdflib.URIRef("http://example.com/1") ][0].val,
+        #                 qwe[rdflib.URIRef("http://example.com/2") ][0] )
+        self.assertEqual( set(), set(qwe.keys() ) )
+
     def test_iter( self ):
         """Tests if list attributes are loaded correctly"""
         g = rdflib.Graph().parse( data=f"""@base <http://example.com/> .
@@ -295,6 +320,7 @@ class testinfo:
     obj3 = rdflib.URIRef( "a://object3" )
     obj4 = rdflib.URIRef( "a://object4" )
     obj5 = rdflib.URIRef( "a://object5" )
+    obj7 = rdflib.URIRef( "a://object7" )
     tree_obj  = rdflib.URIRef("a://treeobject")
     any_prop_obj = any_prop_obj
     has_bnode_property_obj = rdflib.URIRef( "a://hasbnode_object" )
@@ -355,6 +381,27 @@ class testinfo:
 
         val = property(fget=_get_val, fset=_set_val)
 
+
+    class F( base ):
+        def __init__(self, uri, val: ext.info_attr(prop1, needed=False, at_generation=True) = None):
+            self.uri = uri
+            if val is not None:
+                self.val = val
+
+        def _set_val(self, val):
+            if not isinstance( val, (base, int, str, float) ):
+                raise Exception(val)
+                raise TypeError(val)
+            self._val = val
+
+        def _get_val(self):
+            try:
+                return self._val
+            except AttributeError:
+                return None
+
+        val = property(fget=_get_val, fset=_set_val)
+
     class E( base ):
         def __init__( self, uri, val: ext.info_attr(prop1, needed=False)=None):
             self.uri = uri
@@ -382,6 +429,7 @@ class testinfo:
             obj3: C,
             obj4: D,
             obj5: E,
+            obj7: F,
             any_prop_obj: any_prop_class,
             has_bnode_property_obj: has_bnode_property,
             property_type: empty,
