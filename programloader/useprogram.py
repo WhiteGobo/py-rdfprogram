@@ -104,12 +104,15 @@ class program(abc.ABC, _iri_repr_class):
         self.iri = iri
         self.app_args = app_args
 
-        self.old_axioms, self.new_axioms, example_nodes, generated_nodes\
-                = self._process_app_args(app_args)
-        self.example_nodes = example_nodes
-        self.generated_nodes = generated_nodes
+        self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
+        for a in app_args:
+            o, n, en, gn = a.process()
+            self.old_axioms.extend(o)
+            self.new_axioms.extend(n)
+            self.example_nodes.extend(en)
+            self.generated_nodes.extend(gn)
 
-        self.possible_new_nodes = generated_nodes
+        self.possible_new_nodes = self.generated_nodes
         self._axioms = self.new_axioms
 
     @abc.abstractmethod
@@ -146,31 +149,6 @@ class program(abc.ABC, _iri_repr_class):
                 >>>     return program_return_str
         """
         pass
-
-    def _process_app_args(self, app_args):
-        has_generated = []
-        has_example = []
-        example_axioms = []
-        generated_axioms = []
-        for x in self.app_args:
-            try:
-                x.example_node.info
-                for ax in x.example_node.info:
-                    if any(x in has_generated for x in ax):
-                        generated_axioms.append(ax)
-                    else:
-                        example_axioms.append(ax)
-                has_example.append(x.example_node)
-            except AttributeError:
-                pass
-            try:
-                x.generated_node.info
-                generated_axioms.extend(x.generated_node.info)
-                has_generated.append(x.generated_node)
-            except AttributeError:
-                pass
-        #assert not set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)), "not every example node is represented in axioms: %s"%(set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)),)
-        return example_axioms, generated_axioms, has_example, has_generated
 
     def get_args_and_kwargs(self, input_args)\
             -> (list[str], dict[str, str]):
@@ -282,6 +260,30 @@ class arg(_iri_repr_class):
             self.example_node = example_node
         if generated_node is not None:
             self.generated_node = generated_node
+
+    def process(self):
+        has_generated = []
+        has_example = []
+        example_axioms = []
+        generated_axioms = []
+        try:
+            self.example_node.info
+            for ax in self.example_node.info:
+                if any(x in has_generated for x in ax):
+                    generated_axioms.append(ax)
+                else:
+                    example_axioms.append(ax)
+            has_example.append(self.example_node)
+        except AttributeError:
+            pass
+        try:
+            self.generated_node.info
+            generated_axioms.extend(self.generated_node.info)
+            has_generated.append(self.generated_node)
+        except AttributeError:
+            pass
+        #assert not set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)), "not every example node is represented in axioms: %s"%(set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)),)
+        return example_axioms, generated_axioms, has_example, has_generated
 
 
 class app(_iri_repr_class):
