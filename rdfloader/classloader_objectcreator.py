@@ -268,6 +268,8 @@ def _create_all_objects(constructlist: typ.List[object_creator], \
             to_add_something.remove(generator)
             done_something = True
     logger.debug( f"All created: {iri_to_objectcontainers}" )
+    if constructlist:
+        logger.debug(f"Could not create: {constructlist}")
     ret = []
     deleted = []
     logger.debug(f"deleting {to_add_something} for missing dependencies")
