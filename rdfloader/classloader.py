@@ -333,6 +333,7 @@ class ObjectfromUri_generator(argument_processor, info_from_class_constructor):
                     except TypeError as err:
                         logger.debug( "".join(traceback.format_exception(err)))
                         continue
+                    logger.debug( f"successful with: {self.class_constructor}\nand input: {myinput}")
                     return newobj, dict( myinput ), set(used_objects)
         raise SkipAllCreation(pres, posts, uri_to_pythonobjects)
 

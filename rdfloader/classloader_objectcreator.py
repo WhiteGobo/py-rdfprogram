@@ -169,7 +169,6 @@ class object_creator(cl.ObjectfromUri_generator, abc_creator):
         self.addable = [ attr for attr, uri in tmp_attr_to_uri.items() \
                                 if attr not in added_attr ]
 
-        logger.debug( f"Created {self.obj}" )
         #uri_to_pythonobjects.setdefault( uri_object,[]).append( newobj )
         #logger.debug( f"Yet Created: {list(uri_to_pythonobjects)}" )
 
@@ -248,7 +247,7 @@ def _create_all_objects(constructlist: typ.List[object_creator], \
                 generator.create_object(iri_to_objectcontainers)
             except FailedCreation:
                 continue
-            logger.debug(f"Created {generator.uri_main}")
+            logger.debug( f"Created {generator.uri_main}: {generator.obj}" )
             constructlist.remove(generator)
             iri_to_objectcontainers.setdefault(generator.uri_main, []).append(generator)
             to_add_something.append(generator)
