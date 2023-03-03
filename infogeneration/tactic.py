@@ -8,6 +8,7 @@ import rdflib
 import typing as typ
 import itertools as it
 import queue
+import pyparsing.exceptions
 
 class rdfgraph_finder:
     """This object is used to find the input for given program.
@@ -44,19 +45,20 @@ class rdfgraph_finder:
         for i, y in enumerate(program.generated_nodes):
             varname = f"y{i}"
             for x, var in mutable_to_var.items():
-                if y.iri == x.iri:
+                if y == x:
                     varname = var
                     break
             mutable_to_var[y] = varname
         filter_resources = set(it.chain.from_iterable(program.old_axioms))
         self.var_to_mutable = {var: node 
                                for node, var in mutable_to_var.items()
-                               if node.iri in filter_resources}
-        resource_to_var = {node.iri: f"?{var}" 
+                               if node in filter_resources}
+        resource_to_var = {node: f"?{var}" 
                            for node, var in mutable_to_var.items()
-                           if node.iri in filter_resources}
+                           if node in filter_resources}
         search_axioms = [tuple(resource_to_var.get(x, f"<{x}>") for x in ax) 
                          for ax in program.old_axioms]
+        assert search_axioms
         self.queryterm ="""
             SELECT %s
             WHERE {%s
@@ -75,7 +77,11 @@ class rdfgraph_finder:
             resourcenames used
         """
         arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
-        for found_nodes in rdfgraph.query(self.queryterm):
+        try:
+            asdf = list(rdfgraph.query(self.queryterm))
+        except pyparsing.exceptions.ParseException as err:
+            raise Exception(self.queryterm) from err
+        for found_nodes in asdf:
             arg_to_resource = {}
             for var, mutable in self.var_to_mutable.items():
                 arg = self.mutable_to_arg[mutable]
@@ -130,6 +136,8 @@ class tactic_priority_organizer:
     def __init__(self, uses):
         self.graphfinder = {}
         for pro in uses:
+            if not pro.old_axioms:
+                raise TypeError( "old axioms must be provided or tactic doesnt know when to use that program")
             self.graphfinder[pro] = rdfgraph_finder(pro)
         self._app_priorityqueue = queue.PriorityQueue()
         self._current_used_rdfgraph = rdflib.Graph()
