@@ -23,6 +23,12 @@ import collections.abc
 from .programcontainer.exceptions import ProgramFailed
 from .programcontainer.class_programcontainer import iri_to_programcontainer,_program
 
+VALID_LITERALS = (str, int, float)
+"""Possible translations for literal values.
+
+:TODO: list here, where the transformation is made
+"""
+
 class _iri_repr_class:
     def __repr__( self ):
         name = f"{type(self).__module__}.{type(self).__name__}"
@@ -178,6 +184,8 @@ class program(abc.ABC, _iri_repr_class):
             the real inputs of the program
         :param input_args: Map of the args to the inputs
         :type input_args: typ.Dict[arg, (str, int, float, resource_link)]
+        :TODO: The query of mytarget.exists should be aligned to 
+            init of filelink
         """
         new_axioms: list = []
         try:
@@ -203,7 +211,12 @@ class program(abc.ABC, _iri_repr_class):
         logger.debug(f"not valid: {not_valid}")
         new_axioms.extend([ax for ax in all_axioms
                       if not any(x in not_valid for x in ax)])
-        logger.debug("missing: %s"%([ax for ax in all_axioms if ax not in new_axioms]))
+        if not_valid:
+            missing = [ax for ax in all_axioms if ax not in new_axioms]
+            logger.debug("After execution of %s the resources %s werent "\
+                    "existend.\nSo following axioms werent returned: %s" \
+                    %(self, not_valid, missing))
+
         return new_axioms
 
 
@@ -303,6 +316,9 @@ class app(_iri_repr_class):
     """Translation of the mutable resources to the resources used in this app
     """
     executes: object
+
+    input_args: dict["Arg.arg", "filelink"]
+    """Mapping of input args to the used abstract used input"""
     def __init__( self, iri, \
             input_args: extc.info_custom_property( PROLOA_NS.arg ),\
             executes: extc.info_attr( PROLOA_NS.executes ), \
@@ -314,6 +330,14 @@ class app(_iri_repr_class):
         self.iri = iri
         self.executes = executes
         self.input_args = input_args
+        if not all(hasattr(datalink, "exists") 
+                   or isinstance(datalink, VALID_LITERALS)
+                   for datalink in input_args.values()):
+            for datalink in input_args.values():
+                if not hasattr(datalink, "exists") or isinstance(datalink, rdflib.Literal):
+                    raise Exception(datalink)
+            raise TypeError(input_args)
+
         self.node_translator \
                 = self._find_all_axioms_and_existing_nodes()
 
@@ -335,11 +359,11 @@ class app(_iri_repr_class):
                 pass
             if hasattr(target, "iri"):
                 for node in translate_nodes:
-                    node_to_target[node.iri] = target.iri 
-            elif isinstance(target, (str, float, int)):
+                    node_to_target[node] = target.iri 
+            elif isinstance(target, VALID_LITERALS):
                 for node in translate_nodes:
                     try:
-                        node_to_target[node.iri] = rdflib.Literal(target)
+                        node_to_target[node] = rdflib.Literal(target)
                     except AttributeError:
                         pass
             else:
@@ -387,6 +411,10 @@ class filelink(_iri_repr_class): #also resource_link but that doesnt work
             assert not (split.query and split.fragment)
             self.filepath = split.netloc + split.path
         self.update_change()
+
+    def exists(self) -> bool:
+        """Checks if file exists"""
+        return os.path.exists(self.filepath)
 
     def update_change(self):
         """Tests if the file was since changed, since the last time this

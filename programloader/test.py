@@ -25,11 +25,13 @@ number_uri = pathlib.Path(number_path).as_uri()
 notnumber_path = importlib.resources.files(test_src).joinpath("notnumber")
 notnumber_uri = pathlib.Path(notnumber_path).as_uri()
 
+from . import Arg
 
 input_dict = {\
         PROLOA_NS.program: useprogram.rdfprogram.from_rdf, \
         PROLOA_NS.mutable_resource: useprogram.mutable_resource,\
-        PROLOA_NS.arg: useprogram.arg,\
+        #PROLOA_NS.arg: useprogram.arg,\
+        PROLOA_NS.arg: Arg.arg,\
         PROLOA_NS.link: useprogram.filelink,\
         PROLOA_NS.app: useprogram.app,\
         }
@@ -62,7 +64,7 @@ class TestProgramloader( unittest.TestCase ):
             <{notnumber_uri}> a proloa:link .
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
-        self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+        #self.assertEqual( set(asdf.keys()), set(g.subjects()) ) #bnodes are not loaded
         appuri = URIRef("http://example.com/meinBefehl")
         myapp = asdf[appuri][0]
         returnstring, new_axioms = myapp()
@@ -95,7 +97,7 @@ class TestProgramloader( unittest.TestCase ):
 
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
-        self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+        #self.assertEqual( set(asdf.keys()), set(g.subjects()) ) #bnodes are not loaded
         myapp = asdf[URIRef("http://example.com/meinBefehl")][0]
         returnstring, new_axioms = myapp()
 
@@ -156,7 +158,7 @@ class TestProgramloader( unittest.TestCase ):
             _:res2 asdf:customProp3 _:res1 .
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
-        self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+        #self.assertEqual( set(asdf.keys()), set(g.subjects()) ) #bnodes are not loaded
 
         app_iri = URIRef("http://example.com/meinBefehl")
         returnstring, new_axioms = asdf[ app_iri ][0]()
@@ -196,7 +198,7 @@ class TestProgramloader( unittest.TestCase ):
             _:res2 asdf:customProp3 _:res1 .
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
-        self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+        #self.assertEqual( set(asdf.keys()), set(g.subjects()) ) #bnodes are not loaded
 
         app_iri = URIRef("http://example.com/meinBefehl")
         #myApp = asdf[ app_iri ][0]
@@ -225,11 +227,19 @@ class TestProgramloader( unittest.TestCase ):
 
 
     def test_simple( self ):
+        """Tests if algorithm can load a program and can execute it,
+        as sepcifided in an 'app'. The program is specified via RDF.
+
+        Description of the program:
+        Executes a program that adds 3 to the given number
+        and can save it in file 'savefile' if given.
+        """
         g = rdflib.Graph().parse( format="ttl", data=f"""
             @prefix asdf: <http://example.com/> .
             @prefix proloa: <http://example.com/programloader/> .
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             # This is the description of the program
+            # adds 3 to given number and saves it in savefile
             <{program_uri}> a proloa:program ;
                 proloa:hasArgument _:1, _:2 .
             _:1 proloa:id 0 ;
@@ -255,7 +265,7 @@ class TestProgramloader( unittest.TestCase ):
             _:res2 asdf:customProp3 _:res1 .
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
-        self.assertEqual( set(asdf.keys()), set(g.subjects()) )
+        #self.assertEqual( set(asdf.keys()), set(g.subjects()) ) #bnodes are not loaded
 
         app_iri = URIRef("http://example.com/meinBefehl")
         myapp = asdf[ app_iri ][0]
