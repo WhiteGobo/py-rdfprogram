@@ -200,8 +200,10 @@ class program(abc.ABC, _iri_repr_class):
                      for x in self.possible_new_nodes)
                      if y not in existing_resources 
                      and isinstance(y, rdflib.IdentifiedNode)}
+        logger.debug(f"not valid: {not_valid}")
         new_axioms.extend([ax for ax in all_axioms
                       if not any(x in not_valid for x in ax)])
+        logger.debug("missing: %s"%([ax for ax in all_axioms if ax not in new_axioms]))
         return new_axioms
 
 
