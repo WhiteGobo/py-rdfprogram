@@ -108,7 +108,7 @@ class program(abc.ABC, _iri_repr_class):
 
     def __init__(self, iri, app_args):
         self.iri = iri
-        self.app_args = app_args
+        self.app_args = list(app_args)
 
         self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
         for a in app_args:

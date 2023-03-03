@@ -116,8 +116,9 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(set(new_axioms), shouldbeaxioms, returnstring)
 
         myprogram = asdf[evaluator_uri][0]
-        ex_node = myprogram.example_nodes[0].iri
-        ge_node = myprogram.generated_nodes[0].iri
+        self.assertEqual(myprogram.app_args[0].id, 0)
+        ex_node = myprogram.app_args[0].example_node
+        ge_node = myprogram.app_args[0].generated_node
         self.assertEqual(myprogram.old_axioms, [])
         asdf_customProp1 = URIRef("http://example.com/customProp1")
         asdf_customResource1 = URIRef("http://example.com/customResource1")
@@ -208,8 +209,13 @@ class TestProgramloader( unittest.TestCase ):
         myProgram.example_nodes 
         myProgram.generated_nodes
 
-        ex_node = myProgram.example_nodes[0].iri
-        ge_node = myProgram.generated_nodes[0].iri
+        for arg in myProgram.app_args:
+            if arg.id == 0:
+                ex_node = arg.example_node
+            elif arg.id == "--savefile":
+                ge_node = arg.generated_node
+            else:
+                raise Exception("unexpected argument", arg, arg.id )
         asdf_customProp1 = URIRef("http://example.com/customProp1")
         asdf_customProp2 = URIRef("http://example.com/customProp2")
         asdf_customProp3 = URIRef("http://example.com/customProp3")
