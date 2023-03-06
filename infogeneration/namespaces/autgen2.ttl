@@ -29,5 +29,8 @@ autgen:project a rdf:class ;
 autgen:implements a rdf:property ;
 	rdfs:comment "connects a project to the used tactic" .
 
-autgen:target a rdf:proerty ;
+autgen:target a rdf:property ;
 	rdfs:comment "connect a project to the target infograph, that should be created" .
+
+autgen:wasExecuted a rdf:property ;
+	rdfs:comment "to label something executed".

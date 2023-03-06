@@ -27,6 +27,7 @@ testnumber_uri = rdflib.URIRef(pathlib.Path(testnumber_path).as_uri())
 input_dictionary = {
         AUTGEN.tactic: tactic.tactic,
         }
+input_dictionary.update(Project.input_dict)
 input_dictionary.update(programloader.input_dict)
 
 info_adder_uri = f"""@prefix asdf: <http://example.com/> .
@@ -74,14 +75,89 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
             a asdf:checkednumber .
 """
 
+info_tactic = f"""@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        @prefix autgen: <http://example.com/automaticgenerator#> .
+        @prefix testpath: <{mypath_prefix}> .
+        @prefix info: <file://info#> .
+        @prefix adder: <file://adder#> .
+
+        #automatic generation tactic
+        <file://mytactic> a autgen:tactic ;
+            autgen:uses <{adder_uri}>,
+                        <{numbertoaxiom_uri}> ;
+            autgen:usesPriorityQueue _:adderQueue .
+        #_:adderQueue autgen:controls <{adder_uri}> ;
+        #    rdfs:comment "prio = info:ntaArg->info:value" .
+"""
+
 class TestInfogenerator( unittest.TestCase ):
     def test_project(self):
-        pass
+        g = rdflib.Graph()
+        g.parse(data = info_tactic)
+        g.parse(data = info_numbertoaxiom)
+        g.parse(data = info_adder_uri)
+        g.parse(format="ttl", data="""@prefix asdf: <http://asdf/>.
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+            @prefix autgen: <http://example.com/automaticgenerator#> .
+
+            asdf:myproject a autgen:project ;
+                    autgen:implements <file://mytactic> ;
+                    autgen:target _:asdf .
+            _:asdf a <http://qwer/z> .
+            """)
+        generated_objects = rl.load_from_graph(input_dictionary, g)
+        #self.assertEqual(set(generated_objects), set(g.subjects()))
+
+        try:
+            pro = generated_objects[rdflib.URIRef("http://asdf/myproject")][0]
+        except KeyError as err:
+            missing = { x for x in g.subjects() if x not in generated_objects}
+            raise Exception("couldnt load needed objects", missing) from err
+
+        inputinformation_graph = rdflib.Graph().parse(format="ttl", data=f"""
+            @prefix asdf: <http://example.com/> .
+            @prefix proloa: <http://example.com/programloader/> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+            <{testnumber_uri}> a asdf:number ;
+                a proloa:link .
+            """)
+        new_axioms, new_apps = pro.update_working_information(inputinformation_graph)
+        q = new_apps[0]
+        from rdflib import URIRef, Literal
+        shouldbeaxioms = set((
+                (q, URIRef("file://info#ntaArg"), URIRef(testnumber_uri)),
+                (q, pro.priority_reference, rdflib.Literal(0.0)),
+                (q, PROLOA.executes, URIRef(numbertoaxiom_uri)),
+                (URIRef('file://info#ntaArg'), RDF.a, PROLOA.arg),
+                (q, RDF.a, PROLOA.app),
+                ))
+        self.assertEqual(set(new_axioms), shouldbeaxioms)
+
+        #new_axioms = set(pro.inner_informationgraph)
+        #"""some information about new apps and what their priorities are"""
+        #shouldbeaxioms = set() 
+        #self.assertEqual(new_axioms, shouldbeaxioms)
+
+        #testing somehow, these new_axioms
+        new_axioms: list["rdflib.graph._TripleType"] = True
+        while new_axioms:
+            returnstring, new_axioms = list(pro.execute_first_app())
+            print(returnstring)
+            print(new_axioms)
+            input()
+        new_axioms = set(pro.copy_generated_information())
+        shouldbeaxioms = set()
+        """some information equal to given in Graph g"""
+        self.assertEqual(new_axioms, shouldbeaxioms)
 
 
     @unittest.skip("asdf")
-    def test_simple(self):
-        """
+    def test_tactic(self):
+        """Test basic implementation of tactic
         
         :TODO: remake priority. It should be some kind of property bound
             to the tactic.
