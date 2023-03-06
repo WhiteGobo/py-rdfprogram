@@ -60,7 +60,11 @@ class priority_project:
 
 
 class program_container:
-    inner_information_graph: rdflib.Graph
+    #@property
+    #@abc.abstractmethod
+    #def inner_information_graph(self) -> rdflib.Graph:
+    #    pass
+
     saved_objects: dict
 
     def __init__(self, used_tactic, saved_objects= dict()):
@@ -106,15 +110,15 @@ class project(information_save, priority_project, program_container):
         :TODO: Make it possible to load and save all inner information in
             a rdf-format
         """
-        #super().__init__()
+        self.uri = uri
+        self.inner_information_graph = rdflib.Graph()
+
         priority_project.__init__(self)
         program_container.__init__(self, used_tactic)
 
-        self.uri = uri
-        #self.used_tactic = used_tactic
+        self.used_tactic = used_tactic
         self.variables = {subj for subj, _, _ in target_information}
         self.target_information = target_information
-        self.inner_information_graph = rdflib.Graph()
         #self.saved_objects = dict()
         #new_axioms = self._find_available_apps()
         #get_priorities(new_axioms)
