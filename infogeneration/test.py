@@ -125,6 +125,11 @@ class TestInfogenerator( unittest.TestCase ):
             <{testnumber_uri}> a asdf:number ;
                 a proloa:link .
             """)
+
+        for myprogram, myfinder in pro.used_tactic.graphfinder.items():
+            logger.debug("To find inputs for program %s uses queryterm:\n%s"
+                         %(myprogram, myfinder.uri_queryterm))
+
         new_axioms, new_apps = pro.update_working_information(inputinformation_graph)
         q = new_apps[0]
         from rdflib import URIRef, Literal
@@ -145,10 +150,10 @@ class TestInfogenerator( unittest.TestCase ):
         #testing somehow, these new_axioms
         new_axioms: list["rdflib.graph._TripleType"] = True
         while new_axioms:
+            logger.debug("repeating step")
             returnstring, new_axioms = list(pro.execute_first_app())
-            print(returnstring)
-            print(new_axioms)
-            input()
+            logger.debug(f"got returnstring:\n{returnstring}\n")
+            logger.debug(f"got new axioms:{new_axioms}")
         new_axioms = set(pro.copy_generated_information())
         shouldbeaxioms = set()
         """some information equal to given in Graph g"""

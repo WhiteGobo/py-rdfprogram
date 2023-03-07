@@ -26,6 +26,14 @@ class rdfgraph_finder:
     """Mapping of mutable nodes of program-arguments to their arguments
     """
 
+    bnode_queryterm: str
+    """String used for query request to find possible programinputs"""
+    uri_queryterm: str
+    """String used for query request to find possible programinputs"""
+    def __str__(self):
+        typename = type(self).__name__
+        return f"<{typename}:program={self.program}>"
+
     def __init__(self, program):
         self.program = program
         self.mutable_to_arg = {}

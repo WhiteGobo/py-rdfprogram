@@ -8,6 +8,8 @@ from rdfloader import annotations as extc
 from . import namespaces
 import rdflib
 import typing as typ
+import logging
+logger = logging.getLogger(__name__)
 import importlib.resources
 autgen_path = importlib.resources.files(namespaces).joinpath("autgen2.ttl")
 from programloader import PROLOA_NS as PROLOA
@@ -79,6 +81,8 @@ class program_container:
         if app_id in self.saved_objects:
             return self.saved_objects[app_id][0]
         else:
+            logger.debug(f"Tried to retrieve not yet existing app {app_id}. "
+                         "Generate it.")
             self.saved_objects = rdfloader.load_from_graph(\
                     programloader.input_dict, self.inner_information_graph, \
                     wanted_resources=[app_id], \
@@ -89,7 +93,7 @@ class program_container:
 class project(information_save, priority_project, program_container):
     """Implements a tactic for a certain target
     """
-    uses: Tactic.tactic
+    used_tactic: Tactic.tactic
     """Foundation to everything the project does. The tactic should give
     all needed algorithms and information used, so that the wanted
     information can be produced
@@ -123,8 +127,12 @@ class project(information_save, priority_project, program_container):
         #new_axioms = self._find_available_apps()
         #get_priorities(new_axioms)
 
+
     def update_working_information(self, \
             rdfgraph: typ.Iterable["rdflib.graph._TripleType"]):
+        """Updates inner_information_graph. Adds all info from given rdfgraph
+        and finds new apps and calculates their priority
+        """
         axioms: list["rdflib.graph._TripleType"]
         apps: list[rdflib.IdentifiedNode]
         for ax in rdfgraph:
@@ -150,7 +158,9 @@ class project(information_save, priority_project, program_container):
         new_axioms: list["rdflib.graph._TripleType"] = []
         new_apps: list[rdflib.BNode] = []
         for pro, finder in self.used_tactic.graphfinder.items():
+            logger.debug(f"Search for new apps with {finder}")
             for arg_to_resource in finder._find_in_graph(infograph):
+                logger.debug(f"Found possible inputs: {arg_to_resource}")
                 app_identifier = rdflib.BNode()
                 new_apps.append(app_identifier)
                 tmp_axioms = finder.create_app(arg_to_resource, app_identifier)
@@ -175,6 +185,7 @@ class project(information_save, priority_project, program_container):
 
         :TODO: remove this method and automatize the things, that are done here
         """
+        raise Exception()
         pro: "programloader.program"
         finder: "Tactic.rdfgraph_finder"
         arg_to_resource: dict["programloader.arg", "rdflib.IdentifiedNode"]
@@ -209,8 +220,8 @@ class project(information_save, priority_project, program_container):
         app_id = self._find_first_app()
         self._label_as_executed(app_id)
         myapp = self._get_app(app_id)
-        print("\n\nExecuted: ", myapp)
-        print(self.inner_information_graph.serialize())
+        logger.debug(f"Executed: {myapp}")
+        #print(self.inner_information_graph.serialize())
         returnstring, new_axioms = myapp()
 
         self.update_working_information(new_axioms)
