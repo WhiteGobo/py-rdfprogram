@@ -111,12 +111,19 @@ class program(abc.ABC, _iri_repr_class):
         self.app_args = list(app_args)
 
         self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
+        all_axioms = []
         for a in app_args:
-            o, n, en, gn = a.process()
-            self.old_axioms.extend(o)
-            self.new_axioms.extend(n)
+            app_axioms, en, gn = a.process()
+            all_axioms.extend(app_axioms)
+            #self.old_axioms.extend(o)
+            #self.new_axioms.extend(n)
             self.example_nodes.extend(en)
             self.generated_nodes.extend(gn)
+        for ax in all_axioms:
+            if any(x in self.generated_nodes for x in ax):
+                self.new_axioms.append(ax)
+            else:
+                self.old_axioms.append(ax)
 
         self.possible_new_nodes = self.generated_nodes
         self._axioms = self.new_axioms
@@ -282,6 +289,12 @@ class arg(_iri_repr_class):
         example_axioms = []
         generated_axioms = []
         try:
+            self.generated_node.info
+            generated_axioms.extend(self.generated_node.info)
+            has_generated.append(self.generated_node)
+        except AttributeError:
+            pass
+        try:
             self.example_node.info
             for ax in self.example_node.info:
                 if any(x in has_generated for x in ax):
@@ -289,12 +302,6 @@ class arg(_iri_repr_class):
                 else:
                     example_axioms.append(ax)
             has_example.append(self.example_node)
-        except AttributeError:
-            pass
-        try:
-            self.generated_node.info
-            generated_axioms.extend(self.generated_node.info)
-            has_generated.append(self.generated_node)
         except AttributeError:
             pass
         #assert not set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)), "not every example node is represented in axioms: %s"%(set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)),)

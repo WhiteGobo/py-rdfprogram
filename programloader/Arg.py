@@ -29,6 +29,11 @@ class arg(_iri_repr_class):
     def __init__( self, iri, id: extc.info_attr( PROLOA_NS.id ), 
                  example_data: extc.info_targetresourceinfo(PROLOA_NS.describedBy),
                  generated_data: extc.info_targetresourceinfo(PROLOA_NS.declaresInfoLike)):
+        """
+
+        :TODO: just return all axioms, when asked. Because single args dont 
+            know which axioms are generated and which are new
+        """
         self.iri = iri
         assert isinstance(id, (str, int)), type(id)
         self.id = id
@@ -50,7 +55,6 @@ class arg(_iri_repr_class):
                                    ))
         self._generated_axioms = list(ax for ax in generated_data if valid(ax))
         self._example_axioms = []
-
         for ax in example_data:
             if valid(ax):
                 if any(x in self._generated_nodes for x in ax):
@@ -58,5 +62,9 @@ class arg(_iri_repr_class):
                 else:
                     self._example_axioms.append(ax)
 
+
+
     def process(self):
-        return self._example_axioms, self._generated_axioms, self._example_nodes, self._generated_nodes
+        all_axioms = list(self._example_axioms)
+        all_axioms.extend(self._generated_axioms)
+        return all_axioms, self._example_nodes, self._generated_nodes
