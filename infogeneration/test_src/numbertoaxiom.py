@@ -1,6 +1,7 @@
 #!/bin/env python
 import argparse
 import rdflib
+import pathlib
 
 def get_args():
     Programdescription = "Prints number in file as axiom:\n"\
