@@ -53,22 +53,81 @@ class rdfgraph_finder:
         self.var_to_mutable = {var: node 
                                for node, var in mutable_to_var.items()
                                if node in filter_resources}
-        resource_to_var = {node: f"?{var}" 
-                           for node, var in mutable_to_var.items()
-                           if node in filter_resources}
-        search_axioms = [tuple(resource_to_var.get(x, f"<{x}>") for x in ax) 
-                         for ax in program.old_axioms]
-        assert search_axioms
-        self.queryterm ="""
-            SELECT %s
-            WHERE {%s
-            }""" %(" ".join(resource_to_var.values()),
-                   "\n".join(f"{s} {p} {o} ." for s,p,o in search_axioms)
-                  )
+        mut_to_arg = {arg.example_node: rdflib.Literal(arg.id) 
+                      for arg in program.app_args 
+                      if hasattr(arg, "example_node")}
+        mut_to_arg.update({arg.generated_node: rdflib.Literal(arg.id)
+                           for arg in program.app_args 
+                           if hasattr(arg, "generated_node")})
+        mut_to_arguri = {}
+        for arg in program.app_args:
+            if isinstance(arg.iri, rdflib.URIRef):
+                if hasattr(arg, "example_node"):
+                    mut_to_arguri[arg.example_node] = arg.iri
+                if hasattr(arg, "generated_node"):
+                    mut_to_arguri[arg.generated_node] = arg.iri
+            else:
+                mut_to_arguri = None
+                break
+
+        self.bnode_queryterm, self.uri_queryterm \
+                = self.__create_queryterms(self.var_to_mutable,
+                                           program.old_axioms,
+                                           mut_to_arg, mut_to_arguri)
         assert all(all(isinstance(x, (rdflib.URIRef, rdflib.Literal)) 
-                       or x in resource_to_var 
+                       or x in self.var_to_mutable.values()
                        for x in ax) 
                    for ax in program.old_axioms)
+
+    def __create_queryterms(self, var_to_mutable, old_axioms,\
+            mutable_to_arg_ids: dict[rdflib.IdentifiedNode, str],\
+            mutable_to_arg_uri = None):
+        """
+
+        :TODO: theoreticly multiple mutable nodes can be mapped onto the same
+            var. So var_to_mutable shouldnt work
+        """
+        bnode_id = 0
+        resource_to_var = {node: f"?{var}" 
+                           for var, node in var_to_mutable.items()}
+        search_axioms = [tuple(resource_to_var.get(x, f"<{x}>") for x in ax) 
+                         for ax in old_axioms]
+        assert search_axioms
+        assert "?app" not in resource_to_var.values()
+        #filter_axioms = ["?app [<%s> %s] %s."
+        #                 % (PROLOA.id, mutable_to_arg_ids[node], var)
+        #                 for node, var in resource_to_var.items()]
+        filter_axioms = []
+        for node, var in resource_to_var.items():
+            bnode = f"?tmpbnode{bnode_id}" 
+            bnode_id += 1
+            filter_axioms.append("?app %s %s." %(bnode, var))
+            filter_axioms.append("%s <%s> %s." %(bnode, PROLOA.id, mutable_to_arg_ids[node]))
+        yield """
+            SELECT %s
+            WHERE {%s
+            FILTER NOT EXISTS { %s }
+            }""" %(" ".join(resource_to_var.values()),
+                   "\n".join(f"{s} {p} {o} ." for s,p,o in search_axioms),
+                   "\n".join(filter_axioms),
+                  )
+        if mutable_to_arg_uri is None:
+            yield None
+            return
+        filter_axioms = []
+        for node, var in resource_to_var.items():
+            filter_axioms.append("?app <%s> %s ." 
+                                 % (mutable_to_arg_uri[node], var))
+        yield """
+            SELECT %s
+            WHERE {%s
+            FILTER NOT EXISTS { %s }
+            }""" %(" ".join(resource_to_var.values()),
+                   "\n".join(f"{s} {p} {o} ." for s,p,o in search_axioms),
+                   "\n".join(filter_axioms),
+                  )
+
+
 
     def _find_in_graph(self, rdfgraph: rdflib.Graph) -> dict[programloader.arg, rdflib.IdentifiedNode]:
         """Find programinput in given rdfgraph
@@ -77,10 +136,15 @@ class rdfgraph_finder:
             resourcenames used
         """
         arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
+        if getattr(self, "uri_queryterm", None):
+            queryterm = self.uri_queryterm
+        else:
+            queryterm = self.bnode_queryterm
+            #assert program in rdfgraph
         try:
-            asdf = list(rdfgraph.query(self.queryterm))
+            asdf = list(rdfgraph.query(queryterm))
         except pyparsing.exceptions.ParseException as err:
-            raise Exception(self.queryterm) from err
+            raise Exception(queryterm) from err
         for found_nodes in asdf:
             arg_to_resource = {}
             for var, mutable in self.var_to_mutable.items():
