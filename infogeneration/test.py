@@ -154,6 +154,7 @@ class TestInfogenerator( unittest.TestCase ):
             returnstring, new_axioms = list(pro.execute_first_app())
             logger.debug(f"got returnstring:\n{returnstring}\n")
             logger.debug(f"got new axioms:{new_axioms}")
+            logger.debug(f"current inner information: {pro.inner_information_graph.serialize()}")
         new_axioms = set(pro.copy_generated_information())
         shouldbeaxioms = set()
         """some information equal to given in Graph g"""
