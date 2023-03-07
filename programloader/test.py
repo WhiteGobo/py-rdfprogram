@@ -197,6 +197,7 @@ class TestProgramloader( unittest.TestCase ):
             _:res2 a proloa:mutable_resource ;
                 asdf:customProp2 asdf:customResource2 .
             _:res2 asdf:customProp3 _:res1 .
+            _:res1 asdf:customProp3 _:res2 .
         """)
         asdf: dict = rl.load_from_graph( input_dict, g )
         #self.assertEqual( set(asdf.keys()), set(g.subjects()) ) #bnodes are not loaded
@@ -227,9 +228,14 @@ class TestProgramloader( unittest.TestCase ):
         ge_axioms = {
                 (ge_node, asdf_customProp2, asdf_customResource2),
                 (ge_node, asdf_customProp3, ex_node),
+                (ex_node, asdf_customProp3, ge_node),
                 }
-        self.assertEqual(ex_axioms, set(myProgram.old_axioms))
-        self.assertEqual(ge_axioms, set(myProgram.new_axioms))
+        self.assertEqual(ex_axioms, set(myProgram.old_axioms), 
+                         msg=f"additional info: oldnode: {ex_node} "
+                         f"new node: {ge_node}")
+        self.assertEqual(ge_axioms, set(myProgram.new_axioms),
+                         msg=f"additional info: oldnode: {ex_node} "
+                         f"new node: {ge_node}")
 
 
     def test_simple( self ):
