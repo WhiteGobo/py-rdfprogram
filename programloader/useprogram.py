@@ -304,6 +304,9 @@ class arg(_iri_repr_class):
 class app(_iri_repr_class):
     """Commands can be executed through this callable object.
 
+    When called always succeeds. When the program fails instead it will
+    return an axiom, that this app is a failed app
+
     :param input_args: Maps the arguments of the used program onto
         the inputarg that is used.
     :type input_args: dict[newuseprogram.arg, 
