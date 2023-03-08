@@ -131,14 +131,29 @@ class TestInfogenerator( unittest.TestCase ):
                          %(myprogram, myfinder.uri_queryterm))
 
         new_axioms, new_apps = pro.update_working_information(inputinformation_graph)
-        q = new_apps[0]
         from rdflib import URIRef, Literal
+        new_axioms = set(new_axioms)
+        node_numtoax = None
+        for node, prop, obj in new_axioms:
+            if prop == PROLOA.executes and obj== URIRef(numbertoaxiom_uri):
+                node_numtoax = node
+                break
+        if node_numtoax is None:
+            raise Exception("couldnt find one of the expected executable apps")
+        node_adder = iter(node for node in new_apps 
+                          if node!= node_numtoax).__next__()
+
         shouldbeaxioms = set((
-                (q, URIRef("file://info#ntaArg"), URIRef(testnumber_uri)),
-                (q, pro.priority_reference, rdflib.Literal(0.0)),
-                (q, PROLOA.executes, URIRef(numbertoaxiom_uri)),
+                (node_numtoax, URIRef("file://info#ntaArg"), URIRef(testnumber_uri)),
+                (node_numtoax, pro.priority_reference, rdflib.Literal(0.0)),
+                (node_numtoax, PROLOA.executes, numbertoaxiom_uri),
                 (URIRef('file://info#ntaArg'), RDF.a, PROLOA.arg),
-                (q, RDF.a, PROLOA.app),
+                (node_numtoax, RDF.a, PROLOA.app),
+                (node_adder, PROLOA.executes, adder_uri),
+                (node_adder, pro.priority_reference, rdflib.Literal(0.0)),
+                (node_adder, RDF.a, PROLOA.app),
+                (URIRef('file://adder#add1'), RDF.a, PROLOA.arg),
+                (node_adder, URIRef('file://adder#add1'), testnumber_uri),
                 ))
         self.assertEqual(set(new_axioms), shouldbeaxioms)
 
@@ -148,13 +163,18 @@ class TestInfogenerator( unittest.TestCase ):
         #self.assertEqual(new_axioms, shouldbeaxioms)
 
         #testing somehow, these new_axioms
-        new_axioms: list["rdflib.graph._TripleType"] = True
-        while new_axioms:
-            logger.debug("repeating step")
+        new_axioms: list["rdflib.graph._TripleType"]
+        for i in range(10):
+            logger.debug(f"repeating step {i}")
             returnstring, new_axioms = list(pro.execute_first_app())
             logger.debug(f"got returnstring:\n{returnstring}\n")
             logger.debug(f"got new axioms:{new_axioms}")
             logger.debug(f"current inner information: {pro.inner_information_graph.serialize()}")
+            if not new_axioms:
+                break
+        if i >= 9:
+            raise Exception("loop was executed too many times")
+
         new_axioms = set(pro.copy_generated_information())
         shouldbeaxioms = set()
         """some information equal to given in Graph g"""
