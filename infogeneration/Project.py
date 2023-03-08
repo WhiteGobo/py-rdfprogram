@@ -24,8 +24,17 @@ AUTGEN = rdf_namespace.from_file(autgen_path, namespace="http://example.com/auto
 
 
 class information_save:
+    """Class to extract all information of a project into the target structure
+    """
     temporary_directory: str
     def copy_generated_information(self):
+        """After reaching all data viable for target, this method copies
+        all temporary saved resources into the wanted places. Also return 
+        all axioms for target so that targeted literals can also be fetched.
+        For this to work all wanted resources must be available per
+        programloader.filelink or are equal to rdflib.Literal.
+        """
+        raise NotImplementedError()
         pass
 
 class priority_project:
