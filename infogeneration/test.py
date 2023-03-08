@@ -142,6 +142,14 @@ class TestInfogenerator( unittest.TestCase ):
             raise Exception("couldnt find one of the expected executable apps")
         node_adder = iter(node for node in new_apps 
                           if node!= node_numtoax).__next__()
+ 
+        try:
+            temporary_fileid = iter(o for s,p,o in pro.inner_information_graph
+                                if (s,p) == (node_adder, URIRef('file://adder#add2'))).__next__()
+        except StopIteration as err:
+            #just to make clear, that there should a be a corresponding BNode.
+            #logging works through self.assertEqual(axioms, shouldbeaxioms)
+            temporary_fileid = rdflib.BNode() 
 
         shouldbeaxioms = set((
                 (node_numtoax, URIRef("file://info#ntaArg"), URIRef(testnumber_uri)),
@@ -154,6 +162,8 @@ class TestInfogenerator( unittest.TestCase ):
                 (node_adder, RDF.a, PROLOA.app),
                 (URIRef('file://adder#add1'), RDF.a, PROLOA.arg),
                 (node_adder, URIRef('file://adder#add1'), testnumber_uri),
+                (URIRef('file://adder#add2'), RDF.a, PROLOA.arg),
+                (node_adder, URIRef('file://adder#add2'), temporary_fileid),
                 ))
         self.assertEqual(set(new_axioms), shouldbeaxioms)
 
