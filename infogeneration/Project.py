@@ -71,6 +71,8 @@ class priority_project:
 
 
 class program_container:
+    """Gives object-access to apps represented in inner_information_graph
+    """
     #@property
     #@abc.abstractmethod
     #def inner_information_graph(self) -> rdflib.Graph:
