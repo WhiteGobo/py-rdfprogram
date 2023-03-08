@@ -144,13 +144,16 @@ class TestInfogenerator( unittest.TestCase ):
                 break
         if node_numtoax is None:
             raise Exception("couldnt find one of the expected executable apps")
-        node_adder = iter(node for node in new_apps 
+        try:
+            node_adder = iter(node for node in new_apps 
                           if node!= node_numtoax).__next__()
+        except StopIteration:
+            node_adder = rdflib.BNode()
  
         try:
             temporary_fileid = iter(o for s,p,o in pro.inner_information_graph
                                 if (s,p) == (node_adder, URIRef('file://adder#add2'))).__next__()
-        except StopIteration as err:
+        except StopIteration:
             #just to make clear, that there should a be a corresponding BNode.
             #logging works through self.assertEqual(axioms, shouldbeaxioms)
             temporary_fileid = rdflib.BNode() 
