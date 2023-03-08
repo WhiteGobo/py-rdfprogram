@@ -100,6 +100,8 @@ class rdfgraph_finder:
                            for var, node in var_to_mutable.items()}
         search_axioms = [tuple(resource_to_var.get(x, f"<{x}>") for x in ax) 
                          for ax in old_axioms]
+        filter_equal = ["FILTER (%s != %s)" % pair for pair 
+                        in it.permutations(resource_to_var.values(), 2)]
         assert search_axioms
         assert "?app" not in resource_to_var.values()
         #filter_axioms = ["?app [<%s> %s] %s."
@@ -115,9 +117,11 @@ class rdfgraph_finder:
             SELECT %s
             WHERE {%s
             FILTER NOT EXISTS { %s }
+            %s
             }""" %(" ".join(resource_to_var.values()),
                    "\n".join(f"{s} {p} {o} ." for s,p,o in search_axioms),
                    "\n".join(filter_axioms),
+                   "\n".join(filter_equal),
                   )
         if mutable_to_arg_uri is None:
             yield None
@@ -130,9 +134,11 @@ class rdfgraph_finder:
             SELECT %s
             WHERE {%s
             FILTER NOT EXISTS { %s }
+            %s
             }""" %(" ".join(resource_to_var.values()),
                    "\n".join(f"{s} {p} {o} ." for s,p,o in search_axioms),
                    "\n".join(filter_axioms),
+                   "\n".join(filter_equal),
                   )
 
 
@@ -168,6 +174,7 @@ class rdfgraph_finder:
         :param arg_to_resource:
         :type arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
         :return: All axioms needed for the app
+        :TODO: if nodes arent in old_axioms, they will be missing here
         """
         if app_identifier is None:
             app_identifier = rdflib.BNode()
@@ -179,6 +186,7 @@ class rdfgraph_finder:
             axioms.extend([(app_identifier, arg.iri, arg_target),
                            (arg.iri, RDF.a, PROLOA.arg),
                            ])
+        return axioms
         raise NotImplementedError(axioms, "need to add information about new generated resources")
         new_generated_nodes = {node: rdflib.BNode() 
                                for node in self.program.new_generated_nodes}
