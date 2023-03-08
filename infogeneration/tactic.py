@@ -179,6 +179,11 @@ class rdfgraph_finder:
             axioms.extend([(app_identifier, arg.iri, arg_target),
                            (arg.iri, RDF.a, PROLOA.arg),
                            ])
+        raise NotImplementedError(axioms, "need to add information about new generated resources")
+        new_generated_nodes = {node: rdflib.BNode() 
+                               for node in self.program.new_generated_nodes}
+        axioms.extend((new_generated_nodes.get(x, x) for x in ax) for ax in self.program.placeholder_axioms)
+
         return axioms
 
 
