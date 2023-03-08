@@ -46,10 +46,13 @@ info_adder_uri = f"""@prefix asdf: <http://example.com/> .
         adder:add2 proloa:id 1 ;
             rdfs:comment "savefile" ;
             a proloa:arg ;
+            proloa:describedBy _:addres2_base ;
             proloa:declaresInfoLike _:addres2 .
 
         _:addres1 a proloa:mutable_resource ;
+            a proloa:link ;
             a asdf:number .
+        _:addres2_base a proloa:link .
         _:addres2 a proloa:mutable_resource ;
             a asdf:number .
         _:addres1 asdf:greater _:addres2 .
@@ -70,6 +73,7 @@ info_numbertoaxiom = f"""@prefix asdf: <http://example.com/> .
             proloa:declaresInfoLike _:ntaNew ;
             proloa:describedBy _:ntaRes .
         _:ntaRes a proloa:mutable_resource ;
+            a proloa:link ;
             a asdf:number .
         _:ntaNew a proloa:mutable_resource ;
             a asdf:checkednumber .
@@ -165,6 +169,8 @@ class TestInfogenerator( unittest.TestCase ):
                 (URIRef('file://adder#add2'), RDF.a, PROLOA.arg),
                 (node_adder, URIRef('file://adder#add2'), temporary_fileid),
                 ))
+        self.assertNotEqual(temporary_fileid, testnumber_uri,
+                            msg="Used same resource for two different inputs")
         self.assertEqual(set(new_axioms), shouldbeaxioms)
 
         #new_axioms = set(pro.inner_informationgraph)
