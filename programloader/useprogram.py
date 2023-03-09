@@ -249,14 +249,12 @@ class argument_processor:
             if getattr(myarg, "example_node", False):
                 continue
             try:
-                for subj, pred, obj in myarg.new_axioms:
+                for subj, pred, obj in myarg._generated_axioms:
                     if subj == myarg.generated_node and pred == RDF_NS.type:
                         self.new_generated_arg_to_typeids\
                                 .setdefault(myarg, list()).append(obj)
-            except AttributeError:
+            except AttributeError as err:
                 pass
-        print(self.new_generated_arg_to_typeids)
-        input()
 
 
 class rdfprogram(program, _iri_repr_class, argument_processor):
