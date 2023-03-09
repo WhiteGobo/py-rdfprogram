@@ -170,6 +170,7 @@ class TestInfogenerator( unittest.TestCase ):
                 (node_adder, URIRef('file://adder#add1'), testnumber_uri),
                 (URIRef('file://adder#add2'), RDF.a, PROLOA.arg),
                 (node_adder, URIRef('file://adder#add2'), temporary_fileid),
+                (temporary_fileid, RDF.a, PROLOA.link),
                 ))
         self.assertNotEqual(temporary_fileid, testnumber_uri,
                             msg="Used same resource for two different inputs")
