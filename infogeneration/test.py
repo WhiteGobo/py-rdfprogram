@@ -142,8 +142,8 @@ class TestInfogenerator( unittest.TestCase ):
             if prop == PROLOA.executes and obj== URIRef(numbertoaxiom_uri):
                 node_numtoax = node
                 break
-        if node_numtoax is None:
-            raise Exception("couldnt find one of the expected executable apps")
+        self.assertIsNotNone(node_numtoax, msg="couldnt find one of the "
+                             "expected executable apps")
         try:
             node_adder = iter(node for node in new_apps 
                           if node!= node_numtoax).__next__()
