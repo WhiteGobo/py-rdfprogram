@@ -218,14 +218,15 @@ class info_attr_list( constructor_annotation ):
 
     def __repr__(self):
         name = ".".join((type(self).__module__, type(self).__name__))
-        a = [tuple(x) for x in self.ignore_uris]
+        #a = [tuple(x) for x in self.ignore_uris]
         #b = [tuple(str(y) for y in x) for x in self.ignore_axioms]
-        return f"<{name}: {a}>"
+        return f"<{name}:{self.uri}>"
 
     def __str__(self):
-        a = [tuple(x) for x in self.ignore_uris]
+        name = type(self).__name__
+        #a = [tuple(x) for x in self.ignore_uris]
         #b = [tuple(str(y) for y in x) for x in self.ignore_axioms]
-        return f"<{type(self).__name__}: {a}>"
+        return f"<{name}:{self.uri}>"
 
     def to_uri_identifier( self ):# -> URI_IDENTIFIER:
         return self
