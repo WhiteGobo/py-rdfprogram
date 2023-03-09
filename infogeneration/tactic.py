@@ -214,8 +214,9 @@ class rdfgraph_finder:
                                 (app_identifier, arg.iri, res_node),
                                 (res_node, RDF.a, typeid),
                                 ])
-        for new_generate_axiom in it.product(asdf_axiom):
-            yield list(it.chain(axioms, new_generate_axiom))
+        new_generate_axiom: list[list["rdflib.graph._TripleType"]]
+        for new_generate_axiom in it.product(*asdf_axiom):
+            yield list(it.chain(axioms, *new_generate_axiom))
 
 
 class tactic_priority_organizer:
