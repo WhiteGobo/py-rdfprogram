@@ -46,14 +46,13 @@ info_adder_uri = f"""@prefix asdf: <http://example.com/> .
         adder:add2 proloa:id 1 ;
             rdfs:comment "savefile" ;
             a proloa:arg ;
-            proloa:describedBy _:addres2_base ;
             proloa:declaresInfoLike _:addres2 .
 
         _:addres1 a proloa:mutable_resource ;
             a proloa:link ;
             a asdf:number .
-        _:addres2_base a proloa:link .
         _:addres2 a proloa:mutable_resource ;
+            a proloa:link ;
             a asdf:number .
         _:addres1 asdf:greater _:addres2 .
 """
