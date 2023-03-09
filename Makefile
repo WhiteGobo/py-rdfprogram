@@ -35,3 +35,6 @@ opendoc:
 	# xdg-open pathfinder/lin_flowgraph_abstract/docs/build/html/index.html
 
 
+PHONY: clean
+clean:
+	-rm -r docs/build
