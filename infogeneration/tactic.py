@@ -89,7 +89,7 @@ class rdfgraph_finder:
 
     def __create_queryterms(self, var_to_mutable, old_axioms,\
             mutable_to_arg_ids: dict[rdflib.IdentifiedNode, str],\
-            mutable_to_arg_uri = None):
+            mutable_to_arg_uri: dict["IdentifiedNode", "URIRef"] = None):
         """
 
         :TODO: theoreticly multiple mutable nodes can be mapped onto the same
