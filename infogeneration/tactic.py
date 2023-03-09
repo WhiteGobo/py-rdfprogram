@@ -50,14 +50,16 @@ class rdfgraph_finder:
         #        p.generated_nodes
         #        p.new_axioms
         mutable_to_var = {x:f"x{i}" for i,x in enumerate(program.example_nodes)}
-        for i, y in enumerate(program.generated_nodes):
-            varname = f"y{i}"
-            for x, var in mutable_to_var.items():
-                if y == x:
-                    varname = var
-                    break
-            mutable_to_var[y] = varname
+        #not needed because only already existing nodes are searched for
+        #for i, y in enumerate(program.generated_nodes):
+        #    varname = f"y{i}"
+        #    for x, var in mutable_to_var.items():
+        #        if y == x:
+        #            varname = var
+        #            break
+        #    mutable_to_var[y] = varname
         filter_resources = set(it.chain.from_iterable(program.old_axioms))
+        #This seems fishy. Vartomutable shouldnt be possible
         self.var_to_mutable = {var: node 
                                for node, var in mutable_to_var.items()
                                if node in filter_resources}
@@ -78,6 +80,7 @@ class rdfgraph_finder:
                 mut_to_arguri = None
                 break
 
+
         self.bnode_queryterm, self.uri_queryterm \
                 = self.__create_queryterms(self.var_to_mutable,
                                            program.old_axioms,
@@ -87,9 +90,11 @@ class rdfgraph_finder:
                        for x in ax) 
                    for ax in program.old_axioms)
 
+
     def __create_queryterms(self, var_to_mutable, old_axioms,\
             mutable_to_arg_ids: dict[rdflib.IdentifiedNode, str],\
-            mutable_to_arg_uri: dict["IdentifiedNode", "URIRef"] = None):
+            mutable_to_arg_uri: dict["IdentifiedNode", "URIRef"] = None,\
+            ):
         """
 
         :TODO: theoreticly multiple mutable nodes can be mapped onto the same
@@ -166,13 +171,17 @@ class rdfgraph_finder:
                 arg_to_resource[arg] = found_nodes[var]
             yield arg_to_resource
 
-    def create_app(self, arg_to_resource, app_identifier=None):
+    def create_app(self, arg_to_resource, app_identifier=None, 
+                   filter_newtypes: list[rdflib.IdentifiedNode] = None):
         """Create all information for an app to given input resources
 
         :param app_identifier: Resource id to use in axioms for the app
         :type app_identifier: rdflib.IdentifiedNode
         :param arg_to_resource:
         :type arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
+        :param filter_newtypes: use this if the list of input_dict of 
+            programloader is available. Just use input_dict.keys() as this
+        :type filter_newtypes: list[rdflib.IdentifiedNode]
         :return: All axioms needed for the app
         :TODO: if nodes arent in old_axioms, they will be missing here
         """
@@ -186,13 +195,27 @@ class rdfgraph_finder:
             axioms.extend([(app_identifier, arg.iri, arg_target),
                            (arg.iri, RDF.a, PROLOA.arg),
                            ])
-        return axioms
-        raise NotImplementedError(axioms, "need to add information about new generated resources")
-        new_generated_nodes = {node: rdflib.BNode() 
-                               for node in self.program.new_generated_nodes}
-        axioms.extend((new_generated_nodes.get(x, x) for x in ax) for ax in self.program.placeholder_axioms)
+        if filter_newtypes is None:
+            validate_type = lambda typ: True
+        else: 
+            validate_type = lambda typ: typ in filter_newtypes
 
-        return axioms
+        if not self.program.new_generated_arg_to_typeids:
+            yield axioms
+            return
+        asdf_axiom = []
+        for arg, typeids in self.program.new_generated_arg_to_typeids.items():
+            tmp = []
+            asdf_axiom.append(tmp)
+            for typeid in typeids:
+                if validate_type(typeid):
+                    res_node = rdflib.BNode()
+                    tmp.append([(arg.iri, RDF.a, PROLOA.arg),
+                                (app_identifier, arg.iri, res_node),
+                                (res_node, RDF.a, typeid),
+                                ])
+        for new_generate_axiom in it.product(asdf_axiom):
+            yield list(it.chain(axioms, new_generate_axiom))
 
 
 class tactic_priority_organizer:

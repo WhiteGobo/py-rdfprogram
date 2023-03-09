@@ -174,8 +174,8 @@ class project(information_save, priority_project, program_container):
                 logger.debug(f"Found possible inputs: {arg_to_resource}")
                 app_identifier = rdflib.BNode()
                 new_apps.append(app_identifier)
-                tmp_axioms = finder.create_app(arg_to_resource, app_identifier)
-                new_axioms.extend(tmp_axioms)
+                for tmp_axioms in finder.create_app(arg_to_resource, app_identifier):
+                    new_axioms.extend(tmp_axioms)
 
         return new_axioms, new_apps
 

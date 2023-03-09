@@ -89,6 +89,8 @@ class program(abc.ABC, _iri_repr_class):
         >>> for ax in new_axioms:
         >>>     my_information_graph.add(ax)
 
+    :TODO: Move old_axioms, new_axioms, old_nodes and new_nodes 
+        to argument_processor
     """
     iri: rdflib.IdentifiedNode
     """Resource identifier in the knowledge graph"""
@@ -108,7 +110,6 @@ class program(abc.ABC, _iri_repr_class):
 
     def __init__(self, iri, app_args):
         self.iri = iri
-        self.app_args = list(app_args)
 
         self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
         all_axioms = []
@@ -227,7 +228,38 @@ class program(abc.ABC, _iri_repr_class):
         return new_axioms
 
 
-class rdfprogram(program, _iri_repr_class):
+class argument_processor:
+    """This class organizes, how inputnodes are treated.
+    
+    Following problem, we have programs that generate new files. Those
+    files may need an argument that wasnt existing previous execution.
+    Also there may be not connected inputs, that are still files.
+    """
+    #app_args: list["arg"]
+    new_generated_arg_to_typeids: dict["arg", list[rdflib.IdentifiedNode]]
+    """Filters which argument point to a not yet existing resource.
+    To each of those resources, gives a list of all available types of 
+    that resource. This is needed, when you need to load a placeholder for
+    given resource.
+    """
+
+    def __init__(self, app_args):
+        self.new_generated_arg_to_typeids = {}
+        for myarg in app_args:
+            if getattr(myarg, "example_node", False):
+                continue
+            try:
+                for subj, pred, obj in myarg.new_axioms:
+                    if subj == myarg.generated_node and pred == RDF_NS.type:
+                        self.new_generated_arg_to_typeids\
+                                .setdefault(myarg, list()).append(obj)
+            except AttributeError:
+                pass
+        print(self.new_generated_arg_to_typeids)
+        input()
+
+
+class rdfprogram(program, _iri_repr_class, argument_processor):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
     """
@@ -242,7 +274,9 @@ class rdfprogram(program, _iri_repr_class):
         return cls(iri, app_args)
 
     def __init__(self, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
-        super().__init__(iri, app_args)
+        self.app_args = list(app_args)
+        program.__init__(self, iri, app_args)
+        argument_processor.__init__(self, app_args)
         #self.iri = iri
         #self.app_args = app_args
         self.program_container = iri_to_programcontainer(iri)
