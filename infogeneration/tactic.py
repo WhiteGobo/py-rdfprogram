@@ -171,52 +171,62 @@ class rdfgraph_finder:
                 arg_to_resource[arg] = found_nodes[var]
             yield arg_to_resource
 
-    def create_app(self, arg_to_resource, app_identifier=None, 
+    def create_app(self, arg_to_resource, 
                    filter_newtypes: list[rdflib.IdentifiedNode] = None):
         """Create all information for an app to given input resources
 
-        :param app_identifier: Resource id to use in axioms for the app
-        :type app_identifier: rdflib.IdentifiedNode
         :param arg_to_resource:
         :type arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
         :param filter_newtypes: use this if the list of input_dict of 
             programloader is available. Just use input_dict.keys() as this
         :type filter_newtypes: list[rdflib.IdentifiedNode]
-        :return: All axioms needed for the app
+        :return: All axioms needed for the app and Resource id to use 
+            in axioms for the app
+        :rtype: list[rdflib.graph._TripleType], rdflib.IdentifiedNode
         :TODO: if nodes arent in old_axioms, they will be missing here
         """
-        if app_identifier is None:
-            app_identifier = rdflib.BNode()
-        axioms = [
-                (app_identifier, RDF.a, PROLOA.app),
-                (app_identifier, PROLOA.executes, self.program.iri),
-                ]
-        for arg, arg_target in arg_to_resource.items():
-            axioms.extend([(app_identifier, arg.iri, arg_target),
-                           (arg.iri, RDF.a, PROLOA.arg),
-                           ])
-        if filter_newtypes is None:
-            validate_type = lambda typ: True
-        else: 
-            validate_type = lambda typ: typ in filter_newtypes
-
         if not self.program.new_generated_arg_to_typeids:
-            yield axioms
-            return
-        asdf_axiom = []
-        for arg, typeids in self.program.new_generated_arg_to_typeids.items():
-            tmp = []
-            asdf_axiom.append(tmp)
-            for typeid in typeids:
-                if validate_type(typeid):
-                    res_node = rdflib.BNode()
-                    tmp.append([(arg.iri, RDF.a, PROLOA.arg),
-                                (app_identifier, arg.iri, res_node),
-                                (res_node, RDF.a, typeid),
-                                ])
-        new_generate_axiom: list[list["rdflib.graph._TripleType"]]
-        for new_generate_axiom in it.product(*asdf_axiom):
-            yield list(it.chain(axioms, *new_generate_axiom))
+            app_identifier = rdflib.BNode()
+            axioms = [
+                    (app_identifier, RDF.a, PROLOA.app),
+                    (app_identifier, PROLOA.executes, self.program.iri),
+                    ]
+            for arg, arg_target in arg_to_resource.items():
+                axioms.extend([(app_identifier, arg.iri, arg_target),
+                               (arg.iri, RDF.a, PROLOA.arg),
+                               ])
+
+            yield axioms, app_identifier
+        else:
+            asdf_axiom = []
+            if filter_newtypes is None:
+                validate_type = lambda typ: True
+            else: 
+                validate_type = lambda typ: typ in filter_newtypes
+            for arg, typeids in self.program.new_generated_arg_to_typeids.items():
+                tmp = []
+                asdf_axiom.append(tmp)
+                for typeid in typeids:
+                    if validate_type(typeid):
+                        res_node = rdflib.BNode()
+                        tmp.append([(arg.iri, RDF.a, PROLOA.arg),
+                                    (None, arg.iri, res_node),
+                                    (res_node, RDF.a, typeid),
+                                    ])
+            new_generate_axiom: list[list["rdflib.graph._TripleType"]]
+            for new_generate_axiom in it.product(*asdf_axiom):
+                app_identifier = rdflib.BNode()
+                axioms = [
+                        (app_identifier, RDF.a, PROLOA.app),
+                        (app_identifier, PROLOA.executes, self.program.iri),
+                        ]
+                for arg, arg_target in arg_to_resource.items():
+                    axioms.extend([(app_identifier, arg.iri, arg_target),
+                                   (arg.iri, RDF.a, PROLOA.arg),
+                                   ])
+                q = [tuple(app_identifier if x is None else x for x in ax) 
+                     for ax in it.chain(axioms, *new_generate_axiom)]
+                yield q, app_identifier
 
 
 class tactic_priority_organizer:

@@ -172,9 +172,8 @@ class project(information_save, priority_project, program_container):
             logger.debug(f"Search for new apps with {finder}")
             for arg_to_resource in finder._find_in_graph(infograph):
                 logger.debug(f"Found possible inputs: {arg_to_resource}")
-                app_identifier = rdflib.BNode()
-                new_apps.append(app_identifier)
-                for tmp_axioms in finder.create_app(arg_to_resource, app_identifier):
+                for tmp_axioms, app_identifier in finder.create_app(arg_to_resource, programloader.input_dict.keys()):
+                    new_apps.append(app_identifier)
                     new_axioms.extend(tmp_axioms)
 
         return new_axioms, new_apps

@@ -176,7 +176,10 @@ class TestInfogenerator( unittest.TestCase ):
         self.assertEqual(set(new_axioms), shouldbeaxioms,
                          msg="\nIn the first set, two apps should be "
                          "represented. So some information is missing or is "
-                         f"wrong. len(new_axioms): {len(new_axioms)}")
+                         f"wrong. len(new_axioms): {len(new_axioms)}; "
+                         f"new fileid: {temporary_fileid}; "
+                         f"nodeadder: {node_adder}; "
+                         f"nodenumtoax: {node_numtoax}")
 
         #new_axioms = set(pro.inner_informationgraph)
         #"""some information about new apps and what their priorities are"""
