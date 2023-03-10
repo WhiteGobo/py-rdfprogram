@@ -27,6 +27,7 @@ VALID_LITERALS = (str, int, float)
 :TODO: list here, where the transformation is made
 """
 
+
 class _iri_repr_class:
     def __repr__( self ):
         name = f"{type(self).__module__}.{type(self).__name__}"
