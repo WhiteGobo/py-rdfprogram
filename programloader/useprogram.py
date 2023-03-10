@@ -36,25 +36,6 @@ class _iri_repr_class:
         #   raise Exception(type(self))
 
 
-class mutable_resource(_iri_repr_class):
-    """A placeholder for newly generated objects, which holds axioms, which 
-    are to be asserted for this new resource. 
-    If the object is created, through the execution of the corresponding 
-    create_program new axioms should be asserted for this resource.
-    The axioms which are hold from this placeholder or are hold by another
-    placeholder to this placeholder should be generated and added to
-    the knowledgegraph.
-    
-    :var iri: (rdflib.IdentifiedNode) identifier of corresponding node
-    :var info: (list[(rdflib.IdentifiedNode, )*3]) All axioms connected 
-        to this node.
-
-    """
-    _is_mutable = (RDF_NS.a, PROLOA_NS.mutable_resource)
-    def __init__( self, iri, info: extc.info_anyprop([],[_is_mutable]) ):
-        self.iri = iri
-        self.info = info
-
 
 class program(abc.ABC, _iri_repr_class):
     """Abstract class for every program. Each program must be a callable
@@ -92,11 +73,11 @@ class program(abc.ABC, _iri_repr_class):
     """
     iri: rdflib.IdentifiedNode
     """Resource identifier in the knowledge graph"""
-    example_nodes: list[mutable_resource]
+    example_nodes: list#[mutable_resource]
     """Resources, that describe the input for the program. Specifies, which 
     axioms must already be valid.
     """
-    generated_nodes: list[mutable_resource]
+    generated_nodes: list#[mutable_resource]
     """Resources, that describe the output of the program. Specifies, which 
     axioms will be valid after this program succeeds.
     """
@@ -299,8 +280,8 @@ class arg(_iri_repr_class):
     """
     iri: rdflib.IdentifiedNode
     id: (str, int)
-    example_node: mutable_resource
-    generated_node: mutable_resource
+    example_node: "mutable_resource"
+    generated_node: "mutable_resource"
 
     def __init__( self, iri, id: extc.info_attr( PROLOA_NS.id ), 
                  example_node: extc.info_attr( PROLOA_NS.describedBy, needed=False, at_generation=True )=None,

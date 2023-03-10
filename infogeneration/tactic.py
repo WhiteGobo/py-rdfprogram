@@ -22,7 +22,7 @@ class rdfgraph_finder:
     """Mapping from program variables to mutable nodes, which hold the 
     information about input and output arguments of the program.
     """
-    mutable_to_arg: dict[programloader.mutable_resource, programloader.arg]
+    mutable_to_arg: dict["programloader.mutable_resource", programloader.arg]
     """Mapping of mutable nodes of program-arguments to their arguments
     """
 
