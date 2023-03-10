@@ -27,6 +27,7 @@ notnumber_uri = pathlib.Path(notnumber_path).as_uri()
 
 from . import Arg
 from . import Filelink
+from . import App
 
 input_dict = {\
         PROLOA_NS.program: useprogram.rdfprogram.from_rdf, \
@@ -34,7 +35,7 @@ input_dict = {\
         #PROLOA_NS.arg: useprogram.arg,\
         PROLOA_NS.arg: Arg.arg,\
         PROLOA_NS.link: Filelink.filelink,\
-        PROLOA_NS.app: useprogram.app,\
+        PROLOA_NS.app: App.app,\
         }
 
 class TestProgramloader( unittest.TestCase ):
