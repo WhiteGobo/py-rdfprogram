@@ -26,13 +26,14 @@ notnumber_path = importlib.resources.files(test_src).joinpath("notnumber")
 notnumber_uri = pathlib.Path(notnumber_path).as_uri()
 
 from . import Arg
+from . import Filelink
 
 input_dict = {\
         PROLOA_NS.program: useprogram.rdfprogram.from_rdf, \
         PROLOA_NS.mutable_resource: useprogram.mutable_resource,\
         #PROLOA_NS.arg: useprogram.arg,\
         PROLOA_NS.arg: Arg.arg,\
-        PROLOA_NS.link: useprogram.filelink,\
+        PROLOA_NS.link: Filelink.filelink,\
         PROLOA_NS.app: useprogram.app,\
         }
 
