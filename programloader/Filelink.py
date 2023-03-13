@@ -13,6 +13,12 @@ class resource_link(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def as_inputstring( self ) -> str:
+        """Returns resource as filepath
+        """
+        pass
+
 
 class _iri_repr_class:
     def __repr__( self ):
