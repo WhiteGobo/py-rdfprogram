@@ -1,7 +1,6 @@
 import unittest
 import os.path
-#from . import useprogram
-from . import useprogram
+from . import Program
 import rdfloader as rl
 import logging
 logger = logging.getLogger( __name__ )
@@ -30,9 +29,7 @@ from . import Filelink
 from . import App
 
 input_dict = {\
-        PROLOA_NS.program: useprogram.rdfprogram.from_rdf, \
-        #PROLOA_NS.mutable_resource: useprogram.mutable_resource,\
-        #PROLOA_NS.arg: useprogram.arg,\
+        PROLOA_NS.program: Program.rdfprogram.from_rdf, \
         PROLOA_NS.arg: Arg.arg,\
         PROLOA_NS.link: Filelink.filelink,\
         PROLOA_NS.app: App.app,\
@@ -294,7 +291,7 @@ class TestProgramloader( unittest.TestCase ):
                 <http://example.com/meinBefehl> ?y ?x .
                 ?y proloa:id "--savefile" .
             }""")).__next__()[0]
-        myfilelink: useprogram.filelink = asdf[linkid][0]
+        myfilelink: Filelink.filelink = asdf[linkid][0]
         with open( myfilelink.filepath, "r" ) as f:
             saved_number = int( "".join(f.readlines()) )
         self.assertEqual(int(saved_number), 2+3, 
