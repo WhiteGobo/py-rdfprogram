@@ -318,10 +318,3 @@ class arg(_iri_repr_class):
             pass
         #assert not set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)), "not every example node is represented in axioms: %s"%(set(x.iri for x in has_example).difference(it.chain.from_iterable(example_axioms)),)
         return example_axioms, generated_axioms, has_example, has_generated
-
-
-class resource_link(abc.ABC):
-    @abc.abstractmethod
-    def update_change(self) -> bool:
-        pass
-

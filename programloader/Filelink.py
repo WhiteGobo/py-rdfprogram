@@ -2,6 +2,14 @@ import urllib
 import rdflib
 import tempfile
 import os
+import abc
+
+
+class resource_link(abc.ABC):
+    @abc.abstractmethod
+    def update_change(self) -> bool:
+        pass
+
 
 class _iri_repr_class:
     def __repr__( self ):
