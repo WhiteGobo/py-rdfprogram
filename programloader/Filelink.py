@@ -9,6 +9,13 @@ class resource_link(abc.ABC):
     @abc.abstractmethod
     def update_change(self) -> bool:
         pass
+    
+    @abc.abstractmethod
+    def exists(self) -> bool:
+        """Checks if the resource exists as file or is reachable.
+        Is used by app to check if it has created a file during execution.
+        """
+        pass
 
 
 class _iri_repr_class:

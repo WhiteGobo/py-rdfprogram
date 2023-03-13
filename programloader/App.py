@@ -35,7 +35,7 @@ class app(_iri_repr_class):
     """
     executes: object
 
-    input_args: dict["Arg.arg", "filelink"]
+    input_args: dict["Arg.arg", "Filelink.filelink"]
     """Mapping of input args to the used abstract used input"""
     def __init__( self, iri, \
             input_args: extc.info_custom_property( PROLOA_NS.arg ),\
