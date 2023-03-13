@@ -18,8 +18,8 @@ import itertools as it
 import sys
 import typing as typ
 import collections.abc
-from .programcontainer.exceptions import ProgramFailed
-from .programcontainer.class_programcontainer import iri_to_programcontainer,_program
+from .Programcontainer.exceptions import ProgramFailed
+from .Programcontainer.class_programcontainer import iri_to_programcontainer,_program
 
 VALID_LITERALS = (str, int, float)
 """Possible translations for literal values.

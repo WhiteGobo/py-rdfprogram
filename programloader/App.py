@@ -3,7 +3,7 @@ from rdfloader import annotations as extc
 import rdflib
 from . import PROLOA_NS
 from . import RDF_NS
-from .programcontainer.exceptions import ProgramFailed
+from .Programcontainer.exceptions import ProgramFailed
 
 VALID_LITERALS = (str, int, float)
 """Possible translations for literal values.
