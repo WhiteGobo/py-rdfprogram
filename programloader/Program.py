@@ -145,7 +145,8 @@ class program_callmethods(abc.ABC, _iri_repr_class):
         """
         pass
 
-    def get_args_and_kwargs(self, input_args)\
+    def get_args_and_kwargs(self,\
+            input_args: typ.Dict[term.IdentifiedNode, term.Identifier])\
             -> (list[str], dict[str, str]):
         for mytarget in input_args.values():
             try:
