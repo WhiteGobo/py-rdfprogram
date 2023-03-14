@@ -3,7 +3,7 @@
 """
 from . import PROLOA_NS
 
-from .Program import program
+from . import Program
 from .App import app
 from .Filelink import filelink
 from .Arg import arg

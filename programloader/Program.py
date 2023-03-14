@@ -20,8 +20,9 @@ import typing as typ
 import collections.abc
 from .Programcontainer.exceptions import ProgramFailed
 from .Programcontainer.class_programcontainer import iri_to_programcontainer,_program
+from rdflib import term
 
-VALID_LITERALS = (str, int, float)
+VALID_INPUTS = typ.Union[str, int, float, "filelinkt"]
 """Possible translations for literal values.
 
 :TODO: list here, where the transformation is made
@@ -38,8 +39,8 @@ class _iri_repr_class:
 
 
 
-class program(abc.ABC, _iri_repr_class):
-    """Abstract class for every program. Each program must be a callable
+class program_callmethods(abc.ABC, _iri_repr_class):
+    """Implements methods to call an executable. 
 
     :cvar iri: iri of this resource
     :cvar example_nodes: all mutable nodes used, when finding the input
@@ -60,7 +61,7 @@ class program(abc.ABC, _iri_repr_class):
     :rtype: (str, typ.Iterable[rdflib.graph._TripleType])
 
     Example
-        >>> myprogram: program
+        >>> myprogram: program_callmethods
         >>> my_information_graph: rdflib.Graph
         >>> input_args = {0:input1, "--arg":input2}
         >>> trans = {BNode("placeholder"): 
@@ -237,7 +238,7 @@ class argument_processor:
                 pass
 
 
-class rdfprogram(program, _iri_repr_class, argument_processor):
+class rdfprogram(program_callmethods, _iri_repr_class, argument_processor):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
     """
@@ -253,13 +254,14 @@ class rdfprogram(program, _iri_repr_class, argument_processor):
 
     def __init__(self, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
         self.app_args = list(app_args)
-        program.__init__(self, iri, app_args)
+        program_callmethods.__init__(self, iri, app_args)
         argument_processor.__init__(self, app_args)
         #self.iri = iri
         #self.app_args = app_args
         self.program_container = iri_to_programcontainer(iri)
 
-    def __call__(self, input_args, node_translator):
+    def __call__(self, input_args: typ.Dict["arg", VALID_INPUTS], 
+                 node_translator: typ.Dict[term.IdentifiedNode, term.Identifier]):
         args, kwargs = self.get_args_and_kwargs(input_args)
         returnstring = self.program_container( *args, **kwargs )
 

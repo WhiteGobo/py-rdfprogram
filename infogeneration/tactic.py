@@ -230,7 +230,7 @@ class rdfgraph_finder:
 
 
 class tactic_priority_organizer:
-    graphfinder: dict[programloader.program, rdfgraph_finder]
+    graphfinder: dict["programloader.program", rdfgraph_finder]
     """Mapping of used programs their graphfinders."""
     _app_prioritiyqueue: queue.PriorityQueue[float, programloader.app]
 
@@ -271,7 +271,7 @@ class tactic_priority_organizer:
         """Generates info, which programs can be used on the given data
         and what the priority of those programs are
         """
-        pro: programloader.program
+        pro: "programloader.program"
         finder: rdfgraph_finder
         arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
         newaxioms: list[rdflib.graph._TripleType] = []
@@ -314,7 +314,7 @@ class tactic(tactic_priority_organizer):
     programs and estimates, which program-usage should be used via 
     a priority queue. It also organizes the usage of the programs.
     """
-    uses: list[programloader.program]
+    uses: list["programloader.program"]
     """all availagle programs which are used, by this tactic"""
     def __init__(self, uri, uses: extc.info_attr_list(AUTGEN.uses)):
         self.uri = uri
@@ -323,7 +323,7 @@ class tactic(tactic_priority_organizer):
         super().__init__(self.uses) #tactic_priority_organizer
 
     @classmethod
-    def _typecontrol_uses(cls, uses: list[programloader.program]):
+    def _typecontrol_uses(cls, uses: list["programloader.program"]):
         for p in uses:
             try:
                 p.example_nodes
