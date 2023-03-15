@@ -9,6 +9,7 @@ import typing as typ
 import itertools as it
 import queue
 import pyparsing.exceptions
+from . import abstractclasses as myabc
 
 class rdfgraph_finder:
     """This object is used to find the input for given program.
@@ -16,13 +17,13 @@ class rdfgraph_finder:
     :cvar program: program 
     :cvar var_to_mutable: Mapping
     """
-    program: object
+    program: myabc.program
     """Program for which this object is created"""
     var_to_mutable: dict
     """Mapping from program variables to mutable nodes, which hold the 
     information about input and output arguments of the program.
     """
-    mutable_to_arg: dict["programloader.mutable_resource", programloader.arg]
+    mutable_to_arg: dict[myabc.mutable_resource, myabc.arg]
     """Mapping of mutable nodes of program-arguments to their arguments
     """
 
@@ -148,13 +149,13 @@ class rdfgraph_finder:
 
 
 
-    def _find_in_graph(self, rdfgraph: rdflib.Graph) -> dict[programloader.arg, rdflib.IdentifiedNode]:
+    def _find_in_graph(self, rdfgraph: rdflib.Graph) -> dict[myabc.arg, rdflib.IdentifiedNode]:
         """Find programinput in given rdfgraph
 
         :return: Mapping of the program-arguments as object to the
             resourcenames used
         """
-        arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
+        arg_to_resource: dict[myabc.arg, rdflib.IdentifiedNode]
         if getattr(self, "uri_queryterm", None):
             queryterm = self.uri_queryterm
         else:
@@ -176,7 +177,7 @@ class rdfgraph_finder:
         """Create all information for an app to given input resources
 
         :param arg_to_resource:
-        :type arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
+        :type arg_to_resource: dict[myabc.arg, rdflib.IdentifiedNode]
         :param filter_newtypes: use this if the list of input_dict of 
             programloader is available. Just use input_dict.keys() as this
         :type filter_newtypes: list[rdflib.IdentifiedNode]
@@ -230,9 +231,9 @@ class rdfgraph_finder:
 
 
 class tactic_priority_organizer:
-    graphfinder: dict["programloader.program", rdfgraph_finder]
+    graphfinder: dict[myabc.program, rdfgraph_finder]
     """Mapping of used programs their graphfinders."""
-    _app_prioritiyqueue: queue.PriorityQueue[float, programloader.app]
+    _app_prioritiyqueue: queue.PriorityQueue[float, myabc.app]
 
     def execute_first_app(self, rdfgraph=None) \
             -> (str, typ.Iterable[rdflib.graph._TripleType]):
@@ -271,9 +272,9 @@ class tactic_priority_organizer:
         """Generates info, which programs can be used on the given data
         and what the priority of those programs are
         """
-        pro: "programloader.program"
+        pro: mybac.program
         finder: rdfgraph_finder
-        arg_to_resource: dict[programloader.arg, rdflib.IdentifiedNode]
+        arg_to_resource: dict[mybac.arg, rdflib.IdentifiedNode]
         newaxioms: list[rdflib.graph._TripleType] = []
         for pro, finder in self.graphfinder.items():
             for arg_to_resource in finder._find_in_graph(rdfgraph):
@@ -314,22 +315,23 @@ class tactic(tactic_priority_organizer):
     programs and estimates, which program-usage should be used via 
     a priority queue. It also organizes the usage of the programs.
     """
-    uses: list["programloader.program"]
+    uses: list[myabc.program]
     """all availagle programs which are used, by this tactic"""
     def __init__(self, uri, uses: extc.info_attr_list(AUTGEN.uses)):
         self.uri = uri
         self.uses = list(uses)
+        try:
+            [myabc.type_control(myabc.program, p) for p in uses]
+        except TypeError as err:
+            raise TypeError(f"input uses for {type(self)}", uses )
         self._typecontrol_uses(self.uses)
         super().__init__(self.uses) #tactic_priority_organizer
 
     @classmethod
-    def _typecontrol_uses(cls, uses: list["programloader.program"]):
+    def _typecontrol_uses(cls, uses: list[myabc.program]):
         for p in uses:
             try:
-                p.example_nodes
-                p.generated_nodes
-                p.old_axioms
-                p.new_axioms
+                myabc.program.check_attributes(p)
             except AttributeError as err:
-                raise TypeError("must all be programloader.program") from err
+                raise TypeError(p) from err
 
