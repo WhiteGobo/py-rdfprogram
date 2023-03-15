@@ -99,7 +99,6 @@ class tempexc(Exception):
     pass
 
 class TestInfogenerator( unittest.TestCase ):
-    @unittest.expectedFailure(tempexc) #remove, when project works as intended
     def test_project(self):
         g = rdflib.Graph()
         g.parse(data = info_tactic)
@@ -203,7 +202,7 @@ class TestInfogenerator( unittest.TestCase ):
             if not new_axioms:
                 break
         if i >= 9:
-            raise tempexc()
+            raise tempexc("expected")
             raise Exception("loop was executed too many times")
 
         new_axioms = set(pro.copy_generated_information())

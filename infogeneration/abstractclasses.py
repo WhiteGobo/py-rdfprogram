@@ -5,6 +5,22 @@ import abc
 class program(abc.ABC):
     """programloader.program conforms to this
     """
+    @property
+    @abc.abstractmethod
+    def example_nodes(self):
+        pass
+    @property
+    @abc.abstractmethod
+    def generated_nodes(self):
+        pass
+    @property
+    @abc.abstractmethod
+    def old_axioms(self):
+        pass
+    @property
+    @abc.abstractmethod
+    def new_axioms(self):
+        pass
 
 class mutable_resource(abc.ABC):
     """programloader.mutable_resource conforms to this

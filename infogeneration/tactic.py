@@ -324,14 +324,5 @@ class tactic(tactic_priority_organizer):
             [myabc.type_control(myabc.program, p) for p in uses]
         except TypeError as err:
             raise TypeError(f"input uses for {type(self)}", uses )
-        self._typecontrol_uses(self.uses)
         super().__init__(self.uses) #tactic_priority_organizer
-
-    @classmethod
-    def _typecontrol_uses(cls, uses: list[myabc.program]):
-        for p in uses:
-            try:
-                myabc.program.check_attributes(p)
-            except AttributeError as err:
-                raise TypeError(p) from err
 
