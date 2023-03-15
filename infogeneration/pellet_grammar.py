@@ -1,9 +1,13 @@
+"""Grammar for return of pellet, a rdf reasoner
+
+:TODO: More documentation
+"""
 import ply.lex as lex
 import ply.yacc as yacc
 import rdflib
 import logging
 logger = logging.getLogger(__name__)
-"""Logger for grammar"""
+"""Logger for pellet-grammar"""
 from programloader import RDF_NS as _RDF
 
 tokens = (
@@ -140,6 +144,9 @@ def p_error(p):
 parser = yacc.yacc(errorlog=logger)
 
 def parse_pelletoutput(data):
+    """Parses pellet output and returns something
+
+    """
     parser.error = 0
     ast = parser.parse(data)
     return ast
