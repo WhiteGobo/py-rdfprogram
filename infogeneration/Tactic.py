@@ -23,7 +23,7 @@ class rdfgraph_finder:
     """Mapping from program variables to mutable nodes, which hold the 
     information about input and output arguments of the program.
     """
-    mutable_to_arg: dict[myabc.mutable_resource, myabc.arg]
+    _mutable_to_arg: dict[myabc.mutable_resource, myabc.arg]
     """Mapping of mutable nodes of program-arguments to their arguments
     """
 
@@ -37,14 +37,14 @@ class rdfgraph_finder:
 
     def __init__(self, program):
         self.program = program
-        self.mutable_to_arg = {}
+        self._mutable_to_arg = {}
         for arg in program.app_args:
             try:
-                self.mutable_to_arg[arg.example_node] = arg
+                self._mutable_to_arg[arg.example_node] = arg
             except AttributeError:
                 pass
             try:
-                self.mutable_to_arg[arg.generated_node] = arg
+                self._mutable_to_arg[arg.generated_node] = arg
             except AttributeError:
                 pass
 
@@ -168,7 +168,7 @@ class rdfgraph_finder:
         for found_nodes in asdf:
             arg_to_resource = {}
             for var, mutable in self.var_to_mutable.items():
-                arg = self.mutable_to_arg[mutable]
+                arg = self._mutable_to_arg[mutable]
                 arg_to_resource[arg] = found_nodes[var]
             yield arg_to_resource
 
