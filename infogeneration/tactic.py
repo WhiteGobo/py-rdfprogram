@@ -229,13 +229,27 @@ class rdfgraph_finder:
                      for ax in it.chain(axioms, *new_generate_axiom)]
                 yield q, app_identifier
 
+class program_container:
+    uses: list[myabc.program]
+    """all availagle programs which are used, by this tactic"""
+    def __init__(self, uses, **kwargs):
+        super().__init__(**kwargs)
+        self.uses = list(uses)
+        try:
+            [myabc.type_control(myabc.program, p) for p in uses]
+        except TypeError as err:
+            raise TypeError(f"input uses for {type(self)}", uses )
 
-class tactic_priority_organizer:
+class tactic_priority_organizer(program_container):
     graphfinder: dict[myabc.program, rdfgraph_finder]
     """Mapping of used programs their graphfinders."""
-    _app_prioritiyqueue: queue.PriorityQueue[float, myabc.app]
+    #_app_prioritiyqueue: queue.PriorityQueue[float, myabc.app]
+    saved_objects: typ.Dict[rdflib.IdentifiedNode, myabc.program]
+    """All available programs, arguments and other objects. Used for 
+    loading additional objects from rdfgraphs.
+    """
 
-    def execute_first_app(self, rdfgraph=None) \
+    def execute_first_app(self, rdfgraph: rdflib.Graph = None) \
             -> (str, typ.Iterable[rdflib.graph._TripleType]):
         """Returns the first app in the priorityQueue.
         If a rdfgraph is given, checks in the graph the current priorities
@@ -253,16 +267,17 @@ class tactic_priority_organizer:
         returnstring, new_axioms = myApp()
         return returnstring, new_axioms
 
-    def __init__(self, uses):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.graphfinder = {}
-        for pro in uses:
+        for pro in self.uses:
             if not pro.old_axioms:
                 raise TypeError( "old axioms must be provided or tactic doesnt know when to use that program")
             self.graphfinder[pro] = rdfgraph_finder(pro)
         self._app_priorityqueue = queue.PriorityQueue()
         self._current_used_rdfgraph = rdflib.Graph()
         self.saved_objects = {}
-        for program in uses:
+        for program in self.uses:
             self.saved_objects[program.iri] = [program]
             for arg in program.app_args:
                 self.saved_objects[arg.iri] = [arg]
@@ -272,7 +287,7 @@ class tactic_priority_organizer:
         """Generates info, which programs can be used on the given data
         and what the priority of those programs are
         """
-        pro: mybac.program
+        pro: myabc.program
         finder: rdfgraph_finder
         arg_to_resource: dict[mybac.arg, rdflib.IdentifiedNode]
         newaxioms: list[rdflib.graph._TripleType] = []
@@ -315,14 +330,6 @@ class tactic(tactic_priority_organizer):
     programs and estimates, which program-usage should be used via 
     a priority queue. It also organizes the usage of the programs.
     """
-    uses: list[myabc.program]
-    """all availagle programs which are used, by this tactic"""
     def __init__(self, uri, uses: extc.info_attr_list(AUTGEN.uses)):
+        super().__init__(uses=uses) #tactic_priority_organizer
         self.uri = uri
-        self.uses = list(uses)
-        try:
-            [myabc.type_control(myabc.program, p) for p in uses]
-        except TypeError as err:
-            raise TypeError(f"input uses for {type(self)}", uses )
-        super().__init__(self.uses) #tactic_priority_organizer
-

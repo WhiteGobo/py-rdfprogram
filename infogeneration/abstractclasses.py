@@ -1,10 +1,31 @@
 """Abstractclasses to annotate data, functions and methods
 """
 import abc
+import rdflib
+import typing as typ
+
+
+class arg(abc.ABC):
+    """programloader.arg conforms to this
+    """
+    @property
+    @abc.abstractmethod
+    def iri(self) -> rdflib.IdentifiedNode:
+        """Returns identifier of object"""
 
 class program(abc.ABC):
     """programloader.program conforms to this
     """
+    @property
+    @abc.abstractmethod
+    def iri(self) -> rdflib.IdentifiedNode:
+        """Returns identifier of object"""
+
+    @property
+    @abc.abstractmethod
+    def app_args(self) -> typ.List[arg]:
+        """all used argument of this argument"""
+
     @property
     @abc.abstractmethod
     def example_nodes(self):
@@ -24,10 +45,6 @@ class program(abc.ABC):
 
 class mutable_resource(abc.ABC):
     """programloader.mutable_resource conforms to this
-    """
-
-class arg(abc.ABC):
-    """programloader.arg conforms to this
     """
 
 class app(abc.ABC):
