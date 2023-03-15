@@ -19,7 +19,7 @@ class rdfgraph_finder:
     """
     program: myabc.program
     """Program for which this object is created"""
-    var_to_mutable: dict
+    var_to_mutable: dict[str, rdflib.IdentifiedNode]
     """Mapping from program variables to mutable nodes, which hold the 
     information about input and output arguments of the program.
     """
