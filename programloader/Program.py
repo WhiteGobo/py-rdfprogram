@@ -30,6 +30,8 @@ VALID_INPUTS = typ.Union[str, int, float, "filelinkt"]
 
 
 class _iri_repr_class:
+    def __init__(self, **kwargs):
+        super().__init__()
     def __repr__( self ):
         name = f"{type(self).__module__}.{type(self).__name__}"
         return f"<{name}:{self.iri}>"
@@ -39,7 +41,7 @@ class _iri_repr_class:
 
 
 
-class program_callmethods(abc.ABC, _iri_repr_class):
+class program_callmethods(abc.ABC):
     """Implements methods to call an executable. 
 
     :cvar iri: iri of this resource
@@ -89,9 +91,9 @@ class program_callmethods(abc.ABC, _iri_repr_class):
     """Extract info from all example generated nodes."""
     app_args: list["arg"]
 
-    def __init__(self, iri, app_args):
-        self.iri = iri
-
+    #def set_options(self, iri, app_args, **kwargs):
+    def __init__(self, iri, app_args, **kwargs):
+        super().__init__(iri=iri, app_args=app_args, **kwargs)
         self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
         all_axioms = []
         for a in app_args:
@@ -145,27 +147,6 @@ class program_callmethods(abc.ABC, _iri_repr_class):
         """
         pass
 
-    def get_args_and_kwargs(self,\
-            input_args: typ.Dict[term.IdentifiedNode, term.Identifier])\
-            -> (list[str], dict[str, str]):
-        for mytarget in input_args.values():
-            try:
-                mytarget.was_created()
-            except AttributeError:
-                pass
-
-        kwargs, args = {},{}
-        for arg, val in input_args.items():
-            if isinstance(arg.id, (str)):
-                kwargs[arg.id] = val
-            elif isinstance(arg.id, int):
-                args[arg.id] = val
-            else:
-                raise TypeError(arg, arg.id, input_args)
-        args = [args[x] for x in sorted(args.keys())]
-        return args, kwargs
-
-
     def get_new_axioms(self, returnstring, input_args, mutable_to_target)\
             -> typ.List:
         """
@@ -209,6 +190,27 @@ class program_callmethods(abc.ABC, _iri_repr_class):
 
         return new_axioms
 
+class input_argument_processor:
+    def get_args_and_kwargs(self,\
+            input_args: typ.Dict[term.IdentifiedNode, term.Identifier])\
+            -> (list[str], dict[str, str]):
+        for mytarget in input_args.values():
+            try:
+                mytarget.was_created()
+            except AttributeError:
+                pass
+
+        kwargs, args = {},{}
+        for arg, val in input_args.items():
+            if isinstance(arg.id, (str)):
+                kwargs[arg.id] = val
+            elif isinstance(arg.id, int):
+                args[arg.id] = val
+            else:
+                raise TypeError(arg, arg.id, input_args)
+        args = [args[x] for x in sorted(args.keys())]
+        return args, kwargs
+
 
 class argument_processor:
     """This class organizes, how inputnodes are treated.
@@ -225,7 +227,8 @@ class argument_processor:
     given resource.
     """
 
-    def __init__(self, app_args):
+    def __init__(self, app_args, **kwargs):
+        super().__init__(app_args=app_args, **kwargs)
         self.new_generated_arg_to_typeids = {}
         for myarg in app_args:
             if getattr(myarg, "example_node", False):
@@ -239,7 +242,7 @@ class argument_processor:
                 pass
 
 
-class rdfprogram(program_callmethods, _iri_repr_class, argument_processor):
+class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
     """
@@ -254,9 +257,9 @@ class rdfprogram(program_callmethods, _iri_repr_class, argument_processor):
         return cls(iri, app_args)
 
     def __init__(self, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
+        self.iri = iri
         self.app_args = list(app_args)
-        program_callmethods.__init__(self, iri, app_args)
-        argument_processor.__init__(self, app_args)
+        super().__init__(iri=iri, app_args=app_args)
         #self.iri = iri
         #self.app_args = app_args
         self.program_container = iri_to_programcontainer(iri)
