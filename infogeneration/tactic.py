@@ -240,7 +240,8 @@ class program_container:
         except TypeError as err:
             raise TypeError(f"input uses for {type(self)}", uses )
 
-class tactic_priority_organizer(program_container):
+
+class tactic_finder_container(program_container):
     graphfinder: dict[myabc.program, rdfgraph_finder]
     """Mapping of used programs their graphfinders."""
 
@@ -251,9 +252,9 @@ class tactic_priority_organizer(program_container):
             if not pro.old_axioms:
                 raise TypeError( "old axioms must be provided or tactic doesnt know when to use that program")
             self.graphfinder[pro] = rdfgraph_finder(pro)
-        self._app_priorityqueue = queue.PriorityQueue()
-        self._current_used_rdfgraph = rdflib.Graph()
 
+
+class tactic_priority_organizer(program_container):
     def calculate_priority(self):
         """Estimates the priority. This method isnt ready yet
         """
@@ -261,7 +262,7 @@ class tactic_priority_organizer(program_container):
 
 
 
-class tactic(tactic_priority_organizer):
+class tactic(tactic_priority_organizer, tactic_finder_container):
     """To generate a certain output with given programs, this class
     is used. It looks up all available input-constellation for the given 
     programs and estimates, which program-usage should be used via 
