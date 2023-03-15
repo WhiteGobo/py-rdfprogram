@@ -3,6 +3,7 @@ This module implements all available classes for rdfloader.load_graph
 """
 from . import PROLOA_NS
 from . import RDF_NS
+from . import RDF_NS as RDF
 from rdfloader import annotations as extc
 import rdflib
 import urllib.parse
@@ -30,8 +31,6 @@ VALID_INPUTS = typ.Union[str, int, float, "filelinkt"]
 
 
 class _iri_repr_class:
-    def __init__(self, **kwargs):
-        super().__init__()
     def __repr__( self ):
         name = f"{type(self).__module__}.{type(self).__name__}"
         return f"<{name}:{self.iri}>"
@@ -75,7 +74,7 @@ class program_callmethods(abc.ABC):
     :TODO: Move old_axioms, new_axioms, old_nodes and new_nodes 
         to argument_processor
     """
-    iri: rdflib.IdentifiedNode
+    iri: rdflib.IdentifiedNode = None
     """Resource identifier in the knowledge graph"""
     example_nodes: list#[mutable_resource]
     """Resources, that describe the input for the program. Specifies, which 
@@ -89,11 +88,12 @@ class program_callmethods(abc.ABC):
     """Extracted info from all example mutable nodes."""
     new_axioms: list[rdflib.graph._TripleType]
     """Extract info from all example generated nodes."""
-    app_args: list["arg"]
+    app_args: typ.List["arg"] = None
 
-    #def set_options(self, iri, app_args, **kwargs):
     def __init__(self, iri, app_args, **kwargs):
-        super().__init__(iri=iri, app_args=app_args, **kwargs)
+        super().__init__(**kwargs)
+        self.iri = iri
+        self.app_args = app_args
         self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
         all_axioms = []
         for a in app_args:
@@ -212,34 +212,42 @@ class input_argument_processor:
         return args, kwargs
 
 
-class argument_processor:
+class argument_processor(abc.ABC):
     """This class organizes, how inputnodes are treated.
     
     Following problem, we have programs that generate new files. Those
     files may need an argument that wasnt existing previous execution.
     Also there may be not connected inputs, that are still files.
     """
-    #app_args: list["arg"]
-    new_generated_arg_to_typeids: dict["arg", list[rdflib.IdentifiedNode]]
-    """Filters which argument point to a not yet existing resource.
-    To each of those resources, gives a list of all available types of 
-    that resource. This is needed, when you need to load a placeholder for
-    given resource.
-    """
+    @property
+    @abc.abstractmethod
+    def app_args(self) -> typ.List["arg"]:
+        pass
 
-    def __init__(self, app_args, **kwargs):
-        super().__init__(app_args=app_args, **kwargs)
-        self.new_generated_arg_to_typeids = {}
-        for myarg in app_args:
-            if getattr(myarg, "example_node", False):
-                continue
-            try:
-                for subj, pred, obj in myarg._generated_axioms:
-                    if subj == myarg.generated_node and pred == RDF_NS.type:
-                        self.new_generated_arg_to_typeids\
-                                .setdefault(myarg, list()).append(obj)
-            except AttributeError as err:
-                pass
+    @property
+    def new_generated_arg_to_typeids(self)\
+            -> dict["arg", list[rdflib.IdentifiedNode]]:
+        """Filters which argument point to a not yet existing resource.
+        To each of those resources, gives a list of all available types of 
+        that resource. This is needed, when you need to load a placeholder for
+        given resource.
+        """
+        try:
+            return self.__new_generated_arg_to_typeids
+        except AttributeError:
+            self.__new_generated_arg_to_typeids = {}
+            for myarg in self.app_args:
+                if getattr(myarg, "example_node", False):
+                    continue
+                try:
+                    for subj, pred, obj in myarg._generated_axioms:
+                        if subj == myarg.generated_node and pred == RDF.type:
+                            self.new_generated_arg_to_typeids\
+                                    .setdefault(myarg, list()).append(obj)
+                except AttributeError as err:
+                    pass
+            return self.__new_generated_arg_to_typeids
+            
 
 
 class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor):
@@ -257,11 +265,7 @@ class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input
         return cls(iri, app_args)
 
     def __init__(self, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
-        self.iri = iri
-        self.app_args = list(app_args)
         super().__init__(iri=iri, app_args=app_args)
-        #self.iri = iri
-        #self.app_args = app_args
         self.program_container = iri_to_programcontainer(iri)
 
     def __call__(self, input_args: typ.Dict["arg", VALID_INPUTS], 
