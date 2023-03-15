@@ -4,6 +4,7 @@ import rdfloader
 import abc
 import programloader
 
+from . import abstractclasses as myabc
 from rdfloader import annotations as extc
 from . import namespaces
 import rdflib
@@ -78,11 +79,16 @@ class program_container:
     #def inner_information_graph(self) -> rdflib.Graph:
     #    pass
 
-    saved_objects: dict
+    saved_objects: dict[rdflib.IdentifiedNode, typ.List[object]]
+    """All resources identified by IRI with a list of corresponding objects.
+    Always contains all available programs and their arguments.
+    """
 
     def __init__(self, used_tactic, saved_objects= dict()):
         self.used_tactic = used_tactic
         self.saved_objects = saved_objects
+        pro: myabc.program
+        arg: myabc.arg
         for pro in self.used_tactic.uses:
             self.saved_objects[pro.iri] = [pro]
             for arg in pro.app_args:
@@ -109,7 +115,7 @@ class project(information_save, priority_project, program_container):
     all needed algorithms and information used, so that the wanted
     information can be produced
     """
-    variables: typ.List["rdflib.IdentifiedNode"]
+    variables: typ.List[rdflib.IdentifiedNode]
     """All variable nodes, that we want to create.
     """
     target_information: typ.List["rdflib.graph._TripleType"]
@@ -163,12 +169,11 @@ class project(information_save, priority_project, program_container):
             -> (list["rdflib.graph._TripleType"], list[rdflib.IdentifiedNode]):
         """Finds all new apps in given infograph
         """
-        pro: "programloader.program"
         finder: "Tactic.rdfgraph_finder"
-        arg_to_resource: dict["programloader.arg", "rdflib.IdentifiedNode"]
+        arg_to_resource: dict[myabc.arg, rdflib.IdentifiedNode]
         new_axioms: list["rdflib.graph._TripleType"] = []
         new_apps: list[rdflib.BNode] = []
-        for pro, finder in self.used_tactic.graphfinder.items():
+        for finder in self.used_tactic.graphfinder.values():
             logger.debug(f"Search for new apps with {finder}")
             for arg_to_resource in finder._find_in_graph(infograph):
                 logger.debug(f"Found possible inputs: {arg_to_resource}")
@@ -229,8 +234,8 @@ class project(information_save, priority_project, program_container):
     def execute_first_app(self):
         app_id = self._find_first_app()
         self._label_as_executed(app_id)
-        myapp = self._get_app(app_id)
-        logger.debug(f"Executed: {myapp}")
+        myapp: myabc.app = self._get_app(app_id)
+        logger.debug(f"Executes: {myapp}")
         #print(self.inner_information_graph.serialize())
         returnstring, new_axioms = myapp()
 

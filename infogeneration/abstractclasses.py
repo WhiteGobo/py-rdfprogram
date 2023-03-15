@@ -50,6 +50,10 @@ class mutable_resource(abc.ABC):
 class app(abc.ABC):
     """programloader.app conforms to this
     """
+    def __call__(self) -> (str, typ.List[rdflib.graph._TripleType]):
+        """"Prints out message from executed program and new information
+        for a rdfgraph
+        """
 
 def type_control(myclass, obj):
     """Checks conformity of given object obj to class myclass"""
