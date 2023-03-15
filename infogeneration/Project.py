@@ -1,4 +1,4 @@
-from . import tactic as Tactic
+from . import Tactic
 import itertools as it
 import rdfloader
 import abc

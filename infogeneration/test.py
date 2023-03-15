@@ -2,7 +2,7 @@ import unittest
 import rdflib
 import logging
 logger = logging.getLogger( __name__ )
-from . import tactic
+from . import Tactic
 from . import AUTGEN
 from programloader import RDF_NS as RDF
 from programloader import PROLOA_NS as PROLOA
@@ -25,7 +25,7 @@ testnumber_path = importlib.resources.files(test_src).joinpath( "a_number" )
 testnumber_uri = rdflib.URIRef(pathlib.Path(testnumber_path).as_uri())
 
 input_dictionary = {
-        AUTGEN.tactic: tactic.tactic,
+        AUTGEN.tactic: Tactic.tactic,
         }
 input_dictionary.update(Project.input_dict)
 input_dictionary.update(programloader.input_dict)
