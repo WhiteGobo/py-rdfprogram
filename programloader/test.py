@@ -52,7 +52,18 @@ class TestProgramloader( unittest.TestCase ):
                 a proloa:arg .
             _:2 proloa:id "--savefile" ;
                 a proloa:arg .
-                """)
+
+            # This is a description what the programs needs as argument 
+            # and what the result of the program looks like
+            _:1 proloa:describedBy _:res1 .
+            _:res1 a proloa:mutable_resource ;
+                asdf:customProp1 asdf:customResource1 .
+            #_:2 proloa:describedBy _:res2 .
+            _:2 proloa:declaresInfoLike _:res2 .
+            _:res2 a proloa:mutable_resource ;
+                asdf:customProp2 asdf:customResource2 .
+            _:res2 asdf:customProp3 _:res1 .
+            """)
         asdf: dict = rl.load_from_graph( input_dict, g )
         try:
             myprogram: "program" = asdf[program_uri][0]
@@ -63,6 +74,13 @@ class TestProgramloader( unittest.TestCase ):
         w2 = myprogram.outputgraphs
         e = myprogram.search_in
         e2 = myprogram.create_possible_apps
+        shouldbesearch = set(myprogram.old_axioms)
+        inputaxioms = {tuple(q[x].example_node if x in q else x for x in ax)
+                       for ax in w1}
+        self.assertEqual(inputaxioms, shouldbesearch, "searchgraph was wrong.")
+        shouldbewhole = set()
+        outputaxioms = {tuple(q.get(x,x) for x in ax) for ax in w2}
+        self.assertEqual(outputaxioms, shouldbewhole, )
         raise Exception(myprogram, q, w1, w2, e)
 
 

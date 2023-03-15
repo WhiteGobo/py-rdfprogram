@@ -84,7 +84,7 @@ class program_callmethods(abc.ABC):
     """Resources, that describe the output of the program. Specifies, which 
     axioms will be valid after this program succeeds.
     """
-    old_axioms: list[rdflib.graph._TripleType]
+    old_axioms: list[rdflib.graph._TripleType] = None
     """Extracted info from all example mutable nodes."""
     new_axioms: list[rdflib.graph._TripleType]
     """Extract info from all example generated nodes."""
@@ -258,6 +258,11 @@ class graph_container(abc.ABC):
         pass
 
     @property
+    @abc.abstractmethod
+    def old_axioms(self):
+        pass
+
+    @property
     def var_to_argid(self) -> typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]:
         """Mapping of used variables in search graph or searchterm"""
         try:
@@ -266,7 +271,7 @@ class graph_container(abc.ABC):
             pass
         self.__var_to_argid = dict()
         for i, myarg in enumerate(self.app_args):
-            tmpvar = f"x{i}"
+            tmpvar = rdflib.Variable(f"x{i}")
             self.__var_to_argid[tmpvar] = myarg
         return self.__var_to_argid
 
@@ -278,7 +283,8 @@ class graph_container(abc.ABC):
         try:
             return self.__inputgraph
         except AttributeError:
-            self.__create_input_output_graphs()
+            pass
+        self.__create_input_output_graphs()
         return self.__inputgraph
 
     @property
@@ -289,7 +295,8 @@ class graph_container(abc.ABC):
         try:
             return self.__outputgraphs
         except AttributeError:
-            self.__create_input_output_graphs()
+            pass
+        self.__create_input_output_graphs()
         return self.__outputgraphs
 
 
@@ -302,8 +309,19 @@ class graph_container(abc.ABC):
         outputgraphs = []
         myvar: rdflib.term.Variable
         myarg: "arg"
+        mut_to_var = {}
         for myvar, myarg in self.var_to_argid.items():
-            pass
+            try:
+                mut_to_var[myarg.example_node] = myvar
+            except AttributeError:
+                pass
+            try:
+                mut_to_var[myarg.generated_node] = myvar
+            except AttributeError:
+                pass
+        for myvar, myarg in self.var_to_argid.items():
+            for ax in self.old_axioms:
+                self.__inputgraph.add((mut_to_var.get(x,x) for x in ax))
         self.__outputgraphs = tuple(outputgraphs)
 
 
