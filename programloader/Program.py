@@ -247,10 +247,80 @@ class argument_processor(abc.ABC):
                 except AttributeError as err:
                     pass
             return self.__new_generated_arg_to_typeids
-            
+
+class graph_container(abc.ABC):
+    """adds all things needed to create a search for input-resources for
+    this program
+    """
+    @property
+    @abc.abstractmethod
+    def app_args(self):
+        pass
+
+    @property
+    def var_to_argid(self) -> typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]:
+        """Mapping of used variables in search graph or searchterm"""
+        try:
+            return self.__var_to_argid
+        except AttributeError:
+            pass
+        self.__var_to_argid = dict()
+        for i, myarg in enumerate(self.app_args):
+            tmpvar = f"x{i}"
+            self.__var_to_argid[tmpvar] = myarg
+        return self.__var_to_argid
+
+    @property
+    def inputgraph(self) -> rdflib.Graph:
+        """Informationgraph for input. use var_to_argid for translation
+        from variables to resource id of the arguments.
+        """
+        try:
+            return self.__inputgraph
+        except AttributeError:
+            self.__create_input_output_graphs()
+        return self.__inputgraph
+
+    @property
+    def outputgraphs(self) -> typ.Tuple[rdflib.Graph]:
+        """Informationgraph for output. use var_to_argid for translation
+        from variables to resource id of the arguments.
+        """
+        try:
+            return self.__outputgraphs
+        except AttributeError:
+            self.__create_input_output_graphs()
+        return self.__outputgraphs
 
 
-class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor):
+    def __create_input_output_graphs(self):
+        """Creates input and outputgraph corresponding to information
+        in app_args. 
+        Notice that there may be multiple outputgraphs.
+        """
+        self.__inputgraph = rdflib.Graph()
+        outputgraphs = []
+        myvar: rdflib.term.Variable
+        myarg: "arg"
+        for myvar, myarg in self.var_to_argid.items():
+            pass
+        self.__outputgraphs = tuple(outputgraphs)
+
+
+class inputgraphfinder(graph_container):
+    """gives methods to find the inputgraph within a given graph"""
+
+    def create_possible_apps(self, rdfgraph: rdflib.Graph):
+        """Searches in given graph for possible new apps of this program.
+        Returns an informationgraph with new apps and all temporary nodes
+        needed as input
+        """
+
+    def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
+            -> typ.Dict["arg", rdflib.term.Identifier]:
+        """searches possible resources usable as input for program"""
+
+class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor, inputgraphfinder):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
     """

@@ -36,6 +36,36 @@ input_dict = {\
         }
 
 class TestProgramloader( unittest.TestCase ):
+    def test_search_in_graphs_for_possible_app(self):
+        """Testing if programs have full support to return graphs equivalent to
+        input and output. Also tests if program can succesfully search in
+        a given graph for needed input
+        """
+        g = rdflib.Graph().parse( format="ttl", data=f"""
+            @prefix asdf: <http://example.com/> .
+            @prefix proloa: <http://example.com/programloader/> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            # This is the description of the program
+            <{program_uri}> a proloa:program ;
+                proloa:hasArgument _:1, _:2 .
+            _:1 proloa:id 0 ;
+                a proloa:arg .
+            _:2 proloa:id "--savefile" ;
+                a proloa:arg .
+                """)
+        asdf: dict = rl.load_from_graph( input_dict, g )
+        try:
+            myprogram: "program" = asdf[program_uri][0]
+        except Exception as err:
+            raise Exception("couldnt load. See other tests.") from err
+        q = myprogram.var_to_argid
+        w1 = myprogram.inputgraph
+        w2 = myprogram.outputgraphs
+        e = myprogram.search_in
+        e2 = myprogram.create_possible_apps
+        raise Exception(myprogram, q, w1, w2, e)
+
+
     def test_failing_evaluator(self):
         """Testing what happens if an evaluator fails, when applied to
         a list of resources. There must be a returned axiom that specifies,
