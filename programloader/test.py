@@ -94,9 +94,8 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(len(myprogram.outputgraphs),1,"too many outputgraphs")
 
         target_g = rdflib.Graph().parse(format="ttl", data="""
-            @base: <http://example.com/> .
             @prefix asdf: <http://example.com/> .
-            <1> asdf:customProp1 asdf:customResource1 .
+            asdf:1 asdf:customProp1 asdf:customResource1 .
             """)
         q = list(myprogram.search_in(target_g))
         self.assertEqual(len(q), 1, "failed to find inputgraph.")
