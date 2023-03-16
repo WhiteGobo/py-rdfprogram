@@ -2,6 +2,7 @@
 This module implements all available classes for rdfloader.load_graph
 """
 from . import PROLOA_NS
+from . import PROLOA_NS as PROLOA
 from . import RDF_NS
 from . import RDF_NS as RDF
 from rdfloader import annotations as extc
@@ -319,6 +320,20 @@ class graph_container(abc.ABC):#, program_callmethods):
         return self.__outputgraphs
 
 
+    @property
+    def _mut_to_var(self):
+        _mut_to_var = {}
+        for myvar, myarg in self.__var_to_arg.items():
+            try:
+                _mut_to_var[myarg.example_node] = myvar
+            except AttributeError:
+                pass
+            try:
+                _mut_to_var[myarg.generated_node] = myvar
+            except AttributeError:
+                pass
+        return _mut_to_var
+
     def __create_input_graph(self):
         """Creates input and outputgraph corresponding to information
         in app_args. 
@@ -377,11 +392,38 @@ class inputgraphfinder(graph_container):
     #def _inputvars(self) -> typ.List[str]:
     #    """Returns all variables used in inputgraph"""
 
-    def create_possible_apps(self, rdfgraph: rdflib.Graph):
+    def create_possible_apps(self, variable_to_resource:typ.Dict, store=None, newapp_uri=None):
         """Searches in given graph for possible new apps of this program.
         Returns an informationgraph with new apps and all temporary nodes
         needed as input
+
+        :TODO: Rework newnode axiom addition
         """
+        assert all(x in self.var_to_argid for x in variable_to_resource)
+        g = rdflib.Graph(store=store) if store is not None else rdflib.Graph()
+        newapp = rdflib.BNode() if newapp_uri is None \
+                else rdflib.URIRef(newapp_uri)
+        g.add((newapp, RDF.type, PROLOA.app))
+        var_to_res = dict(variable_to_resource)
+        newnodes = []
+        for var in self.var_to_argid:
+            if var not in var_to_res:
+                tmp_node = rdflib.BNode()
+                newnodes.append(tmp_node)
+                var_to_res[var] = tmp_node
+                g.add((tmp_node, RDF.type, PROLOA.link))
+        for var, res in var_to_res.items():
+            g.add((newapp, self.var_to_argid[var], res))
+        return g
+
+
+    
+
+    def _create_filter_existing_app(self, rdfgraph: rdflib.Graph) -> str:
+        if all(isinstance(argid, rdflib.URIRef) for argid in self.var_to_argid.values()):
+            return " .\n".join((f"?{var} {arg} ?app") for var, arg in self.var_to_argid.items()),
+        else:
+            raise NotImplementedError()
 
     def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
             -> typ.Iterable[typ.Dict["arg", rdflib.term.Identifier]]:
@@ -389,14 +431,23 @@ class inputgraphfinder(graph_container):
 
         filter_equal = ("FILTER (%s != %s)" % pair for pair 
                         in it.permutations(self._inputvars, 2))
-        query = "SELECT %s \nWHERE {\n%s%s} %s"\
-                %(", ".join([f"?{var}" for var in self._inputvars]),
-                  self.inputgraph.serialize(format="ntriples"),
-                  "\n".join(filter_equal),
-                  f"LIMIT {limit}" if limit is not None else "")
+        # ?app is some common app. app should be in self.var_to_argid
+        filter_existing_app: str = self._create_filter_existing_app(rdfgraph)
 
-        for result in rdfgraph.query(query):
-            yield {var: obj for var, obj in zip(self._inputvars, result)}
+        VARS = ", ".join([f"?{var}" for var in self._inputvars])
+        AXIOMS = self.inputgraph.serialize(format="ntriples")[:-1] #deletes \n at end
+        FILTER_EQUAL = "\n".join(filter_equal)
+        FILTER_APPS = "FILTER NOT EXISTS {\n%s\n}" % (filter_existing_app)
+        FILTER_APPS = ""
+        LIMIT = " LIMIT %i" % (limit) if limit is not None else ""
+        query = f"SELECT {VARS}\nWHERE {{\n{AXIOMS}{FILTER_EQUAL}"\
+                f"\n{FILTER_APPS}\n}}{LIMIT}"
+
+        try:
+            for result in rdfgraph.query(query):
+                yield {var: obj for var, obj in zip(self._inputvars, result)}
+        except Exception as err:
+            raise Exception(query) from err
 
 class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor, inputgraphfinder):
     """This class is for loading per rdfloader.load_from_graph .

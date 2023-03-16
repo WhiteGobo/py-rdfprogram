@@ -47,19 +47,19 @@ class TestProgramloader( unittest.TestCase ):
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             # This is the description of the program
             <{program_uri}> a proloa:program ;
-                proloa:hasArgument _:1, _:2 .
-            _:1 proloa:id 0 ;
+                proloa:hasArgument <1>, <2> .
+            <1> proloa:id 0 ;
                 a proloa:arg .
-            _:2 proloa:id "--savefile" ;
+            <2> proloa:id "--savefile" ;
                 a proloa:arg .
 
             # This is a description what the programs needs as argument 
             # and what the result of the program looks like
-            _:1 proloa:describedBy _:res1 .
+            <1> proloa:describedBy _:res1 .
             _:res1 a proloa:mutable_resource ;
                 asdf:customProp1 asdf:customResource1 .
             #_:2 proloa:describedBy _:res2 .
-            _:2 proloa:declaresInfoLike _:res2 .
+            <2> proloa:declaresInfoLike _:res2 .
             _:res2 a proloa:mutable_resource ;
                 asdf:customProp2 asdf:customResource2 .
             _:res2 asdf:customProp3 _:res1 .
@@ -99,12 +99,24 @@ class TestProgramloader( unittest.TestCase ):
             """)
         q = list(myprogram.search_in(target_g))
         self.assertEqual(len(q), 1, "failed to find inputgraph.")
-        inputvar = iter(x for x,y in myprogram.var_to_argid.items()
+        inputvar = iter(x for x, y in myprogram.var_to_argid.items()
                         if y==arg_input).__next__()
         self.assertEqual(q[0], 
                          {inputvar: rdflib.URIRef("http://example.com/1")})
-        e2 = myprogram.create_possible_apps(target_g)
-        raise Exception(e2)
+        g2 = myprogram.create_possible_apps(q[0])
+        cg = rdflib.compare.to_isomorphic(rdflib.Graph().parse(data="""
+            @prefix asdf: <file:///home/hfechner/Projects/rdftest/rdfprogram/>.
+            [] a <http://example.com/programloader/app> ;
+                asdf:1 <http://example.com/1> ;
+                asdf:2 [ a <http://example.com/programloader/link> ] .
+            """))
+        cg2 = rdflib.compare.to_isomorphic(g2)
+        in_both, in_first, in_second = rdflib.compare.graph_diff(cg, cg2)
+        self.assertEqual(set(in_first), set(in_second))
+        #raise Exception(set(in_both))
+        target_g = target_g + g2
+        q = list(myprogram.search_in(target_g))
+        self.assertEqual(q, [])
 
 
     def test_failing_evaluator(self):
