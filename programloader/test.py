@@ -115,6 +115,7 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(set(in_first), set(in_second))
         #raise Exception(set(in_both))
         target_g = target_g + g2
+        logger.debug("Graph in which is search in: %s" %(target_g.serialize()))
         q = list(myprogram.search_in(target_g))
         self.assertEqual(q, [])
 

@@ -419,9 +419,11 @@ class inputgraphfinder(graph_container):
 
     
 
-    def _create_filter_existing_app(self, rdfgraph: rdflib.Graph) -> str:
+    def _create_filter_existing_app(self, rdfgraph: rdflib.Graph,
+                                    app_var="app") -> str:
         if all(isinstance(argid, rdflib.URIRef) for argid in self.var_to_argid.values()):
-            return " .\n".join((f"?{var} {arg} ?app") for var, arg in self.var_to_argid.items()),
+            return " .\n".join((f"?{app_var} <{arg}> ?{var}")
+                               for var, arg in self.var_to_argid.items()),
         else:
             raise NotImplementedError()
 
@@ -438,16 +440,13 @@ class inputgraphfinder(graph_container):
         AXIOMS = self.inputgraph.serialize(format="ntriples")[:-1] #deletes \n at end
         FILTER_EQUAL = "\n".join(filter_equal)
         FILTER_APPS = "FILTER NOT EXISTS {\n%s\n}" % (filter_existing_app)
-        FILTER_APPS = ""
         LIMIT = " LIMIT %i" % (limit) if limit is not None else ""
         query = f"SELECT {VARS}\nWHERE {{\n{AXIOMS}{FILTER_EQUAL}"\
                 f"\n{FILTER_APPS}\n}}{LIMIT}"
 
-        try:
-            for result in rdfgraph.query(query):
-                yield {var: obj for var, obj in zip(self._inputvars, result)}
-        except Exception as err:
-            raise Exception(query) from err
+        logger.debug("Used query: %s" %(query))
+        for result in rdfgraph.query(query):
+            yield {var: obj for var, obj in zip(self._inputvars, result)}
 
 class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor, inputgraphfinder):
     """This class is for loading per rdfloader.load_from_graph .
