@@ -303,7 +303,6 @@ class graph_container(abc.ABC):
         """Informationgraph for output. use var_to_argid for translation
         from variables to resource id of the arguments.
         """
-        return []
         try:
             return self.__outputgraphs
         except AttributeError:
@@ -336,6 +335,7 @@ class graph_container(abc.ABC):
     def __create_output_graphs(self):
         outputgraphs = []
         mut_to_var = {}
+        output_args = []
         for myvar, myarg in self.__var_to_arg.items():
             try:
                 mut_to_var[myarg.example_node] = myvar
@@ -343,12 +343,18 @@ class graph_container(abc.ABC):
                 pass
             try:
                 mut_to_var[myarg.generated_node] = myvar
+                output_args.append(myarg)
             except AttributeError:
                 pass
-        for myvar, myarg in self.var_to_argid.items():
-            #for ax in self.new_axioms:
-            #    self.__outputgraph.add((mut_to_var.get(x,x) for x in ax))
-            pass
+        basic_information = list(self.new_axioms)
+        for i in range(1, len(output_args)+1):
+            for tmp_args in it.combinations(output_args, i):
+                tmp_outputgraph = set()
+                outputgraphs.append(tmp_outputgraph)
+                for ax in self.new_axioms:
+                    if all(mut_to_var[x] for x in ax if x in mut_to_var):
+                        tmp_outputgraph.add(tuple(mut_to_var.get(x,x)
+                                                  for x in ax))
         self.__outputgraphs = tuple(outputgraphs)
 
 
