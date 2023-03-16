@@ -386,9 +386,13 @@ class inputgraphfinder(graph_container):
     def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
             -> typ.Iterable[typ.Dict["arg", rdflib.term.Identifier]]:
         """searches possible resources usable as input for program"""
-        query = "SELECT %s \nWHERE {\n%s} %s"\
+
+        filter_equal = ("FILTER (%s != %s)" % pair for pair 
+                        in it.permutations(self._inputvars, 2))
+        query = "SELECT %s \nWHERE {\n%s%s} %s"\
                 %(", ".join([f"?{var}" for var in self._inputvars]),
                   self.inputgraph.serialize(format="ntriples"),
+                  "\n".join(filter_equal),
                   f"LIMIT {limit}" if limit is not None else "")
 
         for result in rdfgraph.query(query):
