@@ -74,13 +74,30 @@ class TestProgramloader( unittest.TestCase ):
         w2 = myprogram.outputgraphs
         e = myprogram.search_in
         e2 = myprogram.create_possible_apps
-        shouldbesearch = set(myprogram.old_axioms)
-        inputaxioms = {tuple(q[x].example_node if x in q else x for x in ax)
-                       for ax in w1}
+        arg_input, arg_output = iter(g.query(f"""SELECT ?e ?g
+            WHERE {{
+                <{program_uri}> proloa:hasArgument ?e, ?g .
+                ?e proloa:describedBy [] .
+                ?g proloa:declaresInfoLike [] .
+            }}""")).__next__()
+        #shouldbesearch = set(myprogram.old_axioms)
+        shouldbesearch = set([(arg_input, rdflib.URIRef('http://example.com/customProp1'), rdflib.URIRef('http://example.com/customResource1'))])
+        try:
+            inputaxioms = {tuple(q[x] if x in q else x for x in ax)
+                       for ax in myprogram.inputgraph}
+        except Exception as err:
+            raise Exception(q, list(myprogram.inputgraph))
         self.assertEqual(inputaxioms, shouldbesearch, "searchgraph was wrong.")
-        shouldbewhole = set()
-        outputaxioms = {tuple(q.get(x,x) for x in ax) for ax in w2}
-        self.assertEqual(outputaxioms, shouldbewhole, )
+        #shouldbewhole = set(myprogram.new_axioms)
+        shouldbewhole = set([
+            #(mutnode_example, rdflib.URIRef('http://example.com/customProp1'), rdflib.URIRef('http://example.com/customResource1')),
+            (arg_output, rdflib.term.URIRef('http://example.com/customProp2'), rdflib.term.URIRef('http://example.com/customResource2')), 
+            (arg_output, rdflib.term.URIRef('http://example.com/customProp3'), arg_input),
+            ])
+        outputaxioms = {tuple(q.get(x,x) for x in ax)
+                        for ax in myprogram.outputgraphs[0]}
+        self.assertEqual(outputaxioms, shouldbewhole, "outputgraphs is wrong")
+        self.assertEqual(len(myprogram.outputgraphs),1,"too many outputgraphs")
         raise Exception(myprogram, q, w1, w2, e)
 
 
