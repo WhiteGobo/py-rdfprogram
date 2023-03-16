@@ -69,24 +69,18 @@ class TestProgramloader( unittest.TestCase ):
             myprogram: "program" = asdf[program_uri][0]
         except Exception as err:
             raise Exception("couldnt load. See other tests.") from err
-        q = myprogram.var_to_argid
-        w1 = myprogram.inputgraph
-        w2 = myprogram.outputgraphs
-        e = myprogram.search_in
-        e2 = myprogram.create_possible_apps
         arg_input, arg_output = iter(g.query(f"""SELECT ?e ?g
             WHERE {{
                 <{program_uri}> proloa:hasArgument ?e, ?g .
                 ?e proloa:describedBy [] .
                 ?g proloa:declaresInfoLike [] .
             }}""")).__next__()
+        myprogram.var_to_argid
         #shouldbesearch = set(myprogram.old_axioms)
         shouldbesearch = set([(arg_input, rdflib.URIRef('http://example.com/customProp1'), rdflib.URIRef('http://example.com/customResource1'))])
-        try:
-            inputaxioms = {tuple(q[x] if x in q else x for x in ax)
-                       for ax in myprogram.inputgraph}
-        except Exception as err:
-            raise Exception(q, list(myprogram.inputgraph))
+        q = myprogram.var_to_argid
+        inputaxioms = {tuple(q[x] if x in q else x 
+                             for x in ax) for ax in myprogram.inputgraph}
         self.assertEqual(inputaxioms, shouldbesearch, "searchgraph was wrong.")
         #shouldbewhole = set(myprogram.new_axioms)
         shouldbewhole = set([
@@ -98,7 +92,13 @@ class TestProgramloader( unittest.TestCase ):
                         for ax in myprogram.outputgraphs[0]}
         self.assertEqual(outputaxioms, shouldbewhole, "outputgraphs is wrong")
         self.assertEqual(len(myprogram.outputgraphs),1,"too many outputgraphs")
-        raise Exception(myprogram, q, w1, w2, e)
+
+        target_g = rdflib.Graph().parse(format="ttl", data="""
+
+            """)
+        q = myprogram.search_in(target_g)
+        e2 = myprogram.create_possible_apps
+        raise Exception(q, e2)
 
 
     def test_failing_evaluator(self):

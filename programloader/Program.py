@@ -248,7 +248,7 @@ class argument_processor(abc.ABC):
                     pass
             return self.__new_generated_arg_to_typeids
 
-class graph_container(abc.ABC):
+class graph_container(abc.ABC):#, program_callmethods):
     """adds all things needed to create a search for input-resources for
     this program
     """
@@ -271,6 +271,13 @@ class graph_container(abc.ABC):
     @abc.abstractmethod
     def generated_nodes(self) -> typ.List["mutable_nodes"]:
         pass
+
+    #def __init__(self, **kwargs):
+    #    super().__init__(**kwargs)
+    #    self.__var_to_arg = dict()
+    #    for i, myarg in enumerate(self.app_args):
+    #        tmpvar = rdflib.Variable(f"x{i}")
+    #        self.__var_to_arg[tmpvar] = myarg
 
 
     @property
@@ -316,6 +323,7 @@ class graph_container(abc.ABC):
         in app_args. 
         Notice that there may be multiple outputgraphs.
         """
+        self.var_to_argid #need __var_to_arg
         self.__inputgraph = rdflib.Graph()
         myvar: rdflib.term.Variable
         myarg: "arg"
@@ -333,6 +341,7 @@ class graph_container(abc.ABC):
             self.__inputgraph.add((mut_to_var.get(x,x) for x in ax))
 
     def __create_output_graphs(self):
+        self.var_to_argid #need __var_to_arg
         outputgraphs = []
         mut_to_var = {}
         output_args = []
