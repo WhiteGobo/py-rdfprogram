@@ -101,9 +101,10 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(len(q), 1, "failed to find inputgraph.")
         inputvar = iter(x for x,y in myprogram.var_to_argid.items()
                         if y==arg_input).__next__()
-        self.assertEqual(q, {inputvar: rdflib.URIRef("http://example.com/1")})
-        e2 = myprogram.create_possible_apps
-        raise Exception(q, e2)
+        self.assertEqual(q[0], 
+                         {inputvar: rdflib.URIRef("http://example.com/1")})
+        e2 = myprogram.create_possible_apps(target_g)
+        raise Exception(e2)
 
 
     def test_failing_evaluator(self):

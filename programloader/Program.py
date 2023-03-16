@@ -279,6 +279,7 @@ class graph_container(abc.ABC):#, program_callmethods):
     #        tmpvar = rdflib.Variable(f"x{i}")
     #        self.__var_to_arg[tmpvar] = myarg
 
+    _inputvars: typ.List[str] = None
 
     @property
     def var_to_argid(self) -> typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]:
@@ -328,9 +329,11 @@ class graph_container(abc.ABC):#, program_callmethods):
         myvar: rdflib.term.Variable
         myarg: "arg"
         mut_to_var = {}
+        self._inputvars = []
         for myvar, myarg in self.__var_to_arg.items():
             try:
                 mut_to_var[myarg.example_node] = myvar
+                self._inputvars.append(myvar)
             except AttributeError:
                 pass
             try:
@@ -369,6 +372,10 @@ class graph_container(abc.ABC):#, program_callmethods):
 
 class inputgraphfinder(graph_container):
     """gives methods to find the inputgraph within a given graph"""
+    #@property
+    #@abc.abstractmethod
+    #def _inputvars(self) -> typ.List[str]:
+    #    """Returns all variables used in inputgraph"""
 
     def create_possible_apps(self, rdfgraph: rdflib.Graph):
         """Searches in given graph for possible new apps of this program.
@@ -377,8 +384,15 @@ class inputgraphfinder(graph_container):
         """
 
     def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
-            -> typ.Dict["arg", rdflib.term.Identifier]:
+            -> typ.Iterable[typ.Dict["arg", rdflib.term.Identifier]]:
         """searches possible resources usable as input for program"""
+        query = "SELECT %s \nWHERE {\n%s} %s"\
+                %(", ".join([f"?{var}" for var in self._inputvars]),
+                  self.inputgraph.serialize(format="ntriples"),
+                  f"LIMIT {limit}" if limit is not None else "")
+
+        for result in rdfgraph.query(query):
+            yield {var: obj for var, obj in zip(self._inputvars, result)}
 
 class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor, inputgraphfinder):
     """This class is for loading per rdfloader.load_from_graph .
