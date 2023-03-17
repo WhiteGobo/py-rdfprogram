@@ -3,14 +3,14 @@
 """
 from . import PROLOA_NS
 
-from . import Program
+from .Program import rdfprogram
 from .App import app
 from .Filelink import filelink
 from .Arg import arg
 
 
 input_dict = {\
-        PROLOA_NS.program: Program.rdfprogram.from_rdf, \
+        PROLOA_NS.program: rdfprogram.from_rdf, \
         PROLOA_NS.arg: arg,\
         PROLOA_NS.link: filelink,\
         PROLOA_NS.app: app,\
