@@ -131,7 +131,7 @@ class program_callmethods(axiom_container, program_basic_container, abc.ABC):
 
         Example:
                 >>> def __call__(self, input_args, node_translator, default_existing_resources):
-                >>>     args, kwargs = self.get_args_and_kwargs(input_args)
+                >>>     args, kwargs = self._get_args_and_kwargs(input_args)
                 >>>     returnstring = self._exe( *args, **kwargs )
                 >>>     new_axioms = self.get_new_axioms(input_args, default_existing_resources, node_translator)
                 >>>     return returnstring, new_axioms
@@ -200,7 +200,7 @@ class program_callmethods(axiom_container, program_basic_container, abc.ABC):
 
 class input_argument_processor:
     """Capabilities to give a executable the needed inputs"""
-    def get_args_and_kwargs(self,\
+    def _get_args_and_kwargs(self,\
             input_args: typ.Dict[term.IdentifiedNode, term.Identifier])\
             -> (list[str], dict[str, str]):
         for mytarget in input_args.values():
@@ -447,7 +447,7 @@ class rdfprogram(_iri_repr_class,
 
     def __call__(self, input_args: typ.Dict["arg", VALID_INPUTS], 
                  node_translator: typ.Dict[term.IdentifiedNode, term.Identifier]):
-        args, kwargs = self.get_args_and_kwargs(input_args)
+        args, kwargs = self._get_args_and_kwargs(input_args)
         returnstring = self.program_container( *args, **kwargs )
 
         new_axioms = self.get_new_axioms(returnstring, input_args, node_translator)
