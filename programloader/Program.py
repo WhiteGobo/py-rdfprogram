@@ -265,7 +265,14 @@ class graph_container(program_callmethods, program_basic_container):
     """
     __var_to_arg: typ.Dict[rdflib.Variable, "arg"]
     inputgraph: rdflib.Graph
+    """Inputgraph specified by self.app_args. Uses rdflib.Variable as 
+    variable nodes. See self.var_to_argid for translation to app_args
+    """
     outputgraphs: typ.List[rdflib.Graph]
+    """List of possible outputgraphs. Uses rdflib.Variable as 
+    variable nodes. See self.var_to_argid for translation to app_args
+    """
+
     _inputvars: typ.List[str] = None
 
     def __init__(self, **kwargs):
@@ -297,7 +304,7 @@ class graph_container(program_callmethods, program_basic_container):
 
     @property
     def var_to_argid(self) -> typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]:
-        """Mapping of used variables in search graph or searchterm"""
+        """Mapping of used variables in inputgraph or and outputgraphs"""
         return {v:a.iri for v,a in self.__var_to_arg.items()}
 
 
@@ -402,6 +409,11 @@ class rdfprogram(_iri_repr_class,
                  ):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
+
+    :param input_args: q
+    :type input_args: typing.Dict["arg", VALID_INPUTS]
+    :param node_translator: q
+    :type node_translator: typing.Dict[term.IdentifiedNode, term.Identifier])
     """
     program_container: _program
 
