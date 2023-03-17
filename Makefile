@@ -38,3 +38,5 @@ opendoc:
 PHONY: clean
 clean:
 	-rm -r docs/build
+	-rm infogeneration/reasoning/parser.out
+	-rm infogeneration/reasoning/parsetab.py
