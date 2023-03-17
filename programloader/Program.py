@@ -350,18 +350,20 @@ class inputgraphfinder(program_basic_container, abc.ABC):
         Returns an informationgraph with new apps and all temporary nodes
         needed as input
 
+        :param argid_to_resource: 
         :TODO: Rework newnode axiom addition. Currently only creates 
             missing nodes as proloa:filelink
         """
-        argid_to_arg = {arg.iri: arg for arg in self.app_args}
-        assert all(x in argid_to_arg for x in argid_to_resource)
+        assert set(argid_to_resource) \
+                == {self.var_to_argid[var] for var in self._inputvars}
         g = rdflib.Graph(store=store) if store is not None else rdflib.Graph()
         newapp = rdflib.BNode() if newapp_uri is None \
                 else rdflib.URIRef(newapp_uri)
         g.add((newapp, RDF.type, PROLOA.app))
         argid_to_res = dict(argid_to_resource)
         newnodes = []
-        for argid in argid_to_arg:
+        for arg in self.app_args:
+            argid = arg.iri
             if argid not in argid_to_res:
                 tmp_node = rdflib.BNode()
                 newnodes.append(tmp_node)
