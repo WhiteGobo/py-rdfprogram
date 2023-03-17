@@ -137,7 +137,7 @@ class program_callmethods(axiom_container, program_basic_container, abc.ABC):
                 >>> def __call__(self, input_args, node_translator, default_existing_resources):
                 >>>     args, kwargs = self._get_args_and_kwargs(input_args)
                 >>>     returnstring = self._exe( *args, **kwargs )
-                >>>     new_axioms = self.get_new_axioms(input_args, default_existing_resources, node_translator)
+                >>>     new_axioms = self._get_new_axioms(input_args, default_existing_resources, node_translator)
                 >>>     return returnstring, new_axioms
                 >>> def _exe():
                 >>>     commandarray = ["python", str(self.filepath)]
@@ -158,7 +158,7 @@ class program_callmethods(axiom_container, program_basic_container, abc.ABC):
         """
         pass
 
-    def get_new_axioms(self, returnstring, input_args, mutable_to_target)\
+    def _get_new_axioms(self, returnstring, input_args, mutable_to_target)\
             -> typ.List:
         """
     
@@ -454,5 +454,5 @@ class program(_iri_repr_class,
         args, kwargs = self._get_args_and_kwargs(input_args)
         returnstring = self.program_container( *args, **kwargs )
 
-        new_axioms = self.get_new_axioms(returnstring, input_args, node_translator)
+        new_axioms = self._get_new_axioms(returnstring, input_args, node_translator)
         return returnstring, new_axioms
