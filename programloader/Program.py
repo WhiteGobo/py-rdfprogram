@@ -337,36 +337,38 @@ class graph_container(program_callmethods, program_basic_container):
         return tuple(outputgraphs)
 
 
-class inputgraphfinder(abc.ABC):
+class inputgraphfinder(program_basic_container, abc.ABC):
     """gives methods to find the inputgraph within a given graph"""
     @property
     @abc.abstractmethod
     def _inputvars(self) -> typ.List[str]:
         """Returns all variables used in inputgraph"""
 
-    def create_possible_apps(self, variable_to_resource:typ.Dict,
+    def create_possible_apps(self, argid_to_resource: typ.Dict[rdflib.IdentifiedNode, rdflib.term.Identifier],
                              store=None, newapp_uri=None):
         """Searches in given graph for possible new apps of this program.
         Returns an informationgraph with new apps and all temporary nodes
         needed as input
 
-        :TODO: Rework newnode axiom addition
+        :TODO: Rework newnode axiom addition. Currently only creates 
+            missing nodes as proloa:filelink
         """
-        assert all(x in self.var_to_argid for x in variable_to_resource)
+        argid_to_arg = {arg.iri: arg for arg in self.app_args}
+        assert all(x in argid_to_arg for x in argid_to_resource)
         g = rdflib.Graph(store=store) if store is not None else rdflib.Graph()
         newapp = rdflib.BNode() if newapp_uri is None \
                 else rdflib.URIRef(newapp_uri)
         g.add((newapp, RDF.type, PROLOA.app))
-        var_to_res = dict(variable_to_resource)
+        argid_to_res = dict(argid_to_resource)
         newnodes = []
-        for var in self.var_to_argid:
-            if var not in var_to_res:
+        for argid in argid_to_arg:
+            if argid not in argid_to_res:
                 tmp_node = rdflib.BNode()
                 newnodes.append(tmp_node)
-                var_to_res[var] = tmp_node
+                argid_to_res[argid] = tmp_node
                 g.add((tmp_node, RDF.type, PROLOA.link))
-        for var, res in var_to_res.items():
-            g.add((newapp, self.var_to_argid[var], res))
+        for argid, res in argid_to_res.items():
+            g.add((newapp, argid, res))
         return g
 
     def _create_filter_existing_app(self, rdfgraph: rdflib.Graph,
@@ -379,7 +381,8 @@ class inputgraphfinder(abc.ABC):
             raise NotImplementedError()
 
     def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
-            -> typ.Iterable[typ.Dict["arg", rdflib.term.Identifier]]:
+            -> typ.Iterable[typ.Dict[rdflib.IdentifiedNode,
+                                     rdflib.term.Identifier]]:
         """searches possible resources usable as input for program"""
 
         filter_equal = ("FILTER (%s != %s)" % pair for pair 
@@ -397,7 +400,8 @@ class inputgraphfinder(abc.ABC):
 
         logger.debug("Used query: %s" %(query))
         for result in rdfgraph.query(query):
-            yield {var: obj for var, obj in zip(self._inputvars, result)}
+            yield {self.var_to_argid[var]: obj
+                   for var, obj in zip(self._inputvars, result)}
 
 
 class rdfprogram(_iri_repr_class, 

@@ -99,10 +99,8 @@ class TestProgramloader( unittest.TestCase ):
             """)
         q = list(myprogram.search_in(target_g))
         self.assertEqual(len(q), 1, "failed to find inputgraph.")
-        inputvar = iter(x for x, y in myprogram.var_to_argid.items()
-                        if y==arg_input).__next__()
         self.assertEqual(q[0], 
-                         {inputvar: rdflib.URIRef("http://example.com/1")})
+                         {arg_input: rdflib.URIRef("http://example.com/1")})
         g2 = myprogram.create_possible_apps(q[0])
         cg = rdflib.compare.to_isomorphic(rdflib.Graph().parse(data="""
             @prefix asdf: <file:///home/hfechner/Projects/rdftest/rdfprogram/>.
