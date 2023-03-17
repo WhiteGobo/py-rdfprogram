@@ -23,6 +23,7 @@ import collections.abc
 from .Programcontainer.exceptions import ProgramFailed
 from .Programcontainer.class_programcontainer import iri_to_programcontainer,_program
 from rdflib import term
+from . import Arg
 
 VALID_INPUTS = typ.Union[str, int, float, "filelinkt"]
 """Possible translations for literal values.
@@ -34,7 +35,9 @@ class program_basic_container:
     app_args: typ.List["arg"]
     def __init__(self, app_args, **kwargs):
         super().__init__(**kwargs)
-        self.app_args = app_args
+        self.app_args = tuple(app_args)
+        if not all(isinstance(arg, Arg.arg) for arg in self.app_args):
+            raise TypeError(app_args)
 
 class _iri_repr_class:
     def __repr__( self ):
@@ -46,8 +49,9 @@ class _iri_repr_class:
 
 
 class axiom_container(program_basic_container):
-    #iri: rdflib.IdentifiedNode = None
-    #"""Resource identifier in the knowledge graph"""
+    """Analyses the given app_args and saves all information about the
+    input and output-axioms of this program
+    """
     example_nodes: list["mutable_resource"]
     """Resources, that describe the input for the program. Specifies, which 
     axioms must already be valid.
