@@ -25,7 +25,7 @@ from .Programcontainer.class_programcontainer import iri_to_programcontainer,_pr
 from rdflib import term
 from . import Arg
 
-VALID_INPUTS = typ.Union[str, int, float, "filelinkt"]
+VALID_INPUTS = typ.Union[str, int, float, "filelink"]
 """Possible translations for literal values.
 
 :TODO: list here, where the transformation is made
