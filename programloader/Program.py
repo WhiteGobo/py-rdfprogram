@@ -220,6 +220,11 @@ class argument_processor(program_basic_container, abc.ABC):
     Following problem, we have programs that generate new files. Those
     files may need an argument that wasnt existing previous execution.
     Also there may be not connected inputs, that are still files.
+
+    :TODO: This class is used for infogeneration.tactic.finder. That class 
+        wont be needed anymore, when the implemented graphfinding 
+        capabilities of program will be used instead. So this might 
+        become OBSOLETE
     """
 
     @property
@@ -247,29 +252,17 @@ class argument_processor(program_basic_container, abc.ABC):
             return self.__new_generated_arg_to_typeids
 
 
-class graph_container(program_callmethods, program_basic_container, abc.ABC):
+class graph_container(program_callmethods, program_basic_container):
     """adds all things needed to create a search for input-resources for
     this program
     """
-    #@property
-    #@abc.abstractmethod
-    #def old_axioms(self):
-    #    pass
-
-    #@property
-    #@abc.abstractmethod
-    #def new_axioms(self):
-    #    pass
-
-    #@property
-    #@abc.abstractmethod
-    #def generated_nodes(self) -> typ.List["mutable_nodes"]:
-    #    pass
-
-    #var_to_argid: typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]
     __var_to_arg: typ.Dict[rdflib.Variable, "arg"]
+    inputgraph: rdflib.Graph
+    outputgraphs: typ.List[rdflib.Graph]
+    _inputvars: typ.List[str] = None
 
     def __init__(self, **kwargs):
+        #uses: self.app_args, self.new_axioms, self.old_axioms
         super().__init__(**kwargs)
         self.__var_to_arg = dict()
         for i, myarg in enumerate(self.app_args):
@@ -283,64 +276,23 @@ class graph_container(program_callmethods, program_basic_container, abc.ABC):
             try:
                 mut_to_var[myarg.example_node] = myvar
                 self._inputvars.append(myvar)
-            except AttributeError:
-                pass
+            except AttributeError: pass
             try:
                 mut_to_var[myarg.generated_node] = myvar
                 output_args.append(myarg)
-            except AttributeError:
-                pass
-        self.__outputgraphs = self.__create_output_graphs(mut_to_var,
-                                                          output_args,
-                                                          self.new_axioms)
-        self.__inputgraph = self.__create_input_graph(mut_to_var,
-                                                      self.old_axioms)
+            except AttributeError: pass
+        self.outputgraphs = self.__create_output_graphs(mut_to_var,
+                                                        output_args,
+                                                        self.new_axioms)
+        self.inputgraph = self.__create_input_graph(mut_to_var,
+                                                    self.old_axioms)
 
-    _inputvars: typ.List[str] = None
 
     @property
     def var_to_argid(self) -> typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]:
         """Mapping of used variables in search graph or searchterm"""
         return {v:a.iri for v,a in self.__var_to_arg.items()}
 
-    @property
-    def inputgraph(self) -> rdflib.Graph:
-        """Informationgraph for input. use var_to_argid for translation
-        from variables to resource id of the arguments.
-        """
-        try:
-            return self.__inputgraph
-        except AttributeError:
-            pass
-        self.__create_input_graph()
-        return self.__inputgraph
-
-    @property
-    def outputgraphs(self) -> typ.Tuple[rdflib.Graph]:
-        """Informationgraph for output. use var_to_argid for translation
-        from variables to resource id of the arguments.
-        """
-        try:
-            return self.__outputgraphs
-        except AttributeError:
-            pass
-        self.__create_output_graphs()
-        return self.__outputgraphs
-
-
-    @property
-    def _mut_to_var(self):
-        _mut_to_var = {}
-        for myvar, myarg in self.__var_to_arg.items():
-            try:
-                _mut_to_var[myarg.example_node] = myvar
-            except AttributeError:
-                pass
-            try:
-                _mut_to_var[myarg.generated_node] = myvar
-            except AttributeError:
-                pass
-        return _mut_to_var
 
     def __create_input_graph(self, mut_to_var, old_axioms):
         """Creates input and outputgraph corresponding to information
@@ -355,25 +307,28 @@ class graph_container(program_callmethods, program_basic_container, abc.ABC):
         return inputgraph
 
     def __create_output_graphs(self, mut_to_var, output_args, new_axioms):
+        """
+        :TODO: doesnt respect tmp_args
+        """
         outputgraphs = []
         basic_information = list(new_axioms)
         for i in range(1, len(output_args)+1):
             for tmp_args in it.combinations(output_args, i):
                 tmp_outputgraph = set()
                 outputgraphs.append(tmp_outputgraph)
-                for ax in self.new_axioms:
+                for ax in new_axioms:
                     if all(mut_to_var[x] for x in ax if x in mut_to_var):
                         tmp_outputgraph.add(tuple(mut_to_var.get(x,x)
                                                   for x in ax))
         return tuple(outputgraphs)
 
 
-class inputgraphfinder():
+class inputgraphfinder(abc.ABC):
     """gives methods to find the inputgraph within a given graph"""
-    #@property
-    #@abc.abstractmethod
-    #def _inputvars(self) -> typ.List[str]:
-    #    """Returns all variables used in inputgraph"""
+    @property
+    @abc.abstractmethod
+    def _inputvars(self) -> typ.List[str]:
+        """Returns all variables used in inputgraph"""
 
     def create_possible_apps(self, variable_to_resource:typ.Dict,
                              store=None, newapp_uri=None):
@@ -434,9 +389,9 @@ class inputgraphfinder():
 class rdfprogram(_iri_repr_class, 
                  input_argument_processor, 
                  argument_processor, 
-                 inputgraphfinder,
                  #program_callmethods, 
                  graph_container,
+                 inputgraphfinder,
                  ):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
