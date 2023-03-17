@@ -29,7 +29,7 @@ from . import Filelink
 from . import App
 
 input_dict = {\
-        PROLOA_NS.program: Program.rdfprogram.from_rdf, \
+        PROLOA_NS.program: Program.program.from_rdf, \
         PROLOA_NS.arg: Arg.arg,\
         PROLOA_NS.link: Filelink.filelink,\
         PROLOA_NS.app: App.app,\

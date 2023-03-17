@@ -416,13 +416,13 @@ class inputgraphfinder(program_basic_container, abc.ABC):
                    for var, obj in zip(self._inputvars, result)}
 
 
-class rdfprogram(_iri_repr_class, 
-                 input_argument_processor, 
-                 argument_processor, 
-                 #program_callmethods, 
-                 graph_container,
-                 inputgraphfinder,
-                 ):
+class program(_iri_repr_class, 
+              input_argument_processor, 
+              argument_processor, 
+              #program_callmethods, 
+              graph_container,
+              inputgraphfinder,
+              ):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
 
