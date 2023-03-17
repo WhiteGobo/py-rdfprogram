@@ -30,6 +30,11 @@ VALID_INPUTS = typ.Union[str, int, float, "filelinkt"]
 :TODO: list here, where the transformation is made
 """
 
+class program_basic_container:
+    app_args: typ.List["arg"]
+    def __init__(self, app_args, **kwargs):
+        super().__init__(**kwargs)
+        self.app_args = app_args
 
 class _iri_repr_class:
     def __repr__( self ):
@@ -40,8 +45,7 @@ class _iri_repr_class:
         #   raise Exception(type(self))
 
 
-
-class program_callmethods(abc.ABC):
+class program_callmethods(program_basic_container, abc.ABC):
     """Implements methods to call an executable. 
 
     :cvar iri: iri of this resource
@@ -89,15 +93,12 @@ class program_callmethods(abc.ABC):
     """Extracted info from all example mutable nodes."""
     new_axioms: list[rdflib.graph._TripleType] = None
     """Extract info from all example generated nodes."""
-    app_args: typ.List["arg"] = None
 
-    def __init__(self, iri, app_args, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.iri = iri
-        self.app_args = app_args
         self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
         all_axioms = []
-        for a in app_args:
+        for a in self.app_args:
             app_axioms, en, gn = a.process()
             all_axioms.extend(app_axioms)
             #self.old_axioms.extend(o)
@@ -213,17 +214,13 @@ class input_argument_processor:
         return args, kwargs
 
 
-class argument_processor(abc.ABC):
+class argument_processor(program_basic_container, abc.ABC):
     """This class organizes, how inputnodes are treated.
     
     Following problem, we have programs that generate new files. Those
     files may need an argument that wasnt existing previous execution.
     Also there may be not connected inputs, that are still files.
     """
-    @property
-    @abc.abstractmethod
-    def app_args(self) -> typ.List["arg"]:
-        pass
 
     @property
     def new_generated_arg_to_typeids(self)\
@@ -249,50 +246,61 @@ class argument_processor(abc.ABC):
                     pass
             return self.__new_generated_arg_to_typeids
 
-class graph_container(abc.ABC):#, program_callmethods):
+
+class graph_container(program_callmethods, program_basic_container, abc.ABC):
     """adds all things needed to create a search for input-resources for
     this program
     """
-    @property
-    @abc.abstractmethod
-    def app_args(self):
-        pass
+    #@property
+    #@abc.abstractmethod
+    #def old_axioms(self):
+    #    pass
 
-    @property
-    @abc.abstractmethod
-    def old_axioms(self):
-        pass
+    #@property
+    #@abc.abstractmethod
+    #def new_axioms(self):
+    #    pass
 
-    @property
-    @abc.abstractmethod
-    def new_axioms(self):
-        pass
+    #@property
+    #@abc.abstractmethod
+    #def generated_nodes(self) -> typ.List["mutable_nodes"]:
+    #    pass
 
-    @property
-    @abc.abstractmethod
-    def generated_nodes(self) -> typ.List["mutable_nodes"]:
-        pass
+    #var_to_argid: typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]
+    __var_to_arg: typ.Dict[rdflib.Variable, "arg"]
 
-    #def __init__(self, **kwargs):
-    #    super().__init__(**kwargs)
-    #    self.__var_to_arg = dict()
-    #    for i, myarg in enumerate(self.app_args):
-    #        tmpvar = rdflib.Variable(f"x{i}")
-    #        self.__var_to_arg[tmpvar] = myarg
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.__var_to_arg = dict()
+        for i, myarg in enumerate(self.app_args):
+            tmpvar = rdflib.Variable(f"x{i}")
+            self.__var_to_arg[tmpvar] = myarg
+
+        mut_to_var = dict()
+        self._inputvars = []
+        output_args = []
+        for myvar, myarg in self.__var_to_arg.items():
+            try:
+                mut_to_var[myarg.example_node] = myvar
+                self._inputvars.append(myvar)
+            except AttributeError:
+                pass
+            try:
+                mut_to_var[myarg.generated_node] = myvar
+                output_args.append(myarg)
+            except AttributeError:
+                pass
+        self.__outputgraphs = self.__create_output_graphs(mut_to_var,
+                                                          output_args,
+                                                          self.new_axioms)
+        self.__inputgraph = self.__create_input_graph(mut_to_var,
+                                                      self.old_axioms)
 
     _inputvars: typ.List[str] = None
 
     @property
     def var_to_argid(self) -> typ.Dict[rdflib.Variable, rdflib.IdentifiedNode]:
         """Mapping of used variables in search graph or searchterm"""
-        try:
-            return {v:a.iri for v,a in self.__var_to_arg.items()}
-        except AttributeError:
-            pass
-        self.__var_to_arg = dict()
-        for i, myarg in enumerate(self.app_args):
-            tmpvar = rdflib.Variable(f"x{i}")
-            self.__var_to_arg[tmpvar] = myarg
         return {v:a.iri for v,a in self.__var_to_arg.items()}
 
     @property
@@ -334,46 +342,21 @@ class graph_container(abc.ABC):#, program_callmethods):
                 pass
         return _mut_to_var
 
-    def __create_input_graph(self):
+    def __create_input_graph(self, mut_to_var, old_axioms):
         """Creates input and outputgraph corresponding to information
         in app_args. 
         Notice that there may be multiple outputgraphs.
         """
-        self.var_to_argid #need __var_to_arg
-        self.__inputgraph = rdflib.Graph()
+        inputgraph = rdflib.Graph()
         myvar: rdflib.term.Variable
         myarg: "arg"
-        mut_to_var = {}
-        self._inputvars = []
-        for myvar, myarg in self.__var_to_arg.items():
-            try:
-                mut_to_var[myarg.example_node] = myvar
-                self._inputvars.append(myvar)
-            except AttributeError:
-                pass
-            try:
-                mut_to_var[myarg.generated_node] = myvar
-            except AttributeError:
-                pass
-        for ax in self.old_axioms:
-            self.__inputgraph.add((mut_to_var.get(x,x) for x in ax))
+        for ax in old_axioms:
+            inputgraph.add((mut_to_var.get(x,x) for x in ax))
+        return inputgraph
 
-    def __create_output_graphs(self):
-        self.var_to_argid #need __var_to_arg
+    def __create_output_graphs(self, mut_to_var, output_args, new_axioms):
         outputgraphs = []
-        mut_to_var = {}
-        output_args = []
-        for myvar, myarg in self.__var_to_arg.items():
-            try:
-                mut_to_var[myarg.example_node] = myvar
-            except AttributeError:
-                pass
-            try:
-                mut_to_var[myarg.generated_node] = myvar
-                output_args.append(myarg)
-            except AttributeError:
-                pass
-        basic_information = list(self.new_axioms)
+        basic_information = list(new_axioms)
         for i in range(1, len(output_args)+1):
             for tmp_args in it.combinations(output_args, i):
                 tmp_outputgraph = set()
@@ -382,17 +365,18 @@ class graph_container(abc.ABC):#, program_callmethods):
                     if all(mut_to_var[x] for x in ax if x in mut_to_var):
                         tmp_outputgraph.add(tuple(mut_to_var.get(x,x)
                                                   for x in ax))
-        self.__outputgraphs = tuple(outputgraphs)
+        return tuple(outputgraphs)
 
 
-class inputgraphfinder(graph_container):
+class inputgraphfinder():
     """gives methods to find the inputgraph within a given graph"""
     #@property
     #@abc.abstractmethod
     #def _inputvars(self) -> typ.List[str]:
     #    """Returns all variables used in inputgraph"""
 
-    def create_possible_apps(self, variable_to_resource:typ.Dict, store=None, newapp_uri=None):
+    def create_possible_apps(self, variable_to_resource:typ.Dict,
+                             store=None, newapp_uri=None):
         """Searches in given graph for possible new apps of this program.
         Returns an informationgraph with new apps and all temporary nodes
         needed as input
@@ -416,12 +400,10 @@ class inputgraphfinder(graph_container):
             g.add((newapp, self.var_to_argid[var], res))
         return g
 
-
-    
-
     def _create_filter_existing_app(self, rdfgraph: rdflib.Graph,
                                     app_var="app") -> str:
-        if all(isinstance(argid, rdflib.URIRef) for argid in self.var_to_argid.values()):
+        if all(isinstance(argid, rdflib.URIRef) 
+               for argid in self.var_to_argid.values()):
             return " .\n".join((f"?{app_var} <{arg}> ?{var}")
                                for var, arg in self.var_to_argid.items()),
         else:
@@ -448,11 +430,21 @@ class inputgraphfinder(graph_container):
         for result in rdfgraph.query(query):
             yield {var: obj for var, obj in zip(self._inputvars, result)}
 
-class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input_argument_processor, inputgraphfinder):
+
+class rdfprogram(_iri_repr_class, 
+                 input_argument_processor, 
+                 argument_processor, 
+                 inputgraphfinder,
+                 #program_callmethods, 
+                 graph_container,
+                 ):
     """This class is for loading per rdfloader.load_from_graph .
     How the program is loaded is organized the program_container
     """
     program_container: _program
+
+    #iri: str = None
+    #app_args: typ.List["arg"] = None
 
     @classmethod
     def from_rdf(cls, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
@@ -463,7 +455,8 @@ class rdfprogram(program_callmethods, argument_processor, _iri_repr_class, input
         return cls(iri, app_args)
 
     def __init__(self, iri, app_args: extc.info_attr_list(PROLOA_NS.hasArgument)):
-        super().__init__(iri=iri, app_args=app_args)
+        self.iri = iri
+        super().__init__(app_args=app_args)
         self.program_container = iri_to_programcontainer(iri)
 
     def __call__(self, input_args: typ.Dict["arg", VALID_INPUTS], 
