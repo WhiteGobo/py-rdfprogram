@@ -384,7 +384,9 @@ class inputgraphfinder(program_basic_container, abc.ABC):
             return " .\n".join((f"?{app_var} <{arg}> ?{var}")
                                for var, arg in self.var_to_argid.items()),
         else:
-            raise NotImplementedError()
+            raise NotImplementedError("This only works currently, when "\
+                    "argument arg are given as URI. So no BNodes currently"\
+                    "supported")
 
     def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
             -> typ.Iterable[typ.Dict[rdflib.IdentifiedNode,
