@@ -45,7 +45,46 @@ class _iri_repr_class:
         #   raise Exception(type(self))
 
 
-class program_callmethods(program_basic_container, abc.ABC):
+class axiom_container(program_basic_container):
+    #iri: rdflib.IdentifiedNode = None
+    #"""Resource identifier in the knowledge graph"""
+    example_nodes: list["mutable_resource"]
+    """Resources, that describe the input for the program. Specifies, which 
+    axioms must already be valid.
+    """
+    generated_nodes: list["mutable_resource"] = None
+    """Resources, that describe the output of the program. Specifies, which 
+    axioms will be valid after this program succeeds.
+    """
+    old_axioms: list[rdflib.graph._TripleType] = None
+    """Extracted info from all example mutable nodes."""
+    new_axioms: list[rdflib.graph._TripleType] = None
+    """Extract info from all example generated nodes."""
+
+    possible_new_nodes: list["mutable_resource"]
+    """Might be the same as generated_nodes"""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
+        all_axioms = []
+        for a in self.app_args:
+            app_axioms, en, gn = a.process()
+            all_axioms.extend(app_axioms)
+            #self.old_axioms.extend(o)
+            #self.new_axioms.extend(n)
+            self.example_nodes.extend(en)
+            self.generated_nodes.extend(gn)
+        for ax in all_axioms:
+            if any(x in self.generated_nodes for x in ax):
+                self.new_axioms.append(ax)
+            else:
+                self.old_axioms.append(ax)
+
+        self.possible_new_nodes = self.generated_nodes
+        self._axioms = self.new_axioms
+
+class program_callmethods(axiom_container, program_basic_container, abc.ABC):
     """Implements methods to call an executable. 
 
     :cvar iri: iri of this resource
@@ -79,40 +118,6 @@ class program_callmethods(program_basic_container, abc.ABC):
     :TODO: Move old_axioms, new_axioms, old_nodes and new_nodes 
         to argument_processor
     """
-    iri: rdflib.IdentifiedNode = None
-    """Resource identifier in the knowledge graph"""
-    example_nodes: list["mutable_resource"]
-    """Resources, that describe the input for the program. Specifies, which 
-    axioms must already be valid.
-    """
-    generated_nodes: list["mutable_resource"] = None
-    """Resources, that describe the output of the program. Specifies, which 
-    axioms will be valid after this program succeeds.
-    """
-    old_axioms: list[rdflib.graph._TripleType] = None
-    """Extracted info from all example mutable nodes."""
-    new_axioms: list[rdflib.graph._TripleType] = None
-    """Extract info from all example generated nodes."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.old_axioms, self.new_axioms, self.example_nodes, self.generated_nodes = [], [], [], []
-        all_axioms = []
-        for a in self.app_args:
-            app_axioms, en, gn = a.process()
-            all_axioms.extend(app_axioms)
-            #self.old_axioms.extend(o)
-            #self.new_axioms.extend(n)
-            self.example_nodes.extend(en)
-            self.generated_nodes.extend(gn)
-        for ax in all_axioms:
-            if any(x in self.generated_nodes for x in ax):
-                self.new_axioms.append(ax)
-            else:
-                self.old_axioms.append(ax)
-
-        self.possible_new_nodes = self.generated_nodes
-        self._axioms = self.new_axioms
 
     @abc.abstractmethod
     def __call__(self, input_args, node_translator, \
@@ -192,7 +197,9 @@ class program_callmethods(program_basic_container, abc.ABC):
 
         return new_axioms
 
+
 class input_argument_processor:
+    """Capabilities to give a executable the needed inputs"""
     def get_args_and_kwargs(self,\
             input_args: typ.Dict[term.IdentifiedNode, term.Identifier])\
             -> (list[str], dict[str, str]):
