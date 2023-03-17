@@ -346,7 +346,7 @@ class inputgraphfinder(program_basic_container, abc.ABC):
 
     def create_possible_apps(self, argid_to_resource: typ.Dict[rdflib.IdentifiedNode, rdflib.term.Identifier],
                              store=None,
-                             newapp_uri: rdflib.IdentifiedNode=None):
+                             newapp: rdflib.IdentifiedNode=None):
         """Searches in given graph for possible new apps of this program.
         Returns an informationgraph with new apps and all temporary nodes
         needed as input
@@ -361,8 +361,8 @@ class inputgraphfinder(program_basic_container, abc.ABC):
         assert set(argid_to_resource) \
                 == {self.var_to_argid[var] for var in self._inputvars}
         g = rdflib.Graph(store=store) if store is not None else rdflib.Graph()
-        newapp = rdflib.BNode() if newapp_uri is None \
-                else rdflib.URIRef(newapp_uri)
+        if newapp is None:
+            newapp = rdflib.BNode()
         g.add((newapp, RDF.type, PROLOA.app))
         argid_to_res = dict(argid_to_resource)
         newnodes = []
