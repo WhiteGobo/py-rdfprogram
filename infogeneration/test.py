@@ -11,7 +11,7 @@ import programloader
 import queue
 
 from . import Project
-from . import reasoning_support
+from . import reasoning
 import importlib.resources
 import pathlib
 import os.path
@@ -337,7 +337,7 @@ class TestInfogenerator( unittest.TestCase ):
                             }
                             """)).__next__().x
 
-        newaxioms = reasoning_support.reason_pellet(g)
+        newaxioms = reasoning.reason_pellet(g)
 
         from rdflib import URIRef, Literal
         shouldbeaxioms = set((
