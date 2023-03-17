@@ -345,12 +345,16 @@ class inputgraphfinder(program_basic_container, abc.ABC):
         """Returns all variables used in inputgraph"""
 
     def create_possible_apps(self, argid_to_resource: typ.Dict[rdflib.IdentifiedNode, rdflib.term.Identifier],
-                             store=None, newapp_uri=None):
+                             store=None,
+                             newapp_uri: rdflib.IdentifiedNode=None):
         """Searches in given graph for possible new apps of this program.
         Returns an informationgraph with new apps and all temporary nodes
         needed as input
 
-        :param argid_to_resource: 
+        :param argid_to_resource: inputparameters for which a new app should
+            be created.
+        :type argid_to_resource: typing.Dict[rdflib.IdentifiedNode,
+            rdflib.term.Identifier]
         :TODO: Rework newnode axiom addition. Currently only creates 
             missing nodes as proloa:filelink
         """
