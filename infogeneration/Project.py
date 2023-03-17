@@ -46,7 +46,8 @@ class priority_project:
 
     priority_reference: rdflib.URIRef
     """Used priority of this app inside the inner_information_graph"""
-    def __init__(self, priority_reference=None):
+    def __init__(self, priority_reference=None, **kwargs):
+        super().__init__(**kwargs)
         if priority_reference is None:
             self.priority_reference = rdflib.URIRef("http://example.com/bubru#priority")
         else:
@@ -84,7 +85,8 @@ class program_container:
     Always contains all available programs and their arguments.
     """
 
-    def __init__(self, used_tactic, saved_objects= dict()):
+    def __init__(self, used_tactic, saved_objects= dict(), **kwargs):
+        super().__init__(**kwargs)
         self.used_tactic = used_tactic
         self.saved_objects = saved_objects
         pro: myabc.program
@@ -133,9 +135,7 @@ class project(information_save, priority_project, program_container):
         """
         self.uri = uri
         self.inner_information_graph = rdflib.Graph()
-
-        priority_project.__init__(self)
-        program_container.__init__(self, used_tactic)
+        super().__init__(used_tactic=used_tactic)
 
         self.used_tactic = used_tactic
         self.variables = {subj for subj, _, _ in target_information}
