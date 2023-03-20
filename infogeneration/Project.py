@@ -171,7 +171,7 @@ class program_container(tactic_container, information_container):
             return self.saved_objects[app_id][0]
 
 
-class infoloader(tactic_container, information_container):
+class app_generator(tactic_container, information_container):
     """Generate all information about apps to call.
     """
     def update_working_information(self, \
@@ -230,7 +230,7 @@ class first_app_caller:
 
 
 class project(first_app_caller,
-              infoloader, 
+              app_generator, 
               information_save,
               priority_project,
               program_container,
