@@ -130,8 +130,17 @@ class priority_project:
 
         return priority_axioms
 
+class tactic_container:
+    used_tactic: Tactic.tactic
+    """Foundation to everything the project does. The tactic should give
+    all needed algorithms and information used, so that the wanted
+    information can be produced
+    """
+    def __init__(self, used_tactic, **kwargs):
+        super().__init__(**kwargs)
+        self.used_tactic = used_tactic
 
-class program_container:
+class program_container(tactic_container):
     """Gives object-access to apps represented in inner_information_graph
     """
     #@property
@@ -144,9 +153,8 @@ class program_container:
     Always contains all available programs and their arguments.
     """
 
-    def __init__(self, used_tactic, saved_objects= dict(), **kwargs):
+    def __init__(self, saved_objects= dict(), **kwargs):
         super().__init__(**kwargs)
-        self.used_tactic = used_tactic
         self.saved_objects = saved_objects
         pro: myabc.program
         arg: myabc.arg
@@ -168,7 +176,7 @@ class program_container:
             return self.saved_objects[app_id][0]
 
 
-class infoloader(information_container):
+class infoloader(tactic_container, information_container):
     """Generate all information about apps to call.
     """
     def update_working_information(self, \
@@ -233,11 +241,6 @@ class project(first_app_caller,
               program_container,
               information_container):
     """Implements a tactic for a certain target
-    """
-    used_tactic: Tactic.tactic
-    """Foundation to everything the project does. The tactic should give
-    all needed algorithms and information used, so that the wanted
-    information can be produced
     """
     variables: typ.List[rdflib.IdentifiedNode]
     """All variable nodes, that we want to create.
