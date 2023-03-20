@@ -143,11 +143,6 @@ class tactic_container:
 class program_container(tactic_container, information_container):
     """Gives object-access to apps represented in inner_information_graph
     """
-    #@property
-    #@abc.abstractmethod
-    #def inner_information_graph(self) -> rdflib.Graph:
-    #    pass
-
     saved_objects: dict[rdflib.IdentifiedNode, typ.List[object]]
     """All resources identified by IRI with a list of corresponding objects.
     Always contains all available programs and their arguments.
