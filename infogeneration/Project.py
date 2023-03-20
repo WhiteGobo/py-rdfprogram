@@ -68,7 +68,11 @@ class priority_project:
 
     def _add_priority(self, app_id, priority) -> "rdflib.graph._TripleType":
         axiom = (app_id, self.priority_reference, rdflib.Literal(priority))
-        self.inner_information_graph.add(axiom)
+        try:
+            self.inner_information_graph.add(axiom)
+        except AssertionError as err:
+            raise TypeError(app_id, 
+                            f"{type(app_id)} is not rdflib.IdentifiedNode")
         return axiom
 
     def _find_first_app(self):
@@ -189,6 +193,22 @@ class app_generator(tactic_container, information_container):
                 for tmp_axioms, app_identifier in finder.create_app(arg_to_resource, programloader.input_dict.keys()):
                     new_apps.append(app_identifier)
                     new_axioms.extend(tmp_axioms)
+
+        pro: "programloader.project"
+        trans: dict[rdflib.IdentifiedNode, rdflib.term.Identifier]
+        myinfo = rdflib.Graph()
+        newapps = []
+        for pro in self.used_tactic.uses:
+            for trans in pro.search_in(infograph):
+                logger.debug(f"Founda possible inputs: {trans}")
+                newinformation =pro.create_possible_apps(trans)
+                appids = newinformation.query("""SELECT ?app
+                    WHERE {
+                         ?app a <http://example.com/programloader/app> .
+                    } LIMIT 1""")
+                newapps.append(list(appids)[0].app)
+                myinfo += newinformation
+        return list(myinfo), newapps
 
         return new_axioms, new_apps
 

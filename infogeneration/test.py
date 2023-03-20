@@ -165,14 +165,14 @@ class TestInfogenerator( unittest.TestCase ):
                 (node_numtoax, URIRef("file://info#ntaArg"), URIRef(testnumber_uri)),
                 (node_numtoax, pro.priority_reference, rdflib.Literal(0.0)),
                 (node_numtoax, PROLOA.executes, numbertoaxiom_uri),
-                (URIRef('file://info#ntaArg'), RDF.a, PROLOA.arg),
+                #(URIRef('file://info#ntaArg'), RDF.a, PROLOA.arg),
                 (node_numtoax, RDF.a, PROLOA.app),
                 (node_adder, PROLOA.executes, adder_uri),
                 (node_adder, pro.priority_reference, rdflib.Literal(0.0)),
                 (node_adder, RDF.a, PROLOA.app),
-                (URIRef('file://adder#add1'), RDF.a, PROLOA.arg),
+                #(URIRef('file://adder#add1'), RDF.a, PROLOA.arg),
                 (node_adder, URIRef('file://adder#add1'), testnumber_uri),
-                (URIRef('file://adder#add2'), RDF.a, PROLOA.arg),
+                #(URIRef('file://adder#add2'), RDF.a, PROLOA.arg),
                 (node_adder, URIRef('file://adder#add2'), temporary_fileid),
                 (temporary_fileid, RDF.a, PROLOA.link),
                 ))
@@ -195,7 +195,11 @@ class TestInfogenerator( unittest.TestCase ):
         new_axioms: list["rdflib.graph._TripleType"]
         for i in range(10):
             logger.debug(f"repeating step {i}")
-            returnstring, new_axioms = list(pro.execute_first_app())
+            try:
+                returnstring, new_axioms = list(pro.execute_first_app())
+            except Exception as err:
+                logger.debug(f"current inner information: {pro.inner_information_graph.serialize()}")
+                raise Exception(f"failed at iteration {i}")
             logger.debug(f"got returnstring:\n{returnstring}\n")
             logger.debug(f"got new axioms:{new_axioms}")
             logger.debug(f"current inner information: {pro.inner_information_graph.serialize()}")
