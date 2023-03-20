@@ -140,7 +140,7 @@ class tactic_container:
         super().__init__(**kwargs)
         self.used_tactic = used_tactic
 
-class program_container(tactic_container):
+class program_container(tactic_container, information_container):
     """Gives object-access to apps represented in inner_information_graph
     """
     #@property
