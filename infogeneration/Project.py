@@ -170,27 +170,9 @@ class program_container(tactic_container, information_container):
                     iri_to_pythonobjects=self.saved_objects)
             return self.saved_objects[app_id][0]
 
-
 class app_generator(tactic_container, information_container):
     """Generate all information about apps to call.
     """
-    def update_working_information(self, \
-            rdfgraph: typ.Iterable["rdflib.graph._TripleType"]):
-        """Updates inner_information_graph. Adds all info from given rdfgraph
-        and finds new apps and calculates their priority
-        """
-        axioms: list["rdflib.graph._TripleType"]
-        apps: list[rdflib.IdentifiedNode]
-        for ax in rdfgraph:
-            self.inner_information_graph.add(ax)
-        axioms, apps = self._find_available_apps(self.inner_information_graph)
-        for app_id in apps:
-            tmp_prio = self.used_tactic.calculate_priority()
-            axioms.append(self._add_priority(app_id, tmp_prio))
-
-        for ax in axioms:
-            self.inner_information_graph.add(ax)
-        return axioms, apps
 
     def _find_available_apps(self, infograph) \
             -> (list["rdflib.graph._TripleType"], list[rdflib.IdentifiedNode]):
@@ -209,6 +191,26 @@ class app_generator(tactic_container, information_container):
                     new_axioms.extend(tmp_axioms)
 
         return new_axioms, new_apps
+
+
+class information_updater(app_generator, information_container):
+    def update_working_information(self, \
+            rdfgraph: typ.Iterable["rdflib.graph._TripleType"]):
+        """Updates inner_information_graph. Adds all info from given rdfgraph
+        and finds new apps and calculates their priority
+        """
+        axioms: list["rdflib.graph._TripleType"]
+        apps: list[rdflib.IdentifiedNode]
+        for ax in rdfgraph:
+            self.inner_information_graph.add(ax)
+        axioms, apps = self._find_available_apps(self.inner_information_graph)
+        for app_id in apps:
+            tmp_prio = self.used_tactic.calculate_priority()
+            axioms.append(self._add_priority(app_id, tmp_prio))
+
+        for ax in axioms:
+            self.inner_information_graph.add(ax)
+        return axioms, apps
 
 
 class first_app_caller:
@@ -230,7 +232,7 @@ class first_app_caller:
 
 
 class project(first_app_caller,
-              app_generator, 
+              information_updater,
               information_save,
               priority_project,
               program_container,
