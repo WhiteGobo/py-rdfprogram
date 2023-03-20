@@ -102,11 +102,13 @@ class TestProgramloader( unittest.TestCase ):
         self.assertEqual(q[0], 
                          {arg_input: rdflib.URIRef("http://example.com/1")})
         g2 = myprogram.create_possible_apps(q[0])
-        cg = rdflib.compare.to_isomorphic(rdflib.Graph().parse(data="""
+        cg = rdflib.compare.to_isomorphic(rdflib.Graph().parse(data=f"""
             @prefix asdf: <file:///home/hfechner/Projects/rdftest/rdfprogram/>.
+            @prefix proloa: <http://example.com/programloader/> .
             [] a <http://example.com/programloader/app> ;
                 asdf:1 <http://example.com/1> ;
-                asdf:2 [ a <http://example.com/programloader/link> ] .
+                asdf:2 [ a <http://example.com/programloader/link> ] ;
+                proloa:executes <{program_uri}> .
             """))
         cg2 = rdflib.compare.to_isomorphic(g2)
         in_both, in_first, in_second = rdflib.compare.graph_diff(cg, cg2)

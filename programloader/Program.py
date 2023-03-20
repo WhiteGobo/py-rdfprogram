@@ -368,6 +368,7 @@ class inputgraphfinder(program_basic_container, abc.ABC):
         if newapp is None:
             newapp = rdflib.BNode()
         g.add((newapp, RDF.type, PROLOA.app))
+        g.add((newapp, PROLOA.executes, self.iri))
         argid_to_res = dict(argid_to_resource)
         newnodes = []
         for arg in self.app_args:
