@@ -10,8 +10,14 @@ class _iri_repr_class:
         return f"<{name}:{self.iri}>"
 
 class rdftranslator:
+    """This implements a way to transform this object back to rdfdata
+
+    :TODO: After reworking how mutableresources are expressed. Add info
+        about mutable resources in here
+    """
     def to_rdf(self) -> rdflib.Graph:
         yield (self.iri, RDF.type, PROLOA.arg)
+        return
         if self.example_data:
             yield (self.iri, PROLOA.describedBy, self.example_data[0][0])
             for ax in self.example_data:

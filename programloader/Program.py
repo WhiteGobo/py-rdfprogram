@@ -390,12 +390,6 @@ class inputgraphfinder(rdftranslator, program_basic_container, abc.ABC):
             g.add((newapp, argid, res))
         return g
 
-    def _create_filter_mutableresources(self) -> str:
-        ret = []
-        for var in self.var_to_argid:
-            ret.append("FILTER NOT EXISTS{[] <%s> ?%s}" %(PROLOA.describedBy, var))
-            ret.append("FILTER NOT EXISTS{[] <%s> ?%s}" %(PROLOA.declaresInfoLike, var))
-        return "\n".join(ret)
 
     def _create_filter_existing_app(self, rdfgraph: rdflib.Graph,
                                     app_var="app") -> str:
@@ -417,13 +411,11 @@ class inputgraphfinder(rdftranslator, program_basic_container, abc.ABC):
                         in it.permutations(self._inputvars, 2))
         # ?app is some common app. app should be in self.var_to_argid
         filter_existing_app: str = self._create_filter_existing_app(rdfgraph)
-        filter_mutableresources: str = self._create_filter_mutableresources()
 
         VARS = ", ".join([f"?{var}" for var in self._inputvars])
         AXIOMS = self.inputgraph.serialize(format="ntriples")[:-1] #deletes \n at end
         FILTER_EQUAL = "\n".join(filter_equal)
         FILTER_APPS = "FILTER NOT EXISTS {\n%s\n}" % (filter_existing_app,)
-        FILTER_MUT = filter_mutableresources
         LIMIT = " LIMIT %i" % (limit) if limit is not None else ""
         query = f"SELECT {VARS}\n"\
                 f"WHERE {{\n"\
