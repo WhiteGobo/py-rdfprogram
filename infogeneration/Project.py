@@ -59,6 +59,9 @@ class information_container(tactic_container):
             self.inner_information_graph = rdflib.Graph()
         else:
             self.inner_information_graph = inner_information_graph
+        for pro in self.used_tactic.uses:
+            for ax in pro.to_rdf():
+                self.inner_information_graph.add(ax)
 
 
 class priority_project:
