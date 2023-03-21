@@ -9,7 +9,20 @@ class _iri_repr_class:
         name = f"{type(self).__module__}.{type(self).__name__}"
         return f"<{name}:{self.iri}>"
 
-class arg(_iri_repr_class):
+class rdftranslator:
+    def to_rdf(self) -> rdflib.Graph:
+        yield (self.iri, RDF.type, PROLOA.arg)
+        if self.example_data:
+            yield (self.iri, PROLOA.describedBy, self.example_data[0][0])
+            for ax in self.example_data:
+                yield ax
+        if self.generated_data:
+            yield (self.iri, PROLOA.declaresInfoLike, self.generated_data[0][0])
+            for ax in self.generated_data:
+                yield ax
+
+
+class arg(rdftranslator, _iri_repr_class):
     """This object describes, how an argument of the corresponding program
     can be interfaced with.
     Yet it just holds the variablename(str) or variable position(int).
@@ -37,9 +50,11 @@ class arg(_iri_repr_class):
         self.iri = iri
         assert isinstance(id, (str, int)), type(id)
         self.id = id
+        self.example_data = list(example_data)
+        self.generated_data = list(generated_data)
 
-        self._generated_nodes = set(ax[0] for ax in generated_data)
-        self._example_nodes = set(ax[0] for ax in example_data)
+        self._generated_nodes = set(ax[0] for ax in self.generated_data)
+        self._example_nodes = set(ax[0] for ax in self.example_data)
         assert len(self._generated_nodes) <= 1, self._generated_nodes
         assert len(self._example_nodes) <= 1, self._example_nodes
         try:
@@ -53,9 +68,10 @@ class arg(_iri_repr_class):
         valid = lambda ax: not all((ax[1]==RDF.a,
                                    ax[2]==PROLOA.mutable_resource,
                                    ))
-        self._generated_axioms = list(ax for ax in generated_data if valid(ax))
+        self._generated_axioms = list(ax for ax in self.generated_data
+                                      if valid(ax))
         self._example_axioms = []
-        for ax in example_data:
+        for ax in self.example_data:
             if valid(ax):
                 if any(x in self._generated_nodes for x in ax):
                     self._generated_axioms.append(ax)

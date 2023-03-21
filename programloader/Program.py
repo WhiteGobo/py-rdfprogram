@@ -340,8 +340,16 @@ class graph_container(program_callmethods, program_basic_container):
                                                   for x in ax))
         return tuple(outputgraphs)
 
+class rdftranslator(program_basic_container):
+    def to_rdf(self) -> rdflib.Graph:
+        yield (self.iri, RDF.type, PROLOA.program)
+        for arg in self.app_args:
+            yield (self.iri, PROLOA.hasArgument, arg.iri)
+            for ax in arg.to_rdf():
+                yield ax
 
-class inputgraphfinder(program_basic_container, abc.ABC):
+
+class inputgraphfinder(rdftranslator, program_basic_container, abc.ABC):
     """gives methods to find the inputgraph within a given graph"""
     @property
     @abc.abstractmethod
@@ -382,12 +390,19 @@ class inputgraphfinder(program_basic_container, abc.ABC):
             g.add((newapp, argid, res))
         return g
 
+    def _create_filter_mutableresources(self) -> str:
+        ret = []
+        for var in self.var_to_argid:
+            ret.append("FILTER NOT EXISTS{[] <%s> ?%s}" %(PROLOA.describedBy, var))
+            ret.append("FILTER NOT EXISTS{[] <%s> ?%s}" %(PROLOA.declaresInfoLike, var))
+        return "\n".join(ret)
+
     def _create_filter_existing_app(self, rdfgraph: rdflib.Graph,
                                     app_var="app") -> str:
         if all(isinstance(argid, rdflib.URIRef) 
                for argid in self.var_to_argid.values()):
             return " .\n".join((f"?{app_var} <{arg}> ?{var}")
-                               for var, arg in self.var_to_argid.items()),
+                               for var, arg in self.var_to_argid.items())
         else:
             raise NotImplementedError("This only works currently, when "\
                     "argument arg are given as URI. So no BNodes currently"\
@@ -402,13 +417,18 @@ class inputgraphfinder(program_basic_container, abc.ABC):
                         in it.permutations(self._inputvars, 2))
         # ?app is some common app. app should be in self.var_to_argid
         filter_existing_app: str = self._create_filter_existing_app(rdfgraph)
+        filter_mutableresources: str = self._create_filter_mutableresources()
 
         VARS = ", ".join([f"?{var}" for var in self._inputvars])
         AXIOMS = self.inputgraph.serialize(format="ntriples")[:-1] #deletes \n at end
         FILTER_EQUAL = "\n".join(filter_equal)
-        FILTER_APPS = "FILTER NOT EXISTS {\n%s\n}" % (filter_existing_app)
+        FILTER_APPS = "FILTER NOT EXISTS {\n%s\n}" % (filter_existing_app,)
+        FILTER_MUT = filter_mutableresources
         LIMIT = " LIMIT %i" % (limit) if limit is not None else ""
-        query = f"SELECT {VARS}\nWHERE {{\n{AXIOMS}{FILTER_EQUAL}"\
+        query = f"SELECT {VARS}\n"\
+                f"WHERE {{\n"\
+                f"{AXIOMS}"\
+                f"{FILTER_EQUAL}"\
                 f"\n{FILTER_APPS}\n}}{LIMIT}"
 
         logger.debug("Used query: %s" %(query))
