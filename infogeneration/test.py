@@ -161,6 +161,7 @@ class TestInfogenerator( unittest.TestCase ):
             #logging works through self.assertEqual(axioms, shouldbeaxioms)
             temporary_fileid = rdflib.BNode() 
 
+        raise NotImplementedError("add complete program to innerinformationgraph")
         shouldbeaxioms = set((
                 (node_numtoax, URIRef("file://info#ntaArg"), URIRef(testnumber_uri)),
                 (node_numtoax, pro.priority_reference, rdflib.Literal(0.0)),
