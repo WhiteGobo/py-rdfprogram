@@ -136,6 +136,8 @@ class TestInfogenerator( unittest.TestCase ):
         for myprogram, myfinder in pro.used_tactic.graphfinder.items():
             logger.debug("To find inputs for program %s uses queryterm:\n%s"
                          %(myprogram, myfinder.uri_queryterm))
+        #self.assertEqual(pro.inner_information_graph.serialize(), infobothprograms)
+        basegraph = rdflib.Graph() + pro.inner_information_graph
 
         new_axioms, new_apps = pro.update_working_information(inputinformation_graph)
         from rdflib import URIRef, Literal
@@ -161,7 +163,6 @@ class TestInfogenerator( unittest.TestCase ):
             #logging works through self.assertEqual(axioms, shouldbeaxioms)
             temporary_fileid = rdflib.BNode() 
 
-        raise NotImplementedError("add complete program to innerinformationgraph")
         shouldbeaxioms = set((
                 (node_numtoax, URIRef("file://info#ntaArg"), URIRef(testnumber_uri)),
                 (node_numtoax, pro.priority_reference, rdflib.Literal(0.0)),
@@ -179,13 +180,25 @@ class TestInfogenerator( unittest.TestCase ):
                 ))
         self.assertNotEqual(temporary_fileid, testnumber_uri,
                             msg="Used same resource for two different inputs")
-        self.assertEqual(set(new_axioms), shouldbeaxioms,
+        try:
+            self.assertEqual(set(new_axioms), shouldbeaxioms,
                          msg="\nIn the first set, two apps should be "
                          "represented. So some information is missing or is "
                          f"wrong. len(new_axioms): {len(new_axioms)}; "
                          f"new fileid: {temporary_fileid}; "
                          f"nodeadder: {node_adder}; "
                          f"nodenumtoax: {node_numtoax}")
+        except Exception as err:
+            logger.debug(f"current inner graph:{pro.inner_information_graph.serialize()}")
+            g1 = rdflib.Graph()
+            for ax in new_axioms:
+                g1.add(ax)
+            g2 = rdflib.Graph()
+            for ax in shouldbeaxioms:
+                g2.add(ax)
+            logger.debug(f"new graph:\n{g1.serialize()}")
+            logger.debug(f"old graph:\n{g2.serialize()}")
+            raise
 
         #new_axioms = set(pro.inner_informationgraph)
         #"""some information about new apps and what their priorities are"""
