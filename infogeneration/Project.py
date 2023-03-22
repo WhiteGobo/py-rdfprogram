@@ -187,18 +187,6 @@ class app_generator(information_container, tactic_container):
             -> (list["rdflib.graph._TripleType"], list[rdflib.IdentifiedNode]):
         """Finds all new apps in given infograph
         """
-        finder: "Tactic.rdfgraph_finder"
-        arg_to_resource: dict[myabc.arg, rdflib.IdentifiedNode]
-        new_axioms: list["rdflib.graph._TripleType"] = []
-        new_apps: list[rdflib.BNode] = []
-        for finder in self.used_tactic.graphfinder.values():
-            logger.debug(f"Search for new apps with {finder}")
-            for arg_to_resource in finder._find_in_graph(infograph):
-                logger.debug(f"Found possible inputs: {arg_to_resource}")
-                for tmp_axioms, app_identifier in finder.create_app(arg_to_resource, programloader.input_dict.keys()):
-                    new_apps.append(app_identifier)
-                    new_axioms.extend(tmp_axioms)
-
         pro: "programloader.project"
         trans: dict[rdflib.IdentifiedNode, rdflib.term.Identifier]
         myinfo = rdflib.Graph()
@@ -214,8 +202,6 @@ class app_generator(information_container, tactic_container):
                 newapps.append(list(appids)[0].app)
                 myinfo += newinformation
         return list(myinfo), newapps
-
-        return new_axioms, new_apps
 
 
 class information_updater(app_generator, information_container):
