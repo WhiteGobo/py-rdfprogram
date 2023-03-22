@@ -18,4 +18,5 @@ References
    :caption: Contents:
 
    ./references
+   ./ref-program
    ./programloader-uridescription.rst

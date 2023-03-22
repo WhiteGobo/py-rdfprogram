@@ -20,3 +20,4 @@ References
    ./tactic-references.rst
    ./ref-project.rst
    ./ref-tactic.rst
+   ./ref-extras.rst
