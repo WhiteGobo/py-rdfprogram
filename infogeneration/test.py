@@ -133,9 +133,6 @@ class TestInfogenerator( unittest.TestCase ):
                 a proloa:link .
             """)
 
-        for myprogram, myfinder in pro.used_tactic.graphfinder.items():
-            logger.debug("To find inputs for program %s uses queryterm:\n%s"
-                         %(myprogram, myfinder.uri_queryterm))
         #self.assertEqual(pro.inner_information_graph.serialize(), infobothprograms)
         basegraph = rdflib.Graph() + pro.inner_information_graph
 
