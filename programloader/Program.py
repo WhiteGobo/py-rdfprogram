@@ -402,12 +402,14 @@ class inputgraphfinder(rdftranslator, program_basic_container, abc.ABC):
                     "argument arg are given as URI. So no BNodes currently"\
                     "supported")
 
-    def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
+    def search_in(self, rdfgraph: rdflib.Graph, limit=None, return_variables=False)\
             -> typ.Iterable[typ.Dict[rdflib.IdentifiedNode,
                                      rdflib.term.Identifier]]:
         """searches possible resources usable as input for program.
         Filters out every subgraph, which is already connected by an 
         existing app.
+
+        :param return_variables: Switch to return variables instead of args
         """
 
         filter_equal = ("FILTER (%s != %s)" % pair for pair 
@@ -428,8 +430,12 @@ class inputgraphfinder(rdftranslator, program_basic_container, abc.ABC):
 
         logger.debug("Used query: %s" %(query))
         for result in rdfgraph.query(query):
-            yield {self.var_to_argid[var]: obj
-                   for var, obj in zip(self._inputvars, result)}
+            if return_variables:
+                yield {var: obj
+                       for var, obj in zip(self._inputvars, result)}
+            else:
+                yield {self.var_to_argid[var]: obj
+                       for var, obj in zip(self._inputvars, result)}
 
 
 class program(_iri_repr_class, 
