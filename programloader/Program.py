@@ -405,7 +405,10 @@ class inputgraphfinder(rdftranslator, program_basic_container, abc.ABC):
     def search_in(self, rdfgraph: rdflib.Graph, limit=None)\
             -> typ.Iterable[typ.Dict[rdflib.IdentifiedNode,
                                      rdflib.term.Identifier]]:
-        """searches possible resources usable as input for program"""
+        """searches possible resources usable as input for program.
+        Filters out every subgraph, which is already connected by an 
+        existing app.
+        """
 
         filter_equal = ("FILTER (%s != %s)" % pair for pair 
                         in it.permutations(self._inputvars, 2))
