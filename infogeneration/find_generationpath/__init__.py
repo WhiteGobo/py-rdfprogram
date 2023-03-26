@@ -14,3 +14,6 @@ the programs can make little improvements to the available data. So
 step by step the information created gets nearer and nearer to the information
 we search for.
 """
+
+from .Flowgraph import flowgraph
+from .Graphstate import graphstate
