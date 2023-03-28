@@ -27,6 +27,8 @@ class netx_graphcontainer(graphcontainer):
 
 
 class maximal_graphs(graphcontainer):
+    supergraphs: typ.List[rdflib.Graph]
+    """list of graphs, which are supergraphs to all previous graphs. Previous ist meant within the graphcontainer"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         comparenodes = {n: compare.to_isomorphic(n.graph) for n in self.nodes}
