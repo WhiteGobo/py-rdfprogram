@@ -80,5 +80,9 @@ class graphstate_generator(graphcontainer):
         return cls(tobevisited, edges, **kwargs)
 
 
+class graphfinder:
+    """Cuts graphs into subgraphs. Each subgraphs ist also a subgraphs to maximalgraphs within flowgraph
+    """ 
+
 class flowgraph(graphstate_generator):
     """Mainclass"""
